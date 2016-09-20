@@ -12,16 +12,16 @@ public class MyHashMapTest {
         hashMap.put("a", "123");
         hashMap.put("b", "123");
         hashMap.put("c", "123");
-        assertEquals(hashMap.size(), 3);
+        assertEquals(3, hashMap.size());
 
         hashMap.put("c", "124");
-        assertEquals(hashMap.size(), 3);
+        assertEquals(3, hashMap.size());
 
         hashMap.put("d", "123");
-        assertEquals(hashMap.size(), 4);
+        assertEquals(4, hashMap.size());
 
         hashMap.remove("d");
-        assertEquals(hashMap.size(), 3);
+        assertEquals(3, hashMap.size());
     }
 
     @Test
@@ -57,14 +57,14 @@ public class MyHashMapTest {
     public void testPut() throws Exception {
         MyHashMap hashMap = new MyHashMap();
         assertNull(hashMap.put("pro", "soft"));
-        assertEquals(hashMap.put("pro", "hard"), "soft");
+        assertEquals("soft", hashMap.put("pro", "hard"));
     }
 
     @Test
     public void testRemove() throws Exception {
         MyHashMap hashMap = new MyHashMap();
         hashMap.put("pro", "soft");
-        assertEquals(hashMap.remove("pro"), "soft");
+        assertEquals("soft", hashMap.remove("pro"));
         assertNull(hashMap.remove("pro"));
     }
 
@@ -74,12 +74,12 @@ public class MyHashMapTest {
         hashMap.put("hello", "world");
         hashMap.put("good", "morning");
         hashMap.put("happy", "Saturday");
-        assertEquals(hashMap.get("hello"), "world");
-        assertEquals(hashMap.get("good"), "morning");
-        assertEquals(hashMap.get("happy"), "Saturday");
+        assertEquals("world", hashMap.get("hello"));
+        assertEquals("morning", hashMap.get("good"));
+        assertEquals("Saturday", hashMap.get("happy"));
 
         hashMap.clear();
-        assertEquals(hashMap.size(), 0);
+        assertEquals(0, hashMap.size());
         assertNull(hashMap.get("hello"));
         assertNull(hashMap.get("good"));
         assertNull(hashMap.get("happy"));

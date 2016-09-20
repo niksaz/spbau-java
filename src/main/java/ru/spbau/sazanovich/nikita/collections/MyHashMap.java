@@ -14,8 +14,8 @@ package ru.spbau.sazanovich.nikita.collections;
  */
 public class MyHashMap {
 
-    private static int DEFAULT_INITIAL_CAPACITY = 16;
-    private static float DEFAULT_LOAD_FACTOR = .75f;
+    private static final int DEFAULT_INITIAL_CAPACITY = 16;
+    private static final float DEFAULT_LOAD_FACTOR = .75f;
 
     private final float loadFactor;
     private int size;
@@ -43,17 +43,17 @@ public class MyHashMap {
     }
 
     public boolean contains(String key) {
-        int listPos = key.hashCode() % listsArray.length;
+        int listPos = getStringBucket(key);
         return listsArray[listPos] != null && listsArray[listPos].contains(key);
     }
 
     public String get(String key) {
-        int listPos = key.hashCode() % listsArray.length;
+        int listPos = getStringBucket(key);
         return listsArray[listPos] == null ? null : listsArray[listPos].get(key);
     }
 
     public String put(String key, String value) {
-        int listPos = key.hashCode() % listsArray.length;
+        int listPos = getStringBucket(key);
         if (listsArray[listPos] == null) {
             listsArray[listPos] = new MyList();
         }
@@ -68,7 +68,7 @@ public class MyHashMap {
     }
 
     public String remove(String key) {
-        int listPos = key.hashCode() % listsArray.length;
+        int listPos = getStringBucket(key);
         if (listsArray[listPos] == null) {
             return null;
         }
@@ -86,6 +86,10 @@ public class MyHashMap {
             }
         }
         size = 0;
+    }
+
+    private int getStringBucket(String key) {
+        return key.hashCode() % listsArray.length;
     }
 
     private void reconstruct() {

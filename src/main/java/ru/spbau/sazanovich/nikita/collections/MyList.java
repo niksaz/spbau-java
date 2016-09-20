@@ -5,12 +5,7 @@ public class MyList {
     private MyListNode head = null;
 
     public boolean contains(String key) {
-        for (MyListNode it = head; it != null; it = it.getNext()) {
-            if (it.getEntry().getKey().equals(key)) {
-                return true;
-            }
-        }
-        return false;
+        return get(key) != null;
     }
 
     public String get(String key) {
