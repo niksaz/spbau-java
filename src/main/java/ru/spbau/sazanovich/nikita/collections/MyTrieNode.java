@@ -1,6 +1,7 @@
 package ru.spbau.sazanovich.nikita.collections;
 
 import java.util.HashMap;
+import java.util.Set;
 
 public class MyTrieNode {
 
@@ -18,6 +19,10 @@ public class MyTrieNode {
 
     public MyTrieNode removeChildWith(char key) {
         return childNodes.remove(key);
+    }
+
+    public Set<Character> getChildCharacters() {
+        return childNodes.keySet();
     }
 
     public int getSubtreeNodesCount() {

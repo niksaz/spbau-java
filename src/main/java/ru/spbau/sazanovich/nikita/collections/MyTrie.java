@@ -3,17 +3,23 @@ package ru.spbau.sazanovich.nikita.collections;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Set;
 
 public class MyTrie implements Trie, StreamSerializable {
+
+    private static final int CNT_MASK = (1 << 6) - 1;
+    private static final int IS_TERMINAL_MASK = 1 << 6;
 
     private MyTrieNode root = new MyTrieNode();
 
     @Override
     public void serialize(OutputStream out) throws IOException {
+        recursive_serialize(root, out);
     }
 
     @Override
     public void deserialize(InputStream in) throws IOException {
+        recursive_deserialize(root = new MyTrieNode(), in);
     }
 
     @Override
@@ -23,7 +29,7 @@ public class MyTrie implements Trie, StreamSerializable {
 
     @Override
     public boolean contains(String element) {
-        MyTrieNode nodeForElement = nodeFor(element);
+        final MyTrieNode nodeForElement = nodeFor(element);
         return nodeForElement != null && nodeForElement.isTerminal();
     }
 
@@ -39,8 +45,31 @@ public class MyTrie implements Trie, StreamSerializable {
 
     @Override
     public int howManyStartsWithPrefix(String prefix) {
-        MyTrieNode nodeForPrefix = nodeFor(prefix);
+        final MyTrieNode nodeForPrefix = nodeFor(prefix);
         return nodeForPrefix == null ? 0 : nodeForPrefix.getSubtreeNodesCount();
+    }
+
+    private void recursive_serialize(MyTrieNode node, OutputStream out) throws IOException {
+        final Set<Character> keys = node.getChildCharacters();
+        out.write(keys.size() + (node.isTerminal() ? IS_TERMINAL_MASK : 0));
+        for (char transition : keys) {
+            out.write(transition);
+            recursive_serialize(node.getChildWith(transition), out);
+        }
+    }
+
+    private MyTrieNode recursive_deserialize(MyTrieNode node, InputStream in) throws IOException {
+        final int node_info_byte = in.read();
+        final int cnt = node_info_byte & CNT_MASK;
+        node.setTerminal((node_info_byte & IS_TERMINAL_MASK) > 0);
+        for (int i = 0; i < cnt; i++) {
+            final char transition = (char) in.read();
+            final MyTrieNode nextNode = new MyTrieNode();
+            node.putChildWith(transition, nextNode);
+            recursive_deserialize(nextNode, in);
+            node.changeSubtreeNodesCount(nextNode.getSubtreeNodesCount());
+        }
+        return null;
     }
 
     private MyTrieNode nodeFor(String prefix) {
@@ -74,11 +103,11 @@ public class MyTrie implements Trie, StreamSerializable {
         if (pos == element.length()) {
             return node.setTerminal(false);
         }
-        MyTrieNode nextNode = node.getChildWith(element.charAt(pos));
+        final MyTrieNode nextNode = node.getChildWith(element.charAt(pos));
         if (nextNode == null) {
             return false;
         }
-        boolean result = recursive_remove(nextNode, element, pos + 1);
+        final boolean result = recursive_remove(nextNode, element, pos + 1);
         if (result) {
             node.changeSubtreeNodesCount(-1);
             if (nextNode.getSubtreeNodesCount() == 0) {
