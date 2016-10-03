@@ -92,7 +92,7 @@ public class MyTrie implements Trie, StreamSerializable {
             nextNode = new MyTrieNode();
             node.putChildWith(element.charAt(pos), nextNode);
         }
-        boolean result = recursive_add(nextNode, element, pos + 1);
+        final boolean result = recursive_add(nextNode, element, pos + 1);
         if (result) {
             node.changeSubtreeNodesCount(+1);
         }
