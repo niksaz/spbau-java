@@ -7,6 +7,8 @@ import java.util.Stack;
 
 public class Collections {
 
+    private Collections() {}
+
     public static <T, R> List<R> map(Function1<? super T, ? extends R> mapper, Iterable<T> iterable) {
         final List<R> result = new ArrayList<>();
         iterable.forEach(element -> result.add(mapper.apply(element)));
