@@ -1,9 +1,6 @@
 package ru.spbau.sazanovich.nikita;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 public class Collections {
 
@@ -53,20 +50,20 @@ public class Collections {
                                  R initialValue, Iterable<T> iterable) {
         return foldl(folder.flip(), initialValue, () -> new Iterator<T>() {
 
-            final Stack<T> stack = new Stack<>();
+            final ArrayDeque<T> stack = new ArrayDeque<>();
 
             {
-                iterable.forEach(stack::add);
+                iterable.forEach(stack::addLast);
             }
 
             @Override
             public boolean hasNext() {
-                return !stack.empty();
+                return !stack.isEmpty();
             }
 
             @Override
             public T next() {
-                return stack.pop();
+                return stack.pollLast();
             }
         });
     }
