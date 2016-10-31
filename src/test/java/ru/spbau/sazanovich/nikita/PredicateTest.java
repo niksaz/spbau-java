@@ -30,7 +30,7 @@ public class PredicateTest {
         final Predicate<Integer> comp = IS_EVEN.or(UNDEFINED);
         boolean thrown = false;
         try {
-            assertTrue(comp.apply(5));
+            comp.apply(5);
         } catch (IllegalStateException correct) {
             thrown = true;
         } finally {
@@ -52,7 +52,7 @@ public class PredicateTest {
         assertFalse(comp.apply(5));
         boolean thrown = false;
         try {
-            assertTrue(comp.apply(6));
+            comp.apply(6);
         } catch (IllegalStateException correct) {
             thrown = true;
         } finally {
