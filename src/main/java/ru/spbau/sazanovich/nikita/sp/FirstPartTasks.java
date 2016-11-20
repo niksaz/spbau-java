@@ -69,7 +69,7 @@ public final class FirstPartTasks {
                 .map(album -> new AbstractMap.SimpleEntry<>(
                         album,
                         album.getTracks().stream().mapToInt(Track::getRating).max().orElse(0)))
-                .min((e1, e2) -> Comparator.<Integer>naturalOrder().compare(e1.getValue(), e2.getValue()))
+                .min((e1, e2) -> e1.getValue().compareTo(e2.getValue()))
                 .map(AbstractMap.SimpleEntry::getKey);
     }
 
@@ -80,7 +80,7 @@ public final class FirstPartTasks {
                         album,
                         album.getTracks().stream().mapToInt(Track::getRating).average().orElse(0.0)
                 ))
-                .sorted((e1, e2) -> Comparator.<Double>naturalOrder().reversed().compare(e1.getValue(), e2.getValue()))
+                .sorted((e1, e2) -> e2.getValue().compareTo(e1.getValue()))
                 .map(AbstractMap.SimpleEntry::getKey)
                 .collect(Collectors.toList());
     }
