@@ -30,8 +30,7 @@ public class ThreadPoolImpl {
         if (supplier == null) {
             throw new NullPointerException("null supplier for task");
         }
-        final ThreadPoolLightFuture<R> task =
-                new ThreadPoolLightFuture<>(ThreadSupplier.castSupplier(supplier));
+        final ThreadPoolLightFuture<R> task = new ThreadPoolLightFuture<>(supplier::get);
         return submit(task);
     }
 
