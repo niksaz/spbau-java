@@ -30,8 +30,8 @@ public class ThreadPoolImpl {
         if (supplier == null) {
             throw new NullPointerException("null supplier for task");
         }
-        @SuppressWarnings("unchecked")
-        final ThreadPoolLightFuture<R> task = new ThreadPoolLightFuture<>((ThreadSupplier<R>) supplier);
+        final ThreadPoolLightFuture<R> task =
+                new ThreadPoolLightFuture<>(ThreadSupplier.castSupplier(supplier));
         return submit(task);
     }
 
