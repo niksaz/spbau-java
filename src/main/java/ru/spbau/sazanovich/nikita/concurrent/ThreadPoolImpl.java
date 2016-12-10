@@ -33,6 +33,7 @@ public class ThreadPoolImpl {
                 thread.interrupt();
             }
             tasks.forEach(ThreadPoolLightFuture::cancel);
+            tasks.clear();
         }
     }
 
