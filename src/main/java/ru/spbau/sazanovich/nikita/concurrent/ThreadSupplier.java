@@ -7,5 +7,5 @@ package ru.spbau.sazanovich.nikita.concurrent;
 @FunctionalInterface
 interface ThreadSupplier<R> {
 
-    R get() throws LightExecutionException, InterruptedException;
+    R get() throws LightException, InterruptedException;
 }

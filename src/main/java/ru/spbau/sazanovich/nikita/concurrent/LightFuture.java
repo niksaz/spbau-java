@@ -19,7 +19,7 @@ public interface LightFuture<R> {
      * @throws LightExecutionException if an exception was caught during execution
      * @throws InterruptedException if the thread was interrupted while waiting
      */
-    R get() throws LightExecutionException, InterruptedException;
+    R get() throws LightException, InterruptedException;
 
     /**
      * Waits till the current task is completed and then uses its result and function parameter

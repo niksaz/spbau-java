@@ -26,6 +26,16 @@ public class ThreadPoolImpl {
         }
     }
 
+    public synchronized void shutdown() {
+        if (!isShutdowned) {
+            isShutdowned = true;
+            for (ThreadInPool thread : threads) {
+                thread.interrupt();
+            }
+            tasks.forEach(ThreadPoolLightFuture::cancel);
+        }
+    }
+
     public <R> LightFuture<R> submit(Supplier<R> supplier) {
         if (supplier == null) {
             throw new NullPointerException("null supplier for task");
@@ -45,15 +55,6 @@ public class ThreadPoolImpl {
             tasks.notify();
         }
         return task;
-    }
-
-    public synchronized void shutdown() {
-        if (!isShutdowned) {
-            isShutdowned = true;
-            for (ThreadInPool thread : threads) {
-                thread.interrupt();
-            }
-        }
     }
 
     private class ThreadInPool extends Thread {
@@ -86,7 +87,7 @@ public class ThreadPoolImpl {
         @GuardedBy("this") private final List<ThreadPoolLightFuture<?>> dependingTasks = new ArrayList<>();
         private final ThreadSupplier<R> supplier;
         private volatile R result;
-        private volatile LightExecutionException exception;
+        private volatile LightException exception;
 
         public ThreadPoolLightFuture(ThreadSupplier<R> supplier) {
             this.supplier = supplier;
@@ -98,7 +99,7 @@ public class ThreadPoolImpl {
         }
 
         @Override
-        public R get() throws LightExecutionException, InterruptedException {
+        public R get() throws LightException, InterruptedException {
             synchronized (this) {
                 if (!isReady()) {
                     wait();
@@ -113,7 +114,7 @@ public class ThreadPoolImpl {
 
         @Override
         public <T> LightFuture<T> thenApply(Function<R, T> transformer) {
-            final ThreadPoolLightFuture<T> newTask = new ThreadPoolLightFuture<>(() -> transformer.apply(result));
+            final ThreadPoolLightFuture<T> newTask = new ThreadPoolLightFuture<>(() -> transformer.apply(get()));
             synchronized (this) {
                 if (isReady()) {
                     submit(newTask);
@@ -134,6 +135,10 @@ public class ThreadPoolImpl {
                 notifyAll();
                 dependingTasks.forEach(ThreadPoolImpl.this::submit);
             }
+        }
+
+        private void cancel() {
+            exception = new LightCancellationException();
         }
     }
 }
