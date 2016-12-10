@@ -38,6 +38,11 @@ public class ThreadPoolImplTest {
     }
 
     @Test
+    public void testThreadPoolCountingInTwoThreadsEightParts() throws Exception {
+        testThreadPoolCountingInNThreads(2, 8);
+    }
+
+    @Test
     public void testThreadPoolShutdown() throws Exception {
         final ThreadPoolImpl pool = new ThreadPoolImpl(1);
         final Supplier<Long> threadCounter = COUNTER.apply(ONES_TO_COUNT);
@@ -58,15 +63,6 @@ public class ThreadPoolImplTest {
     }
 
     @Test
-    public void testLightFutureThenApply() throws Exception {
-        final ThreadPoolImpl pool = new ThreadPoolImpl(1);
-        final Supplier<Long> threadCounter = COUNTER.apply(ONES_TO_COUNT);
-        final LightFuture<Long> future = pool.submit(threadCounter);
-        final LightFuture<Long> transformedFuture = future.thenApply(aLong -> aLong / 10);
-        assertEquals(Long.valueOf(ONES_TO_COUNT / 10), transformedFuture.get());
-    }
-
-    @Test
     public void testThreadPoolForActuallyCreatingNThreads() throws Exception {
         final int threadsNumber = 16;
         final ThreadPoolImpl pool = new ThreadPoolImpl(threadsNumber);
@@ -78,6 +74,30 @@ public class ThreadPoolImplTest {
         for (int i = 0; i < threadsNumber; i++) {
             assertEquals(Integer.valueOf(threadsNumber), futures.get(i).get());
         }
+    }
+
+    @Test(expected = LightExecutionException.class)
+    public void testThreadPoolThrowingLightExecutionException() throws Exception {
+        final ThreadPoolImpl pool = new ThreadPoolImpl(1);
+        LightFuture<Object> failedFuture = pool.submit(() -> {
+            throw new IllegalStateException();
+        });
+        failedFuture.get();
+    }
+
+    @Test
+    public void testLightFutureThenApply() throws Exception {
+        final ThreadPoolImpl pool = new ThreadPoolImpl(1);
+        final Supplier<Long> threadCounter = COUNTER.apply(ONES_TO_COUNT);
+        final LightFuture<Long> future = pool.submit(threadCounter);
+        final LightFuture<Long> alphaFuture = future.thenApply(n -> n / 10);
+        final LightFuture<Long> betaFuture = future.thenApply(n -> n / 20);
+        final LightFuture<Long> gammaFuture = alphaFuture.thenApply(n -> n / 10);
+
+        assertEquals(Long.valueOf(ONES_TO_COUNT / 100), gammaFuture.get());
+        assertEquals(Long.valueOf(ONES_TO_COUNT / 20), betaFuture.get());
+        assertEquals(Long.valueOf(ONES_TO_COUNT / 10), alphaFuture.get());
+        assertEquals(Long.valueOf(ONES_TO_COUNT), future.get());
     }
 
     private void testThreadPoolCountingInNThreads(int threadsNumber, int parts)
