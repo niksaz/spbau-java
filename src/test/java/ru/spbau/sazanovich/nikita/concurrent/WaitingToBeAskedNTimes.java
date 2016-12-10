@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 
 public class WaitingToBeAskedNTimes implements Supplier<Integer> {
 
-    private AtomicInteger timesAsked = new AtomicInteger();
+    private final AtomicInteger timesAsked = new AtomicInteger();
     private final int integerToPass;
 
     public WaitingToBeAskedNTimes(int integerToPass) {

@@ -8,6 +8,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.lang.Thread.sleep;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.*;
 
 public class ThreadPoolImplTest {
@@ -52,12 +53,7 @@ public class ThreadPoolImplTest {
         sleep(100);
         pool.shutdown();
         assertEquals(Long.valueOf(ONES_TO_COUNT), future.get());
-        try {
-            futureCancelled.get();
-        } catch (LightCancellationException expected) {
-        } catch (Exception e) {
-            fail();
-        }
+        assertThatThrownBy(futureCancelled::get).isInstanceOf(LightCancellationException.class);
         final LightFuture<Long> deniedFuture = pool.submit(COUNTER.apply(ONES_TO_COUNT));
         assertNull(deniedFuture);
     }
