@@ -2,6 +2,8 @@ package ru.spbau.sazanovich.nikita;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
@@ -17,6 +19,7 @@ public class LazyFactoryTest {
         return sum;
     };
     private static final Supplier<Object> NULLER = () -> null;
+    private static final int NUMBER_OF_THREADS = 5;
 
     /**
      * Tests basic properties: correctness of the result, returning of the same object each time,
@@ -25,24 +28,23 @@ public class LazyFactoryTest {
 
     @Test
     public void testSingleThreadedLazySimpleCase() {
-        testOnSimpleCase(LazyFactory.createSingleThreadedLazy(new LimitedSupplier<>(SUMMER_OF_NUMBERS, 1)));
+        testOnSimpleCase(
+                LazyFactory.createSingleThreadedLazy(new LimitedSupplier<>(SUMMER_OF_NUMBERS, 1)),
+                SUMMER_OF_NUMBERS);
     }
 
     @Test
     public void testMultiThreadedLazySimpleCase() {
-        testOnSimpleCase(LazyFactory.createMultiThreadedLazy(new LimitedSupplier<>(SUMMER_OF_NUMBERS, 1)));
+        testOnSimpleCase(
+                LazyFactory.createMultiThreadedLazy(new LimitedSupplier<>(SUMMER_OF_NUMBERS, 1)),
+                SUMMER_OF_NUMBERS);
     }
 
     @Test
     public void testLockFreeLazySimpleCase() {
-        testOnSimpleCase(LazyFactory.createLockFreeLazy(new LimitedSupplier<>(SUMMER_OF_NUMBERS, 1)));
-    }
-
-    private void testOnSimpleCase(Lazy<Long> lazy) {
-        final Long result = lazy.get();
-        assertEquals(SUMMER_OF_NUMBERS.get(), result);
-        final Long anotherResult = lazy.get();
-        assertSame(result, anotherResult);
+        testOnSimpleCase(
+                LazyFactory.createLockFreeLazy(new LimitedSupplier<>(SUMMER_OF_NUMBERS, 1)),
+                SUMMER_OF_NUMBERS);
     }
 
     /**
@@ -83,11 +85,53 @@ public class LazyFactoryTest {
         testOnNull(LazyFactory.createLockFreeLazy(new LimitedSupplier<>(NULLER, 1)));
     }
 
+    /**
+     * Multithreaded tests.
+     */
+
+    @Test
+    public void testMultiThreadedLazyMultiThreaded() throws InterruptedException {
+        testInMultithreadedEnvironment(
+                LazyFactory.createMultiThreadedLazy(new LimitedSupplier<>(SUMMER_OF_NUMBERS, 1)),
+                SUMMER_OF_NUMBERS);
+    }
+
+    @Test
+    public void testLockFreeLazyMultiThreaded() throws InterruptedException {
+        // not limited usage because lock-free Lazy implementation does not guarantee
+        // calling supplier's get() method exactly once
+        testInMultithreadedEnvironment(
+                LazyFactory.createLockFreeLazy(SUMMER_OF_NUMBERS),
+                SUMMER_OF_NUMBERS);
+    }
+
+    private <T> void testOnSimpleCase(Lazy<T> lazy, Supplier<T> underlyingSupplier) {
+        final T result = lazy.get();
+        assertEquals(underlyingSupplier.get(), result);
+        final T anotherResult = lazy.get();
+        assertSame(result, anotherResult);
+    }
+
     private <T> void testOnNull(Lazy<T> lazy) {
         final T result = lazy.get();
         assertEquals(null, result);
         final T anotherResult = lazy.get();
         assertSame(result, anotherResult);
+    }
+
+    private <T> void testInMultithreadedEnvironment(Lazy<T> lazy, Supplier<T> underlyingSupplier) throws InterruptedException {
+        final List<Thread> threads = new ArrayList<>();
+        final Runnable taskToExecute = () -> testOnSimpleCase(lazy, underlyingSupplier);
+
+        for (int threadNumber = 0; threadNumber < NUMBER_OF_THREADS; threadNumber++) {
+            final Thread thread = new Thread(taskToExecute);
+            thread.start();
+            threads.add(thread);
+        }
+
+        for (Thread thread : threads) {
+            thread.join();
+        }
     }
 
     private static class LimitedSupplier<T> implements Supplier<T> {
