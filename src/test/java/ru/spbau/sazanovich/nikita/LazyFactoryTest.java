@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
@@ -134,22 +135,25 @@ public class LazyFactoryTest {
         }
     }
 
+    /**
+     * Class which allows calling the Supplier only the specified number of times.
+     */
     private static class LimitedSupplier<T> implements Supplier<T> {
 
         final Supplier<T> supplier;
-        int allowedUsages;
+        final AtomicInteger allowedUsages;
 
         LimitedSupplier(Supplier<T> supplier, int allowedUsages) {
             this.supplier = supplier;
-            this.allowedUsages = allowedUsages;
+            this.allowedUsages = new AtomicInteger(allowedUsages);
         }
 
         @Override
         public T get() {
-            if (allowedUsages == 0) {
+            if (allowedUsages.get() == 0) {
                 throw new RuntimeException();
             } else {
-                allowedUsages--;
+                allowedUsages.decrementAndGet();
             }
             return supplier.get();
         }
