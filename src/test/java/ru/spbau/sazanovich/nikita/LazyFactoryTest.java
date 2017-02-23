@@ -16,22 +16,24 @@ public class LazyFactoryTest {
         return sum;
     };
 
+    /**
+     * Tests basic properties: correctness of the result, returning of the same object each time,
+     * calling exactly once from a single threaded environment.
+     */
+
     @Test
     public void createSingleThreadedLazySimpleCase() {
-        final Lazy<Long> computation = LazyFactory.createSingleThreadedLazy(SUMMER_OF_FIRST_NUMBERS);
-        testOnSimpleCase(computation);
+        testOnSimpleCase(LazyFactory.createSingleThreadedLazy(new LimitedSupplier<>(SUMMER_OF_FIRST_NUMBERS, 1)));
     }
 
     @Test
     public void createMultiThreadedLazySimpleCase() {
-        final Lazy<Long> computation = LazyFactory.createMultiThreadedLazy(SUMMER_OF_FIRST_NUMBERS);
-        testOnSimpleCase(computation);
+        testOnSimpleCase(LazyFactory.createMultiThreadedLazy(new LimitedSupplier<>(SUMMER_OF_FIRST_NUMBERS, 1)));
     }
 
     @Test
     public void createLockFreeLazySimpleCase() {
-        final Lazy<Long> computation = LazyFactory.createLockFreeLazy(SUMMER_OF_FIRST_NUMBERS);
-        testOnSimpleCase(computation);
+        testOnSimpleCase(LazyFactory.createLockFreeLazy(new LimitedSupplier<>(SUMMER_OF_FIRST_NUMBERS, 1)));
     }
 
     private void testOnSimpleCase(Lazy<Long> lazy) {
@@ -39,5 +41,45 @@ public class LazyFactoryTest {
         assertEquals(SUMMER_OF_FIRST_NUMBERS.get().longValue(), result.longValue());
         final Long anotherResult = lazy.get();
         assertEquals(result, anotherResult);
+    }
+
+    /**
+     * Tests whether a computation is starting before calling get().
+     */
+
+    @Test
+    public void createSingleThreadedLazyBottom() {
+        LazyFactory.createSingleThreadedLazy(new LimitedSupplier<>(SUMMER_OF_FIRST_NUMBERS, 0));
+    }
+
+    @Test
+    public void createMultiThreadedLazyBottom() {
+        LazyFactory.createMultiThreadedLazy(new LimitedSupplier<>(SUMMER_OF_FIRST_NUMBERS, 0));
+    }
+
+    @Test
+    public void createLockFreeLazyBottom() {
+        LazyFactory.createLockFreeLazy(new LimitedSupplier<>(SUMMER_OF_FIRST_NUMBERS, 0));
+    }
+
+    private static class LimitedSupplier<T> implements Supplier<T> {
+
+        final Supplier<T> supplier;
+        int allowedUsages;
+
+        LimitedSupplier(Supplier<T> supplier, int allowedUsages) {
+            this.supplier = supplier;
+            this.allowedUsages = allowedUsages;
+        }
+
+        @Override
+        public T get() {
+            if (allowedUsages == 0) {
+                throw new RuntimeException();
+            } else {
+                allowedUsages--;
+            }
+            return supplier.get();
+        }
     }
 }
