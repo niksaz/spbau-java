@@ -5,6 +5,7 @@ package ru.spbau.sazanovich.nikita;
  *
  * @param <T> the type of the computation's result
  */
+@FunctionalInterface
 public interface Lazy<T> {
 
     /**
