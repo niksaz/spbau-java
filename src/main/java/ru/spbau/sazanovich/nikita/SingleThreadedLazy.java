@@ -4,14 +4,14 @@ import javax.xml.ws.Holder;
 import java.util.function.Supplier;
 
 /**
- * Implementation of <a href="Lazy.html">Lazy interface</a>
+ * Implementation of {@link Lazy} interface
  * which is for calling {@link #get()} in a single thread.
  *
  * @param <T> result type of the computation
  */
 class SingleThreadedLazy<T> implements Lazy<T> {
 
-    private final Supplier<T> computation;
+    private Supplier<T> computation;
     private Holder<T> result;
 
     /**
@@ -34,6 +34,7 @@ class SingleThreadedLazy<T> implements Lazy<T> {
     public T get() {
         if (result == null) {
             result = new Holder<>(computation.get());
+            computation = null;
         }
         return result.value;
     }

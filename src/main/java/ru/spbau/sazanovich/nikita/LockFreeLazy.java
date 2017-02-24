@@ -5,14 +5,16 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.function.Supplier;
 
 /**
- * Lock-free implementation of <a href="Lazy.html">Lazy interface</a>
+ * Lock-free implementation of {@link Lazy} interface
  * which may be used for calling {@link #get()} from multiple threads.
  *
  * @param <T> result type of the computation
  */
 class LockFreeLazy<T> implements Lazy<T> {
 
-    // used to update field if we have different threads performing computations
+    /**
+     * Used to update field if we have different threads performing computations.
+     */
     private static final AtomicReferenceFieldUpdater<LockFreeLazy, Holder> resultUpdater =
             AtomicReferenceFieldUpdater.newUpdater(LockFreeLazy.class, Holder.class, "result");
 
