@@ -2,6 +2,10 @@ package ru.spbau.sazanovich.nikita;
 
 import ru.spbau.sazanovich.nikita.mygit.MyGit;
 
+import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 public class ConsoleApp {
 
     private static final String INIT_CMD = "init";
@@ -14,6 +18,16 @@ public class ConsoleApp {
     private static final String MERGE_CMD = "merge";
 
     public static void main(String[] args) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-1");
+            String s = "test content";
+            digest.update(s.getBytes());
+            byte[] sha1 = digest.digest();
+            final String hexString = new HexBinaryAdapter().marshal(sha1);
+            System.out.println(hexString);
+        } catch (NoSuchAlgorithmException ignored) {
+        }
+
         if (args.length > 0 && args[0].equals(INIT_CMD)) {
             boolean result = MyGit.init();
             if (result) {
