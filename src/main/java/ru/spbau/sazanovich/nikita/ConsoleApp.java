@@ -1,10 +1,13 @@
 package ru.spbau.sazanovich.nikita;
 
 import ru.spbau.sazanovich.nikita.mygit.MyGit;
+import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitException;
 
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 
 public class ConsoleApp {
 
@@ -18,6 +21,7 @@ public class ConsoleApp {
     private static final String MERGE_CMD = "merge";
 
     public static void main(String[] args) {
+        /*
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-1");
             String s = "test content";
@@ -27,16 +31,27 @@ public class ConsoleApp {
             System.out.println(hexString);
         } catch (NoSuchAlgorithmException ignored) {
         }
+        */
 
-        if (args.length > 0 && args[0].equals(INIT_CMD)) {
-            boolean result = MyGit.init();
-            if (result) {
+        try {
+            if (args.length > 0 && args[0].equals(INIT_CMD)) {
+                try {
+                    MyGit.init();
+                } catch (MyGitException ignored) {
+                    System.out.println("Error occurred while trying to create a mygit repository.");
+                    return;
+                }
                 System.out.println("Successfully initialized mygit repository.");
+            } else if (args.length > 0 && args[0].equals(STATUS_CMD)) {
+                final ArrayList<Path> paths = MyGit.scanDirectory();
+                for (Path path : paths) {
+                    System.out.println("? " + path);
+                }
             } else {
-                System.out.println("Error occurred while trying to create a mygit repository.");
+                showHelp();
             }
-        } else {
-            showHelp();
+        } catch (Exception e) {
+            System.out.println("An exception occurred: " + e.getMessage());
         }
     }
 
