@@ -1,12 +1,11 @@
 package ru.spbau.sazanovich.nikita;
 
 import ru.spbau.sazanovich.nikita.mygit.MyGit;
+import ru.spbau.sazanovich.nikita.mygit.MyGitHandler;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitException;
 
-import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class ConsoleApp {
@@ -37,15 +36,22 @@ public class ConsoleApp {
             if (args.length > 0 && args[0].equals(INIT_CMD)) {
                 try {
                     MyGit.init();
-                } catch (MyGitException ignored) {
-                    System.out.println("Error occurred while trying to create a mygit repository.");
+                } catch (MyGitException e) {
+                    System.out.println("Error occurred while trying to create a mygit repository: " + e.getMessage());
                     return;
                 }
                 System.out.println("Successfully initialized mygit repository.");
-            } else if (args.length > 0 && args[0].equals(STATUS_CMD)) {
-                final ArrayList<Path> paths = MyGit.scanDirectory();
+                return;
+            }
+
+            final MyGitHandler handler = new MyGitHandler();
+
+            if (args.length > 0 && args[0].equals(STATUS_CMD)) {
+                final ArrayList<Path> paths = handler.scanDirectory();
+                final Path currentPath = Paths.get("").toAbsolutePath();
+                System.out.println(currentPath);
                 for (Path path : paths) {
-                    System.out.println("? " + path);
+                    System.out.println("? " + currentPath.relativize(path));
                 }
             } else {
                 showHelp();

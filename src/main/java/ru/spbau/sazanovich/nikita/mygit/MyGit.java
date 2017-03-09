@@ -2,18 +2,16 @@ package ru.spbau.sazanovich.nikita.mygit;
 
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitException;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.stream.Collectors;
 
 public class MyGit {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void init() throws MyGitException, IOException {
-        // TODO: exceptions
         if (Files.exists(Paths.get(".mygit"))) {
             throw new MyGitException("mygit repository is already created");
         } else {
@@ -35,9 +33,5 @@ public class MyGit {
         }
     }
 
-    public static ArrayList<Path> scanDirectory() throws IOException {
-        return Files
-                .find(Paths.get("."), Integer.MAX_VALUE, (p, bfa) -> !p.startsWith("./.mygit"))
-                .collect(Collectors.toCollection(ArrayList::new));
-    }
+    private MyGit() {}
 }
