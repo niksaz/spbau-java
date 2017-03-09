@@ -1,20 +1,16 @@
 package ru.spbau.sazanovich.nikita.mygit.objects;
 
+import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Object which stores commit's message and reference to base {@link Tree} object.
  */
-public class Commit extends GitObject {
-
-    private static final String TYPE = "commit";
+public class Commit implements Serializable {
 
     private String message;
     private String author;
     private Date dateCreated;
-
-    public Commit(String message) {
-        super(TYPE);
-        this.message = message;
-    }
+    private List<Commit> parents;
 }

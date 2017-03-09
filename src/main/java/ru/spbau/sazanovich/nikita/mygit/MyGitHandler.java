@@ -20,10 +20,6 @@ public class MyGitHandler {
         }
     }
 
-    public Path getMyGitDirectory() {
-        return myGitDirectory;
-    }
-
     private Path findMyGitPath(Path currentDirectory) {
         if (currentDirectory == null) {
             return null;
@@ -37,20 +33,12 @@ public class MyGitHandler {
     }
 
     public ArrayList<Path> scanDirectory() throws IOException {
-        System.out.println(myGitDirectory);
         return Files
                 .find(myGitDirectory, Integer.MAX_VALUE, (p, bfa) -> !containsMyGitAsSubpath(p))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
     private static boolean containsMyGitAsSubpath(Path path) {
-        if (path == null) {
-            return false;
-        }
-        if (path.endsWith(".mygit")) {
-            return true;
-        } else {
-            return containsMyGitAsSubpath(path.getParent());
-        }
+        return path != null && (path.endsWith(".mygit") || containsMyGitAsSubpath(path.getParent()));
     }
 }

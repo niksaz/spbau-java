@@ -3,7 +3,11 @@ package ru.spbau.sazanovich.nikita;
 import ru.spbau.sazanovich.nikita.mygit.MyGit;
 import ru.spbau.sazanovich.nikita.mygit.MyGitHandler;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitException;
+import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -31,6 +35,21 @@ public class ConsoleApp {
         } catch (NoSuchAlgorithmException ignored) {
         }
         */
+
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+             ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
+            objectOutputStream.writeObject(new Tree("name"));
+            objectOutputStream.flush();
+            System.out.println(byteArrayOutputStream.toByteArray().length);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        if (args.length - 100 < 0) {
+            return;
+        }
 
         try {
             if (args.length > 0 && args[0].equals(INIT_CMD)) {
