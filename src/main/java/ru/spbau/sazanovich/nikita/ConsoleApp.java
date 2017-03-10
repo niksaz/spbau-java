@@ -2,8 +2,6 @@ package ru.spbau.sazanovich.nikita;
 
 import ru.spbau.sazanovich.nikita.mygit.MyGit;
 import ru.spbau.sazanovich.nikita.mygit.MyGitHandler;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitException;
-import ru.spbau.sazanovich.nikita.mygit.utils.Hasher;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,30 +21,24 @@ public class ConsoleApp {
     public static void main(String[] args) {
         try {
             if (args.length > 0 && args[0].equals(INIT_CMD)) {
-                try {
-                    MyGit.init();
-                } catch (MyGitException e) {
-                    System.out.println("Error occurred while trying to create a mygit repository: " + e.getMessage());
-                    return;
-                }
+                MyGit.init();
                 System.out.println("Successfully initialized mygit repository.");
-                return;
-            }
-
-            final MyGitHandler handler = new MyGitHandler();
-
-            if (args.length > 0 && args[0].equals(STATUS_CMD)) {
-                final ArrayList<Path> paths = handler.scanDirectory();
-                final Path currentPath = Paths.get("").toAbsolutePath();
-                System.out.println(currentPath);
-                for (Path path : paths) {
-                    System.out.println("? " + currentPath.relativize(path));
-                }
             } else {
-                showHelp();
+                final MyGitHandler handler = new MyGitHandler();
+
+                if (args.length > 0 && args[0].equals(STATUS_CMD)) {
+                    final ArrayList<Path> paths = handler.scanDirectory();
+                    final Path currentPath = Paths.get("").toAbsolutePath();
+                    System.out.println(currentPath);
+                    for (Path path : paths) {
+                        System.out.println("? " + currentPath.relativize(path));
+                    }
+                } else {
+                    showHelp();
+                }
             }
         } catch (Exception e) {
-            System.out.println("An exception occurred: " + e.getMessage());
+            System.out.println("Unsuccessful operation: " + e.getMessage());
         }
     }
 

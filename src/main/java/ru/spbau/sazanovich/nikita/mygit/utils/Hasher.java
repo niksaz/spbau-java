@@ -17,15 +17,18 @@ public class Hasher {
     private static final String HASH_ALGORITHM = "SHA-1";
     private static final int BUFFER_SIZE = 8192;
 
-    public static String getHashFromFile(String path) {
+    @NotNull
+    public static String getHashFromFile(@NotNull String path) throws IOException {
         return bytesToHex(getByteHashFromFile(path));
     }
 
-    public static String getHashFromObject(Object object) {
+    @NotNull
+    public static String getHashFromObject(@NotNull Object object) throws IOException {
         return bytesToHex(getByteHashFromObject(object));
     }
 
-    private static byte[] getByteHashFromFile(String path) {
+    @NotNull
+    private static byte[] getByteHashFromFile(@NotNull String path) throws IOException {
         final MessageDigest messageDigest = getMessageDigest();
         try (FileInputStream fileInputStream = new FileInputStream(path);
              DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, messageDigest)
@@ -34,45 +37,37 @@ public class Hasher {
             //noinspection StatementWithEmptyBody
             while (digestInputStream.read(buffer) != -1) {
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            //TODO: real handling
-        } catch (IOException e) {
-            e.printStackTrace();
-            e.printStackTrace();
-            //TODO: real handling
         }
         return messageDigest.digest();
     }
 
-    private static byte[] getByteHashFromObject(@NotNull Object object) {
+    @NotNull
+    private static byte[] getByteHashFromObject(@NotNull Object object) throws IOException {
         final MessageDigest messageDigest = getMessageDigest();
         final OutputStream nullOutputStream = new OutputStream() {
             @Override
             public void write(int b) throws IOException {
             }
         };
-        try (
-             DigestOutputStream digestOutputStream = new DigestOutputStream(nullOutputStream, messageDigest);
+        try (DigestOutputStream digestOutputStream = new DigestOutputStream(nullOutputStream, messageDigest);
              ObjectOutputStream objectOutputStream = new ObjectOutputStream(digestOutputStream)
         ) {
             objectOutputStream.writeObject(object);
-        } catch (IOException e) {
-            //TODO:
-            e.printStackTrace();
         }
         return messageDigest.digest();
     }
 
-    public static String bytesToHex(@NotNull byte[] bytes) {
+    @NotNull
+    private static String bytesToHex(@NotNull byte[] bytes) {
         return DatatypeConverter.printHexBinary(bytes);
     }
 
+    @NotNull
     private static MessageDigest getMessageDigest() {
         try {
             return MessageDigest.getInstance(HASH_ALGORITHM);
         } catch (NoSuchAlgorithmException ignored) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("there is no " + HASH_ALGORITHM + " algorithm");
         }
     }
     private Hasher() {}

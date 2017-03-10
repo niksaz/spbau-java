@@ -1,5 +1,7 @@
 package ru.spbau.sazanovich.nikita.mygit.objects;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,13 +13,14 @@ public class Tree implements Serializable {
 
     public static final String TYPE = "tree";
 
+    @NotNull
     private final List<TreeObject> children;
 
     public Tree() {
         this(new ArrayList<>());
     }
 
-    public Tree(List<TreeObject> children) {
+    public Tree(@NotNull List<TreeObject> children) {
         this.children = children;
     }
 
