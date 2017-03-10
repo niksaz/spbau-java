@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitException;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
+import ru.spbau.sazanovich.nikita.mygit.utils.Mapper;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,6 +17,8 @@ public class MyGitHandler {
 
     @NotNull
     private final Path myGitDirectory;
+    @NotNull
+    private final Mapper mapper;
 
     public MyGitHandler() throws MyGitException {
         final Path path = findMyGitPath(Paths.get(".").toAbsolutePath());
@@ -23,6 +26,7 @@ public class MyGitHandler {
             throw new MyGitStateException("Not a mygit repository (or any of the parent directories): .mygit");
         }
         myGitDirectory = path;
+        mapper = new Mapper(myGitDirectory);
     }
 
     @Nullable
@@ -39,7 +43,8 @@ public class MyGitHandler {
     }
 
     @NotNull
-    public ArrayList<Path> scanDirectory() throws IOException {
+    public ArrayList<Path> scanDirectory() throws MyGitStateException, IOException {
+        mapper.getHeadTree();
         return Files
                 .find(myGitDirectory, Integer.MAX_VALUE, (p, bfa) -> !containsMyGitAsSubpath(p))
                 .collect(Collectors.toCollection(ArrayList::new));

@@ -2,6 +2,8 @@ package ru.spbau.sazanovich.nikita.mygit.utils;
 
 import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitFilesystemException;
+import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
+import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -36,5 +38,27 @@ public class Mapper {
             objectOutputStream.writeObject(object);
         }
         return hash;
+    }
+
+    //@NotNull
+    public Tree getHeadTree() throws MyGitStateException, IOException {
+        final File headFile = new File(myGitDirectory + "/.mygit/HEAD");
+        if (!headFile.exists()) {
+            throw new MyGitStateException("could not find " + headFile.getAbsolutePath());
+        }
+        String headType;
+        String headPath;
+        try (FileInputStream fileInputStream = new FileInputStream(headFile);
+             InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
+             BufferedReader reader = new BufferedReader(inputStreamReader)
+        ) {
+            headType = reader.readLine();
+            headPath = reader.readLine();
+            if (headType == null || headPath == null) {
+                throw new MyGitStateException("corrupted HEAD file");
+            }
+        }
+        System.out.println("HEAD HASH " + headType + " " + headPath);
+        return null;
     }
 }
