@@ -1,6 +1,7 @@
 package ru.spbau.sazanovich.nikita.mygit.objects;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -10,7 +11,15 @@ public class Tree implements Serializable {
 
     public static final String TYPE = "tree";
 
-    private List<TreeObject> children;
+    private final List<TreeObject> children;
+
+    public Tree() {
+        this(new ArrayList<>());
+    }
+
+    public Tree(List<TreeObject> children) {
+        this.children = children;
+    }
 
     /**
      * Objects which represent edges in a filesystem graph
