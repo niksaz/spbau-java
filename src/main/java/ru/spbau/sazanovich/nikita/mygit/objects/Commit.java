@@ -1,6 +1,7 @@
 package ru.spbau.sazanovich.nikita.mygit.objects;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -10,7 +11,7 @@ import java.util.List;
 /**
  * Object which stores commit's message and reference to base {@link Tree} object.
  */
-public class Commit implements Serializable {
+public class Commit implements Serializable, Comparable<Commit> {
 
     public static final String TYPE = "commit";
 
@@ -23,19 +24,19 @@ public class Commit implements Serializable {
     @NotNull
     private Date dateCreated;
     @NotNull
-    private List<Commit> parents;
+    private List<String> parentsHashes;
 
     public Commit(@NotNull String hash) {
         this(hash, "repository initialized", getUsername(), new Date(), new ArrayList<>());
     }
 
-    public Commit(@NotNull String hash, @NotNull String message, @NotNull String author,
-                  @NotNull Date date, @NotNull List<Commit> parents) {
+    private Commit(@NotNull String hash, @NotNull String message, @NotNull String author,
+                  @NotNull Date date, @NotNull List<String> parentsHashes) {
         this.treeHash = hash;
         this.message = message;
         this.author = author;
         this.dateCreated = date;
-        this.parents = parents;
+        this.parentsHashes = parentsHashes;
     }
 
     @NotNull
@@ -59,12 +60,60 @@ public class Commit implements Serializable {
     }
 
     @NotNull
-    public List<Commit> getParents() {
-        return parents;
+    public List<String> getParentsHashes() {
+        return parentsHashes;
     }
 
     @NotNull
     private static String getUsername() {
         return System.getProperty("user.name");
     }
+
+    @Override
+    public boolean equals(@Nullable  Object obj) {
+        return obj instanceof Commit && compareTo(((Commit) obj)) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 17;
+        result = 31 * result + treeHash.hashCode();
+        result = 31 * result + message.hashCode();
+        result = 31 * result + author.hashCode();
+        result = 31 * result + dateCreated.hashCode();
+        result = 31 * result + parentsHashes.hashCode();
+        return result;
+    }
+
+    @Override
+    public int compareTo(@NotNull Commit that) {
+        int result = dateCreated.compareTo(that.dateCreated);
+        if (result != 0) {
+            return result;
+        }
+        result = author.compareTo(that.author);
+        if (result != 0) {
+            return result;
+        }
+        result = message.compareTo(that.author);
+        if (result != 0) {
+            return result;
+        }
+        result = treeHash.compareTo(that.treeHash);
+        if (result != 0) {
+            return result;
+        }
+        result = Integer.valueOf(parentsHashes.size()).compareTo(that.parentsHashes.size());
+        if (result != 0) {
+            return result;
+        }
+        for (int i = 0; i < parentsHashes.size(); i++) {
+            result = parentsHashes.get(i).compareTo(that.parentsHashes.get(i));
+            if (result != 0) {
+                return result;
+            }
+        }
+        return 0;
+    }
+
 }

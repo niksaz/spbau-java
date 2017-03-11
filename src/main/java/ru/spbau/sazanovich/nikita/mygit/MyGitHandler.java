@@ -5,8 +5,12 @@ import org.jetbrains.annotations.Nullable;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitException;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
+import ru.spbau.sazanovich.nikita.mygit.logs.CommitLog;
+import ru.spbau.sazanovich.nikita.mygit.logs.Status;
 import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
+import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
+import ru.spbau.sazanovich.nikita.mygit.utils.Hasher;
 import ru.spbau.sazanovich.nikita.mygit.utils.Mapper;
 
 import java.io.IOException;
@@ -15,7 +19,9 @@ import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.TreeSet;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -37,11 +43,6 @@ public class MyGitHandler {
         }
         myGitDirectory = path;
         mapper = new Mapper(myGitDirectory);
-    }
-
-    @NotNull
-    public Path getMyGitDirectory() {
-        return myGitDirectory;
     }
 
     @NotNull
@@ -86,6 +87,38 @@ public class MyGitHandler {
                     }
                 };
         performUpdateToIndex(arguments, action);
+    }
+    
+    @NotNull
+    public Status getHeadStatus() throws MyGitStateException, IOException {
+        return mapper.getHeadStatus();
+    }
+
+    @NotNull
+    public List<CommitLog> getLogsHistory() throws MyGitStateException, IOException {
+        final Commit headCommit = mapper.getHeadCommit();
+        final TreeSet<Commit> commitTree = new TreeSet<>();
+        traverseCommitsTree(headCommit, commitTree);
+        final List<CommitLog> logsHistory = new ArrayList<>();
+        for (Commit commit : commitTree) {
+            final CommitLog log =
+                    new CommitLog(Hasher.getHashFromObject(commit), commit.getMessage(),
+                                  commit.getAuthor(), commit.getDateCreated());
+            logsHistory.add(log);
+        }
+        Collections.reverse(logsHistory);
+        return logsHistory;
+    }
+
+    private void traverseCommitsTree(@NotNull Commit commit, @NotNull TreeSet<Commit> commitTree)
+            throws MyGitStateException, IOException {
+        if (!commitTree.contains(commit)) {
+            commitTree.add(commit);
+            for (String parentHash : commit.getParentsHashes()) {
+                final Commit parentCommit = mapper.readCommit(parentHash);
+                traverseCommitsTree(parentCommit, commitTree);
+            }
+        }
     }
 
     private void performUpdateToIndex(@NotNull List<String> arguments,

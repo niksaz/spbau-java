@@ -3,7 +3,12 @@ package ru.spbau.sazanovich.nikita;
 import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.MyGit;
 import ru.spbau.sazanovich.nikita.mygit.MyGitHandler;
+import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
+import ru.spbau.sazanovich.nikita.mygit.logs.CommitLog;
+import ru.spbau.sazanovich.nikita.mygit.logs.Status;
+import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -47,7 +52,21 @@ public class ConsoleApp {
                         }
                         handler.resetPaths(suffixArgsToList(args));
                         break;
+                    case LOG_CMD:
+                        printStatusInfo(handler);
+                        System.out.println();
+                        final List<CommitLog> logsHistory = handler.getLogsHistory();
+                        for (CommitLog log : logsHistory) {
+                            System.out.println("commit " + log.getRevisionHash() + "\n" +
+                                               "Author: " + log.getAuthor() + "\n" +
+                                               "Date:   " + log.getDateCreated() + "\n" +
+                                               "\n" +
+                                               "    " + log.getMessage() +
+                                               "\n");
+                        }
+                        break;
                     case STATUS_CMD:
+                        printStatusInfo(handler);
                         final List<Path> paths = handler.scanDirectory();
                         break;
                     default:
@@ -57,6 +76,15 @@ public class ConsoleApp {
             }
         } catch (Exception e) {
             System.out.println("Unsuccessful operation: " + e.getMessage());
+        }
+    }
+
+    private static void printStatusInfo(@NotNull MyGitHandler handler) throws MyGitStateException, IOException {
+        final Status status = handler.getHeadStatus();
+        if (status.getType().equals(Branch.TYPE)) {
+            System.out.println("On branch " + status.getName());
+        } else {
+            System.out.println("HEAD detached at " + status.getName());
         }
     }
 

@@ -27,7 +27,7 @@ public class Hasher {
     }
 
     @NotNull
-    static String getHashFromObject(@NotNull Object object) throws IOException {
+    public static String getHashFromObject(@NotNull Object object) throws IOException {
         return bytesToHex(getByteHashFromObject(object));
     }
 
