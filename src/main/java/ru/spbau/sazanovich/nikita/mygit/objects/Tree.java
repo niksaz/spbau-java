@@ -24,13 +24,47 @@ public class Tree implements Serializable {
         this.children = children;
     }
 
+    @NotNull
+    public List<TreeObject> getChildren() {
+        return children;
+    }
+
     /**
-     * Objects which represent edges in a filesystem graph
+     * Objects which are put into {@link Tree object} to represent edges in a filesystem graph
      */
     public static class TreeObject implements Serializable {
 
+        @NotNull
         private String sha;
+        @NotNull
         private String name;
+        @NotNull
         private String type;
+
+        public TreeObject(@NotNull String sha, @NotNull String name, @NotNull String type) {
+            this.sha = sha;
+            this.name = name;
+            this.type = type;
+        }
+
+        @NotNull
+        public String getSha() {
+            return sha;
+        }
+
+        @NotNull
+        public String getName() {
+            return name;
+        }
+
+        @NotNull
+        public String getType() {
+            return type;
+        }
+
+        @Override
+        public String toString() {
+            return "SHA=" + getSha() + ", NAME=" + getName() + ", TYPE=" + getType();
+        }
     }
 }

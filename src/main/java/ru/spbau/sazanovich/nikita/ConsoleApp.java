@@ -4,8 +4,7 @@ import ru.spbau.sazanovich.nikita.mygit.MyGit;
 import ru.spbau.sazanovich.nikita.mygit.MyGitHandler;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.List;
 
 public class ConsoleApp {
 
@@ -27,18 +26,13 @@ public class ConsoleApp {
                 final MyGitHandler handler = new MyGitHandler();
 
                 if (args.length > 0 && args[0].equals(STATUS_CMD)) {
-                    final ArrayList<Path> paths = handler.scanDirectory();
-                    final Path currentPath = Paths.get("").toAbsolutePath();
-                    System.out.println(currentPath);
-                    for (Path path : paths) {
-                        System.out.println("? " + currentPath.relativize(path));
-                    }
+                    final List<Path> paths = handler.scanDirectory();
                 } else {
                     showHelp();
                 }
             }
         } catch (Exception e) {
-            System.out.println("Unsuccessful operation: " + e.getMessage());
+            System.out.println("Unsuccessful operation -- " + e.getMessage());
         }
     }
 

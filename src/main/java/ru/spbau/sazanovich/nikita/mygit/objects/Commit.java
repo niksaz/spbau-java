@@ -15,7 +15,7 @@ public class Commit implements Serializable {
     public static final String TYPE = "commit";
 
     @NotNull
-    private String baseTreeHash;
+    private String treeHash;
     @NotNull
     private String message;
     @NotNull
@@ -31,11 +31,36 @@ public class Commit implements Serializable {
 
     public Commit(@NotNull String hash, @NotNull String message, @NotNull String author,
                   @NotNull Date date, @NotNull List<Commit> parents) {
-        this.baseTreeHash = hash;
+        this.treeHash = hash;
         this.message = message;
         this.author = author;
         this.dateCreated = date;
         this.parents = parents;
+    }
+
+    @NotNull
+    public String getTreeHash() {
+        return treeHash;
+    }
+
+    @NotNull
+    public String getMessage() {
+        return message;
+    }
+
+    @NotNull
+    public String getAuthor() {
+        return author;
+    }
+
+    @NotNull
+    public Date getDateCreated() {
+        return dateCreated;
+    }
+
+    @NotNull
+    public List<Commit> getParents() {
+        return parents;
     }
 
     @NotNull

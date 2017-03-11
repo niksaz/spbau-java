@@ -1,6 +1,7 @@
 package ru.spbau.sazanovich.nikita.mygit.utils;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.*;
@@ -17,13 +18,16 @@ public class Hasher {
     private static final String HASH_ALGORITHM = "SHA-1";
     private static final int BUFFER_SIZE = 8192;
 
+    private static final int FIRST_PART_ENDS = 2;
+    private static final int HASH_LENGTH = 40;
+
     @NotNull
     public static String getHashFromFile(@NotNull String path) throws IOException {
         return bytesToHex(getByteHashFromFile(path));
     }
 
     @NotNull
-    public static String getHashFromObject(@NotNull Object object) throws IOException {
+    static String getHashFromObject(@NotNull Object object) throws IOException {
         return bytesToHex(getByteHashFromObject(object));
     }
 
@@ -70,5 +74,35 @@ public class Hasher {
             throw new IllegalStateException("there is no " + HASH_ALGORITHM + " algorithm");
         }
     }
+
+    /**
+     * Used during internal storage -- splitting on a directory name and a file name.
+     */
+    static class HashParts {
+
+        @NotNull
+        private String first;
+        @NotNull
+        private String last;
+
+        HashParts(@NotNull String hash) throws MyGitStateException {
+            if (hash.length() != HASH_LENGTH) {
+                throw new MyGitStateException("hash length isn't " + HASH_LENGTH);
+            }
+            first = hash.substring(0, FIRST_PART_ENDS);
+            last = hash.substring(FIRST_PART_ENDS);
+        }
+
+        @NotNull
+        String getFirst() {
+            return first;
+        }
+
+        @NotNull
+        String getLast() {
+            return last;
+        }
+    }
+
     private Hasher() {}
 }

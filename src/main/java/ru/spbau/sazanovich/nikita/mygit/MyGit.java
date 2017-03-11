@@ -2,6 +2,7 @@ package ru.spbau.sazanovich.nikita.mygit;
 
 import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitFilesystemException;
+import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
@@ -17,7 +18,7 @@ import java.nio.file.Paths;
 public class MyGit {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static void init() throws MyGitFilesystemException, IOException {
+    public static void init() throws MyGitFilesystemException, IOException, MyGitStateException {
         if (Files.exists(Paths.get(".mygit"))) {
             throw new MyGitFilesystemException("mygit repository is already created");
         } else {
@@ -48,7 +49,7 @@ public class MyGit {
     }
 
     @NotNull
-    private static String createInitialCommit() throws MyGitFilesystemException, IOException {
+    private static String createInitialCommit() throws MyGitFilesystemException, IOException, MyGitStateException {
         final Path directory = Paths.get("").toAbsolutePath();
         final Mapper mapper = new Mapper(directory);
         final String treeHash = mapper.map(new Tree());
