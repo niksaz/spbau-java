@@ -5,7 +5,7 @@ package ru.spbau.sazanovich.nikita.mygit.exceptions;
  */
 public class MyGitException extends Exception {
 
-    public MyGitException(String message) {
+    MyGitException(String message) {
         super(message);
     }
 }

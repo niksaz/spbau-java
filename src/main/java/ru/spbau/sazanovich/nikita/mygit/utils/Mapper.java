@@ -11,6 +11,7 @@ import ru.spbau.sazanovich.nikita.mygit.utils.Hasher.HashParts;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -56,7 +57,7 @@ public class Mapper {
         }
         final List<String> headLines = Files.lines(headFile.toPath()).collect(Collectors.toList());
         if (headLines.size() != 2) {
-            throw new MyGitStateException("corrupted HEAD file: odd number of lines");
+            throw new MyGitStateException("corrupted HEAD file -- odd number of lines");
         }
         final String headType = headLines.get(0);
         final String headPath = headLines.get(1);
@@ -65,7 +66,7 @@ public class Mapper {
             case Branch.TYPE:
                 final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + headPath);
                 if (!branchFile.exists()) {
-                    throw new MyGitStateException("corrupted HEAD file: could not find " + branchFile.getAbsolutePath());
+                    throw new MyGitStateException("corrupted HEAD file -- could not find " + branchFile.getAbsolutePath());
                 }
                 final List<String> branchLines =
                         Files.lines(branchFile.toPath()).collect(Collectors.toCollection(ArrayList::new));
@@ -78,9 +79,29 @@ public class Mapper {
                 commitHash = headPath;
                 break;
             default:
-                throw new MyGitStateException("corrupted HEAD file");
+                throw new MyGitStateException("corrupted HEAD file -- unknown HEAD type");
         }
         return getCommitsTree(commitHash);
+    }
+
+    @NotNull
+    public List<Path> readIndexPaths() throws MyGitStateException, IOException {
+        final File indexFile = getIndexFile();
+        return Files
+                .lines(indexFile.toPath())
+                .map(Paths::get)
+                .collect(Collectors.toList());
+    }
+
+    public void writeIndexPaths(@NotNull List<Path> paths) throws MyGitStateException, IOException {
+        final File indexFile = getIndexFile();
+        try (FileWriter fileWriter = new FileWriter(indexFile);
+             BufferedWriter writer = new BufferedWriter(fileWriter)
+        ) {
+            for (Path path : paths) {
+                writer.write(path.toString() + "\n");
+            }
+        }
     }
 
     @NotNull
@@ -107,7 +128,7 @@ public class Mapper {
                 myGitDirectory + "/.mygit/objects/" + hashParts.getFirst() + "/" + hashParts.getLast();
         final File objectFile = new File(objectPath);
         if (!objectFile.exists()) {
-            throw new MyGitStateException("could not find object's file: " + objectFile.getAbsolutePath());
+            throw new MyGitStateException("could not find object's file -- " + objectFile.getAbsolutePath());
         }
         try (FileInputStream fileInputStream = new FileInputStream(objectFile);
             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)
@@ -116,5 +137,14 @@ public class Mapper {
         } catch (ClassNotFoundException e) {
             throw new MyGitStateException("could not read object's file + " + e.getMessage());
         }
+    }
+
+    @NotNull
+    private File getIndexFile() throws MyGitStateException {
+        final File indexFile = new File(myGitDirectory + "/.mygit/index");
+        if (!indexFile.exists()) {
+            throw new MyGitStateException("could not find " + indexFile.getAbsolutePath());
+        }
+        return indexFile;
     }
 }
