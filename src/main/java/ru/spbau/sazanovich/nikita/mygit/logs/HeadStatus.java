@@ -5,14 +5,14 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Represents the status of MyGit repository's HEAD.
  */
-public class Status {
+public class HeadStatus {
 
     @NotNull
     private String type;
     @NotNull
     private String name;
 
-    public Status(@NotNull String type, @NotNull String name) {
+    public HeadStatus(@NotNull String type, @NotNull String name) {
         this.type = type;
         this.name = name;
     }

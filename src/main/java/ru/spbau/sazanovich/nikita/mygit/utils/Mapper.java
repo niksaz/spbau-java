@@ -3,7 +3,8 @@ package ru.spbau.sazanovich.nikita.mygit.utils;
 import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitFilesystemException;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
-import ru.spbau.sazanovich.nikita.mygit.logs.Status;
+import ru.spbau.sazanovich.nikita.mygit.logs.HeadStatus;
+import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
 import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
@@ -74,7 +75,7 @@ public class Mapper {
     }
 
     @NotNull
-    public Status getHeadStatus() throws MyGitStateException, IOException {
+    public HeadStatus getHeadStatus() throws MyGitStateException, IOException {
         final File headFile = new File(myGitDirectory + "/.mygit/HEAD");
         if (!headFile.exists()) {
             throw new MyGitStateException("could not find " + headFile.getAbsolutePath());
@@ -88,26 +89,26 @@ public class Mapper {
         if (!headType.equals(Branch.TYPE) && !headType.equals(Commit.TYPE)) {
             throw new MyGitStateException("corrupted HEAD file -- unknown HEAD type");
         }
-        return new Status(headType, headPath);
+        return new HeadStatus(headType, headPath);
     }
 
     @NotNull
     public Commit getHeadCommit() throws MyGitStateException, IOException {
-        final Status headStatus = getHeadStatus();
+        final HeadStatus headHeadStatus = getHeadStatus();
         String commitHash;
-        if (headStatus.getType().equals(Branch.TYPE)) {
-            final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + headStatus.getName());
+        if (headHeadStatus.getType().equals(Branch.TYPE)) {
+            final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + headHeadStatus.getName());
             if (!branchFile.exists()) {
                 throw new MyGitStateException("corrupted HEAD file -- could not find " + branchFile.getAbsolutePath());
             }
             final List<String> branchLines =
                     Files.lines(branchFile.toPath()).collect(Collectors.toCollection(ArrayList::new));
             if (branchLines.size() != 1) {
-                throw new MyGitStateException("not single line in branch " + headStatus.getName());
+                throw new MyGitStateException("not single line in branch " + headHeadStatus.getName());
             }
             commitHash = branchLines.get(0);
         } else {
-            commitHash = headStatus.getName();
+            commitHash = headHeadStatus.getName();
         }
         return readCommit(commitHash);
     }
@@ -126,6 +127,11 @@ public class Mapper {
     @NotNull
     public Tree readTree(@NotNull String treeHash) throws MyGitStateException, IOException {
         return readObject(treeHash, Tree.class);
+    }
+
+    @NotNull
+    public Blob readBlob(@NotNull String blobHash) throws MyGitStateException, IOException {
+        return readObject(blobHash, Blob.class);
     }
 
     @NotNull

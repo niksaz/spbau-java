@@ -10,4 +10,8 @@ public class Blob implements Serializable {
     public static final String TYPE = "blob";
 
     private byte[] content;
+
+    public byte[] getContent() {
+        return content;
+    }
 }

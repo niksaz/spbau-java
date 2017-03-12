@@ -5,13 +5,14 @@ import ru.spbau.sazanovich.nikita.mygit.MyGit;
 import ru.spbau.sazanovich.nikita.mygit.MyGitHandler;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.logs.CommitLog;
-import ru.spbau.sazanovich.nikita.mygit.logs.Status;
+import ru.spbau.sazanovich.nikita.mygit.logs.HeadStatus;
 import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
+import ru.spbau.sazanovich.nikita.mygit.status.*;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ConsoleApp {
 
@@ -53,21 +54,10 @@ public class ConsoleApp {
                         handler.resetPaths(suffixArgsToList(args));
                         break;
                     case LOG_CMD:
-                        printStatusInfo(handler);
-                        System.out.println();
-                        final List<CommitLog> logsHistory = handler.getLogsHistory();
-                        for (CommitLog log : logsHistory) {
-                            System.out.println("commit " + log.getRevisionHash() + "\n" +
-                                               "Author: " + log.getAuthor() + "\n" +
-                                               "Date:   " + log.getDateCreated() + "\n" +
-                                               "\n" +
-                                               "    " + log.getMessage() +
-                                               "\n");
-                        }
+                        performLogCommand(handler);
                         break;
                     case STATUS_CMD:
-                        printStatusInfo(handler);
-                        final List<Path> paths = handler.scanDirectory();
+                        performStatusCommand(handler);
                         break;
                     default:
                         showHelp();
@@ -79,18 +69,71 @@ public class ConsoleApp {
         }
     }
 
-    private static void printStatusInfo(@NotNull MyGitHandler handler) throws MyGitStateException, IOException {
-        final Status status = handler.getHeadStatus();
-        if (status.getType().equals(Branch.TYPE)) {
-            System.out.println("On branch " + status.getName());
-        } else {
-            System.out.println("HEAD detached at " + status.getName());
+    private static void performLogCommand(@NotNull MyGitHandler handler) throws MyGitStateException, IOException {
+        printStatusInfo(handler);
+        System.out.println();
+        final List<CommitLog> logsHistory = handler.getLogsHistory();
+        for (CommitLog log : logsHistory) {
+            System.out.println("commit " + log.getRevisionHash() + "\n" +
+                    "Author: " + log.getAuthor() + "\n" +
+                    "Date:   " + log.getDateCreated() + "\n" +
+                    "\n" +
+                    "    " + log.getMessage() +
+                    "\n");
+        }
+
+    }
+
+    private static void performStatusCommand(@NotNull MyGitHandler handler) throws MyGitStateException, IOException {
+        printStatusInfo(handler);
+
+        final List<Change> changes = handler.getHeadChanges();
+        final List<ChangeToBeCommitted> changesToBeCommitted =
+                filterSubclass(changes, ChangeToBeCommitted.class);
+        if (changesToBeCommitted.size() != 0) {
+            System.out.println("Changes to be committed:\n");
+            for (ChangeToBeCommitted change : changesToBeCommitted) {
+                System.out.println(
+                        "\t" +
+                                mapFileChangeTypeToString(change.getFileChangeType()) +
+                                change.getPath());
+            }
+            System.out.println();
+        }
+
+        final List<ChangeNotStagedForCommit> changesNotStagedForCommit =
+                filterSubclass(changes, ChangeNotStagedForCommit.class);
+        if (changesNotStagedForCommit.size() != 0) {
+            System.out.println("Changes not staged for commit:\n");
+            for (ChangeNotStagedForCommit change : changesNotStagedForCommit) {
+                System.out.println(
+                        "\t" +
+                                mapFileChangeTypeToString(change.getFileChangeType()) +
+                                change.getPath());
+            }
+            System.out.println();
+        }
+
+        final List<UntrackedFile> untrackedFiles =
+                filterSubclass(changes, UntrackedFile.class);
+        if (untrackedFiles.size() != 0) {
+            System.out.println("Untracked files:\n");
+            for (UntrackedFile change : untrackedFiles) {
+                System.out.println(
+                        "\t" +
+                                change.getPath());
+            }
+            System.out.println();
         }
     }
 
-    @NotNull
-    private static List<String> suffixArgsToList(@NotNull String[] args) {
-        return Arrays.asList(args).subList(1, args.length);
+    private static void printStatusInfo(@NotNull MyGitHandler handler) throws MyGitStateException, IOException {
+        final HeadStatus headStatus = handler.getHeadStatus();
+        if (headStatus.getType().equals(Branch.TYPE)) {
+            System.out.println("On branch " + headStatus.getName());
+        } else {
+            System.out.println("HEAD detached at " + headStatus.getName());
+        }
     }
 
     private static void showHelp() {
@@ -113,5 +156,30 @@ public class ConsoleApp {
                 "  " + CHECKOUT_CMD + " <branch> | <revision>\n" +
                 "  " + COMMIT_CMD +  " <message>\n" +
                 "  " + MERGE_CMD + " <branch>");
+    }
+
+    private static String mapFileChangeTypeToString(@NotNull FileChangeType fileChangeType) {
+        switch (fileChangeType) {
+            case ADDITION:
+                return "new file:   ";
+            case REMOVAL:
+                return "deleted:   ";
+            default:
+                return "";
+        }
+    }
+
+    @NotNull
+    private static List<String> suffixArgsToList(@NotNull String[] args) {
+        return Arrays.asList(args).subList(1, args.length);
+    }
+
+    @NotNull
+    private static <T, S extends T> List<S> filterSubclass(List<T> list, Class<S> subclassClass) {
+        return list
+                .stream()
+                .filter(subclassClass::isInstance)
+                .map(subclassClass::cast)
+                .collect(Collectors.toList());
     }
 }
