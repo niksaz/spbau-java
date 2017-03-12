@@ -18,10 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -54,7 +51,7 @@ public class MyGitHandler {
                 Files
                     .find(myGitDirectory, Integer.MAX_VALUE, (p, bfa) -> !containsMyGitAsSubpath(p))
                     .collect(Collectors.toList());
-        final List<Path> indexPaths = mapper.readIndexPaths();
+        final Set<Path> indexPaths = mapper.readIndexPaths();
         for (Path path : headPaths) {
             System.out.println("HED: " + path);
         }
@@ -69,7 +66,7 @@ public class MyGitHandler {
 
     public void addPathsToIndex(@NotNull List<String> arguments)
             throws MyGitStateException, MyGitIllegalArgumentException, IOException {
-        final Function<List<Path>, Consumer<Path>> action =
+        final Function<Set<Path>, Consumer<Path>> action =
                 paths -> (Consumer<Path>) path -> {
                     if (!paths.contains(path)) {
                         paths.add(path);
@@ -80,7 +77,7 @@ public class MyGitHandler {
 
     public void resetPaths(@NotNull List<String> arguments)
             throws MyGitStateException, MyGitIllegalArgumentException, IOException {
-        final Function<List<Path>, Consumer<Path>> action =
+        final Function<Set<Path>, Consumer<Path>> action =
                 paths -> (Consumer<Path>) path -> {
                     if (paths.contains(path)) {
                         paths.remove(path);
@@ -122,13 +119,32 @@ public class MyGitHandler {
     }
 
     private void performUpdateToIndex(@NotNull List<String> arguments,
-                                      @NotNull Function<List<Path>, Consumer<Path>> action)
+                                      @NotNull Function<Set<Path>, Consumer<Path>> action)
             throws MyGitStateException, MyGitIllegalArgumentException, IOException {
         final List<Path> argsPaths = convertStringsToPaths(arguments);
-        final List<Path> indexedPaths = mapper.readIndexPaths();
+        final Set<Path> indexedPaths = mapper.readIndexPaths();
         final Consumer<Path> indexUpdater = action.apply(indexedPaths);
         argsPaths.forEach(indexUpdater);
         mapper.writeIndexPaths(indexedPaths);
+    }
+
+    private void traverse(@NotNull Tree tree, @NotNull Path prefixPath, @NotNull List<Path> paths)
+            throws MyGitStateException, IOException {
+        paths.add(prefixPath);
+        for (TreeObject child : tree.getChildren()) {
+            final Path childPath = Paths.get(prefixPath.toString(), child.getName());
+            switch (child.getType()) {
+                case Blob.TYPE:
+                    paths.add(childPath);
+                    break;
+                case Tree.TYPE:
+                    final Tree childTree = mapper.readTree(child.getSha());
+                    traverse(childTree, childPath, paths);
+                    break;
+                default:
+                    throw new MyGitStateException("met an unknown type while traversing the tree -- " + child.getType());
+            }
+        }
     }
 
     @Nullable
@@ -159,29 +175,9 @@ public class MyGitHandler {
                 throw new MyGitIllegalArgumentException(
                         "files should be located in the mygit repository's directory, but an argument is " + path);
             }
-            path = myGitDirectory.relativize(path);
             paths.add(path);
         }
         return paths;
-    }
-
-    private void traverse(@NotNull Tree tree, @NotNull Path prefixPath, @NotNull List<Path> paths)
-            throws MyGitStateException, IOException {
-        paths.add(prefixPath);
-        for (TreeObject child : tree.getChildren()) {
-            final Path childPath = Paths.get(prefixPath.toString(), child.getName());
-            switch (child.getType()) {
-                case Blob.TYPE:
-                    paths.add(childPath);
-                    break;
-                case Tree.TYPE:
-                    final Tree childTree = mapper.readTree(child.getSha());
-                    traverse(childTree, childPath, paths);
-                    break;
-                default:
-                    throw new MyGitStateException("met an unknown type while traversing the tree -- " + child.getType());
-            }
-        }
     }
 
     private static boolean containsMyGitAsSubpath(@Nullable Path path) {

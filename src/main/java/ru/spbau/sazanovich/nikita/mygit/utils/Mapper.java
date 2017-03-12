@@ -14,7 +14,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -51,21 +53,22 @@ public class Mapper {
     }
 
     @NotNull
-    public List<Path> readIndexPaths() throws MyGitStateException, IOException {
+    public Set<Path> readIndexPaths() throws MyGitStateException, IOException {
         final File indexFile = getIndexFile();
         return Files
                 .lines(indexFile.toPath())
                 .map(Paths::get)
-                .collect(Collectors.toList());
+                .map(Path::toAbsolutePath)
+                .collect(Collectors.toCollection(HashSet::new));
     }
 
-    public void writeIndexPaths(@NotNull List<Path> paths) throws MyGitStateException, IOException {
+    public void writeIndexPaths(@NotNull Set<Path> paths) throws MyGitStateException, IOException {
         final File indexFile = getIndexFile();
         try (FileWriter fileWriter = new FileWriter(indexFile);
              BufferedWriter writer = new BufferedWriter(fileWriter)
         ) {
             for (Path path : paths) {
-                writer.write(path.toString() + "\n");
+                writer.write(myGitDirectory.relativize(path).toString() + "\n");
             }
         }
     }
