@@ -8,6 +8,7 @@ import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.logs.CommitLog;
 import ru.spbau.sazanovich.nikita.mygit.logs.HeadStatus;
 import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
+import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeObject;
@@ -93,6 +94,22 @@ public class MyGitHandler {
         }
         Collections.reverse(logsHistory);
         return logsHistory;
+    }
+
+    @NotNull
+    public List<Branch> listBranches() throws MyGitStateException, IOException {
+        final File branchesDirectory = new File(myGitDirectory + "/.mygit/branches/");
+        if (!branchesDirectory.exists()) {
+            throw new MyGitStateException("could not find " + branchesDirectory);
+        }
+        final File[] branches = branchesDirectory.listFiles();
+        if (branches == null) {
+            throw new IOException("could not read " + branchesDirectory);
+        }
+        return Arrays
+               .stream(branches)
+               .map(file -> new Branch(file.getName()))
+               .collect(Collectors.toList());
     }
 
     private void traverseCommitsTree(@NotNull Commit commit, @NotNull TreeSet<Commit> commitTree)

@@ -59,6 +59,15 @@ public class ConsoleApp {
                     case STATUS_CMD:
                         performStatusCommand(handler);
                         break;
+                    case BRANCH_CMD:
+                        if (args.length == 1) {
+                            printAllBranches(handler);
+                        } else if (args.length == 2) {
+                            // create a branch
+                        } else if (args.length == 3 && args[1].equals("-d")) {
+                            // delete branch
+                        }
+                        break;
                     default:
                         showHelp();
                         break;
@@ -66,6 +75,23 @@ public class ConsoleApp {
             }
         } catch (Exception e) {
             System.out.println("Unsuccessful operation: " + e.getMessage());
+        }
+    }
+
+    private static void printAllBranches(@NotNull MyGitHandler handler) throws MyGitStateException, IOException {
+        final List<Branch> branches = handler.listBranches();
+        final HeadStatus headStatus = handler.getHeadStatus();
+        String currentBranchName;
+        if (headStatus.getType().equals(Branch.TYPE)) {
+            currentBranchName = headStatus.getName();
+        } else {
+            currentBranchName = null;
+            System.out.println("* (HEAD detached at " + headStatus.getName() + ")");
+        }
+        for (Branch branch : branches) {
+            System.out.println(
+                    (branch.getName().equals(currentBranchName) ? "* " : "  ") +
+                            branch.getName());
         }
     }
 

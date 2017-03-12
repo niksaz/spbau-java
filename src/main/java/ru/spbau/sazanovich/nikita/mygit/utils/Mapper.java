@@ -94,21 +94,21 @@ public class Mapper {
 
     @NotNull
     public Commit getHeadCommit() throws MyGitStateException, IOException {
-        final HeadStatus headHeadStatus = getHeadStatus();
+        final HeadStatus headStatus = getHeadStatus();
         String commitHash;
-        if (headHeadStatus.getType().equals(Branch.TYPE)) {
-            final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + headHeadStatus.getName());
+        if (headStatus.getType().equals(Branch.TYPE)) {
+            final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + headStatus.getName());
             if (!branchFile.exists()) {
                 throw new MyGitStateException("corrupted HEAD file -- could not find " + branchFile.getAbsolutePath());
             }
             final List<String> branchLines =
                     Files.lines(branchFile.toPath()).collect(Collectors.toCollection(ArrayList::new));
             if (branchLines.size() != 1) {
-                throw new MyGitStateException("not single line in branch " + headHeadStatus.getName());
+                throw new MyGitStateException("not single line in branch " + headStatus.getName());
             }
             commitHash = branchLines.get(0);
         } else {
-            commitHash = headHeadStatus.getName();
+            commitHash = headStatus.getName();
         }
         return readCommit(commitHash);
     }

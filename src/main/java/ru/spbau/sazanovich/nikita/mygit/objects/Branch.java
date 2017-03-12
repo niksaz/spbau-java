@@ -1,11 +1,23 @@
 package ru.spbau.sazanovich.nikita.mygit.objects;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
- * Class to store info associated with branches.
+ * Class to represent branches info given to the user.
  */
 public class Branch {
 
     public static final String TYPE = "branch";
 
-    private Branch() {}
+    @NotNull
+    private String name;
+
+    public Branch(@NotNull String name) {
+        this.name = name;
+    }
+
+    @NotNull
+    public String getName() {
+        return name;
+    }
 }
