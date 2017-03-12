@@ -1,6 +1,7 @@
 package ru.spbau.sazanovich.nikita.mygit.objects;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Class to represent branches info given to the user.
@@ -19,5 +20,10 @@ public class Branch {
     @NotNull
     public String getName() {
         return name;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object that) {
+        return that instanceof Branch && name.equals(((Branch) that).getName());
     }
 }

@@ -57,10 +57,20 @@ public class Mapper {
     public Set<Path> readIndexPaths() throws MyGitStateException, IOException {
         final File indexFile = getIndexFile();
         return Files
-                .lines(indexFile.toPath())
-                .map(Paths::get)
-                .map(Path::toAbsolutePath)
-                .collect(Collectors.toCollection(HashSet::new));
+               .lines(indexFile.toPath())
+               .map(Paths::get)
+               .map(Path::toAbsolutePath)
+               .collect(Collectors.toCollection(HashSet::new));
+    }
+
+    public void writeBranch(@NotNull String branchName, @NotNull String commitHash) throws IOException {
+        final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + branchName);
+        //noinspection ResultOfMethodCallIgnored
+        branchFile.createNewFile();
+        try (FileWriter writer = new FileWriter(branchFile)
+        ) {
+            writer.write(commitHash);
+        }
     }
 
     public void writeIndexPaths(@NotNull Set<Path> paths) throws MyGitStateException, IOException {
@@ -97,20 +107,25 @@ public class Mapper {
         final HeadStatus headStatus = getHeadStatus();
         String commitHash;
         if (headStatus.getType().equals(Branch.TYPE)) {
-            final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + headStatus.getName());
-            if (!branchFile.exists()) {
-                throw new MyGitStateException("corrupted HEAD file -- could not find " + branchFile.getAbsolutePath());
-            }
-            final List<String> branchLines =
-                    Files.lines(branchFile.toPath()).collect(Collectors.toCollection(ArrayList::new));
-            if (branchLines.size() != 1) {
-                throw new MyGitStateException("not single line in branch " + headStatus.getName());
-            }
-            commitHash = branchLines.get(0);
+            commitHash = getBranchCommitHash(headStatus.getName());
         } else {
             commitHash = headStatus.getName();
         }
         return readCommit(commitHash);
+    }
+
+    @NotNull
+    public String getBranchCommitHash(@NotNull String branchName) throws MyGitStateException, IOException {
+        final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + branchName);
+        if (!branchFile.exists()) {
+            throw new MyGitStateException("could not find branch '" + branchName + "'");
+        }
+        final List<String> branchLines =
+                Files.lines(branchFile.toPath()).collect(Collectors.toCollection(ArrayList::new));
+        if (branchLines.size() != 1) {
+            throw new MyGitStateException("not a single line in branch '" + branchName + "'");
+        }
+        return branchLines.get(0);
     }
 
     @NotNull

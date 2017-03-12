@@ -64,7 +64,7 @@ public class ConsoleApp {
                         if (args.length == 1) {
                             printAllBranches(handler);
                         } else if (args.length == 2) {
-                            // create a branch
+                            handler.createBranch(args[1]);
                         } else if (args.length == 3 && args[1].equals("-d")) {
                             deleteBranch(handler, args[2]);
                         }

@@ -117,12 +117,32 @@ public class MyGitHandler {
                .collect(Collectors.toList());
     }
 
-    public void deleteBranch(@NotNull String branchName) throws MyGitIllegalArgumentException, IOException {
-        final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + branchName);
-        if (!branchFile.exists()) {
+    public void createBranch(@NotNull String branchName)
+            throws MyGitStateException, IOException, MyGitIllegalArgumentException {
+        if (doesBranchExists(branchName)) {
+            throw new MyGitIllegalArgumentException("'" + branchName + "' branch already exists");
+        }
+        final HeadStatus headStatus = mapper.getHeadStatus();
+        if (headStatus.getType().equals(Branch.TYPE)) {
+            final String branchCommitHash = mapper.getBranchCommitHash(headStatus.getName());
+            mapper.writeBranch(branchName, branchCommitHash);
+        } else {
+            mapper.writeBranch(branchName, headStatus.getName());
+        }
+    }
+
+    public void deleteBranch(@NotNull String branchName)
+            throws MyGitIllegalArgumentException, IOException, MyGitStateException {
+        if (!doesBranchExists(branchName)) {
             throw new MyGitIllegalArgumentException("'" + branchName + "' branch is missing");
         }
+        final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + branchName);
         Files.delete(branchFile.toPath());
+    }
+
+    private boolean doesBranchExists(@NotNull String branchName) throws MyGitStateException, IOException {
+        final List<Branch> branches = listBranches();
+        return branches.contains(new Branch(branchName));
     }
 
     private void traverseCommitsTree(@NotNull Commit commit, @NotNull TreeSet<Commit> commitTree)

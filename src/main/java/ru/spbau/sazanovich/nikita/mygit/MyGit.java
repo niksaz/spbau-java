@@ -40,18 +40,16 @@ public class MyGit {
             if (!createdSuccessfully) {
                 throw new MyGitFilesystemException("could not create .mygit/branches");
             }
-            new File(".mygit/branches/master").createNewFile();
-            final String commitHash = createInitialCommit();
-            try (PrintWriter printWriter = new PrintWriter(".mygit/branches/master")) {
-                printWriter.println(commitHash);
-            }
+            final Path directory = Paths.get("").toAbsolutePath();
+            final Mapper mapper = new Mapper(directory);
+            final String commitHash = createInitialCommit(mapper);
+            mapper.writeBranch("master", commitHash);
         }
     }
 
     @NotNull
-    private static String createInitialCommit() throws MyGitFilesystemException, IOException, MyGitStateException {
-        final Path directory = Paths.get("").toAbsolutePath();
-        final Mapper mapper = new Mapper(directory);
+    private static String createInitialCommit(@NotNull Mapper mapper)
+            throws MyGitFilesystemException, IOException, MyGitStateException {
         final String treeHash = mapper.map(new Tree());
         final Commit primaryCommit = new Commit(treeHash);
         return mapper.map(primaryCommit);
