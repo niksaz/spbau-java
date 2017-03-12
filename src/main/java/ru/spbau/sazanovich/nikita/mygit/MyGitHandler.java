@@ -45,6 +45,11 @@ public class MyGitHandler {
     }
 
     @NotNull
+    public Path getMyGitDirectory() {
+        return myGitDirectory;
+    }
+
+    @NotNull
     public List<Change> getHeadChanges() throws MyGitStateException, IOException {
         final Tree tree = mapper.getHeadTree();
         final Set<Path> indexedPaths = mapper.readIndexPaths();
@@ -110,6 +115,14 @@ public class MyGitHandler {
                .stream(branches)
                .map(file -> new Branch(file.getName()))
                .collect(Collectors.toList());
+    }
+
+    public void deleteBranch(@NotNull String branchName) throws MyGitIllegalArgumentException, IOException {
+        final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + branchName);
+        if (!branchFile.exists()) {
+            throw new MyGitIllegalArgumentException("'" + branchName + "' branch is missing");
+        }
+        Files.delete(branchFile.toPath());
     }
 
     private void traverseCommitsTree(@NotNull Commit commit, @NotNull TreeSet<Commit> commitTree)

@@ -3,6 +3,7 @@ package ru.spbau.sazanovich.nikita;
 import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.MyGit;
 import ru.spbau.sazanovich.nikita.mygit.MyGitHandler;
+import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.logs.CommitLog;
 import ru.spbau.sazanovich.nikita.mygit.logs.HeadStatus;
@@ -65,7 +66,7 @@ public class ConsoleApp {
                         } else if (args.length == 2) {
                             // create a branch
                         } else if (args.length == 3 && args[1].equals("-d")) {
-                            // delete branch
+                            deleteBranch(handler, args[2]);
                         }
                         break;
                     default:
@@ -75,6 +76,19 @@ public class ConsoleApp {
             }
         } catch (Exception e) {
             System.out.println("Unsuccessful operation: " + e.getMessage());
+        }
+    }
+
+    private static void deleteBranch(@NotNull MyGitHandler handler, @NotNull String branchName)
+            throws IOException, MyGitIllegalArgumentException, MyGitStateException {
+        final HeadStatus headStatus = handler.getHeadStatus();
+        if (headStatus.getType().equals(Branch.TYPE) && headStatus.getName().equals(branchName)) {
+            System.out.println(
+                    "Unsuccessful operation: cannot delete branch '" +
+                            branchName +
+                            "' checked out at " + handler.getMyGitDirectory());
+        } else {
+            handler.deleteBranch(branchName);
         }
     }
 
