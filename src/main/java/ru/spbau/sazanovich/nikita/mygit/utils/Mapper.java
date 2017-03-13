@@ -104,7 +104,7 @@ public class Mapper {
     }
 
     @NotNull
-    public Commit getHeadCommit() throws MyGitStateException, IOException {
+    public String getHeadCommitHash() throws MyGitStateException, IOException {
         final HeadStatus headStatus = getHeadStatus();
         String commitHash;
         if (headStatus.getType().equals(Branch.TYPE)) {
@@ -112,7 +112,18 @@ public class Mapper {
         } else {
             commitHash = headStatus.getName();
         }
-        return readCommit(commitHash);
+        return commitHash;
+    }
+
+    @NotNull
+    public Commit getHeadCommit() throws MyGitStateException, IOException {
+        return readCommit(getHeadCommitHash());
+    }
+
+    @NotNull
+    public Tree getHeadTree() throws MyGitStateException, IOException {
+        final Commit headCommit = getHeadCommit();
+        return readTree(headCommit.getTreeHash());
     }
 
     @NotNull
@@ -127,12 +138,6 @@ public class Mapper {
             throw new MyGitStateException("not a single line in branch '" + branchName + "'");
         }
         return branchLines.get(0);
-    }
-
-    @NotNull
-    public Tree getHeadTree() throws MyGitStateException, IOException {
-        final Commit headCommit = getHeadCommit();
-        return readTree(headCommit.getTreeHash());
     }
 
     @NotNull

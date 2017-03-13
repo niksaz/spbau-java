@@ -19,12 +19,14 @@ import ru.spbau.sazanovich.nikita.mygit.utils.Mapper;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class MyGitHandler {
 
@@ -78,6 +80,11 @@ public class MyGitHandler {
                 };
         performUpdateToIndex(arguments, action);
     }
+
+
+    public void resetAllPaths() throws MyGitStateException, IOException {
+        mapper.writeIndexPaths(new HashSet<>());
+    }
     
     @NotNull
     public HeadStatus getHeadStatus() throws MyGitStateException, IOException {
@@ -105,13 +112,7 @@ public class MyGitHandler {
         if (!mapper.readIndexPaths().isEmpty()) {
             throw new MyGitMissingPrerequisites("staging area should be empty before a checkout operation");
         }
-        final HeadStatus headStatus = mapper.getHeadStatus();
-        String fromCommitHash;
-        if (headStatus.getType().equals(Branch.TYPE)) {
-            fromCommitHash = mapper.getBranchCommitHash(headStatus.getName());
-        } else {
-            fromCommitHash = headStatus.getName();
-        }
+        final String fromCommitHash = mapper.getHeadCommitHash();
         String toCommitHash;
         if (listBranches().contains(new Branch(revisionName))) {
             toCommitHash = mapper.getBranchCommitHash(revisionName);
@@ -153,13 +154,7 @@ public class MyGitHandler {
         if (doesBranchExists(branchName)) {
             throw new MyGitIllegalArgumentException("'" + branchName + "' branch already exists");
         }
-        final HeadStatus headStatus = mapper.getHeadStatus();
-        if (headStatus.getType().equals(Branch.TYPE)) {
-            final String branchCommitHash = mapper.getBranchCommitHash(headStatus.getName());
-            mapper.writeBranch(branchName, branchCommitHash);
-        } else {
-            mapper.writeBranch(branchName, headStatus.getName());
-        }
+        mapper.writeBranch(branchName, mapper.getHeadCommitHash());
     }
 
     public void deleteBranch(@NotNull String branchName)
@@ -169,6 +164,11 @@ public class MyGitHandler {
         }
         final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + branchName);
         Files.delete(branchFile.toPath());
+    }
+
+    public void commitWithMessage(@NotNull String message) throws MyGitStateException, IOException {
+        final Tree tree = mapper.getHeadTree();
+        //TODO
     }
 
     private boolean doesBranchExists(@NotNull String branchName) throws MyGitStateException, IOException {

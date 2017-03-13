@@ -20,6 +20,7 @@ public class ConsoleApp {
     private static final String INIT_CMD = "init";
     private static final String ADD_CMD = "add";
     private static final String RESET_CMD = "reset";
+    private static final String RESET_ALL_CMD = "resetall";
     private static final String LOG_CMD = "log";
     private static final String STATUS_CMD = "status";
     private static final String BRANCH_CMD = "branch";
@@ -54,6 +55,8 @@ public class ConsoleApp {
                         }
                         handler.resetPaths(suffixArgsToList(args));
                         break;
+                    case RESET_ALL_CMD:
+                        handler.resetAllPaths();
                     case LOG_CMD:
                         performLogCommand(handler);
                         break;
@@ -77,6 +80,10 @@ public class ConsoleApp {
                             }
                         }
                         break;
+                    case COMMIT_CMD:
+                        if (args.length > 1) {
+                            handler.commitWithMessage(args[1]);
+                        }
                     default:
                         showHelp();
                         break;
@@ -194,6 +201,7 @@ public class ConsoleApp {
                 "work on the current change:\n" +
                 "  " + ADD_CMD + " [<files>]\n" +
                 "  " + RESET_CMD + " [<files>]\n" +
+                "  " + RESET_ALL_CMD + "\n" +
                 "\n" +
                 "examine the history and state:\n" +
                 "  " + LOG_CMD + "\n" +
