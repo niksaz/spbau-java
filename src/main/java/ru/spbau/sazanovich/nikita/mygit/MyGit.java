@@ -8,7 +8,6 @@ import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
 import ru.spbau.sazanovich.nikita.mygit.utils.Mapper;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -19,31 +18,20 @@ public class MyGit {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void init() throws MyGitFilesystemException, IOException, MyGitStateException {
-        //final Path myGitPath = Paths.get(".mygit");
-        if (Files.exists(Paths.get(".mygit"))) {
+        final Path myGitPath = Paths.get(".mygit");
+        if (myGitPath.toFile().exists()) {
             throw new MyGitFilesystemException("mygit repository is already created");
         } else {
-            //Files.createFile(Paths.get(".mygit"));
-            boolean createdSuccessfully = new File(".mygit").mkdir();
-            if (!createdSuccessfully) {
-                throw new MyGitFilesystemException("could not create .mygit/");
-            }
-            new File(".mygit/HEAD").createNewFile();
+            Files.createDirectory(myGitPath);
+            Files.createFile(Paths.get(myGitPath.toString(), "HEAD"));
             try (PrintWriter printWriter = new PrintWriter(".mygit/HEAD")) {
                 printWriter.println(Branch.TYPE);
                 printWriter.println("master");
             }
-            new File(".mygit/index").createNewFile();
-            createdSuccessfully = new File(".mygit/objects").mkdir();
-            if (!createdSuccessfully) {
-                throw new MyGitFilesystemException("could not create .mygit/objects");
-            }
-            createdSuccessfully = new File(".mygit/branches").mkdir();
-            if (!createdSuccessfully) {
-                throw new MyGitFilesystemException("could not create .mygit/branches");
-            }
-            final Path directory = Paths.get("").toAbsolutePath();
-            final Mapper mapper = new Mapper(directory);
+            Files.createFile(Paths.get(myGitPath.toString(), "index"));
+            Files.createDirectory(Paths.get(myGitPath.toString(), "objects"));
+            Files.createDirectory(Paths.get(myGitPath.toString(), "branches"));
+            final Mapper mapper = new Mapper(myGitPath.toAbsolutePath().getParent());
             final String commitHash = createInitialCommit(mapper);
             mapper.writeBranch("master", commitHash);
         }
