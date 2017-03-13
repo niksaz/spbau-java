@@ -26,13 +26,17 @@ public class Commit implements Serializable, Comparable<Commit> {
     @NotNull
     private List<String> parentsHashes;
 
-    public Commit(@NotNull String hash) {
-        this(hash, "repository initialized", getUsername(), new Date(), new ArrayList<>());
+    public Commit(@NotNull String treeHash) {
+        this(treeHash, "repository initialized", new ArrayList<>());
     }
 
-    private Commit(@NotNull String hash, @NotNull String message, @NotNull String author,
-                  @NotNull Date date, @NotNull List<String> parentsHashes) {
-        this.treeHash = hash;
+    public Commit(@NotNull String treeHash, @NotNull String message, @NotNull List<String> parentsHashes) {
+        this(treeHash, message, parentsHashes, getUsername(), new Date());
+    }
+
+    private Commit(@NotNull String treeHash, @NotNull String message, @NotNull List<String> parentsHashes,
+                   @NotNull String author, @NotNull Date date) {
+        this.treeHash = treeHash;
         this.message = message;
         this.author = author;
         this.dateCreated = date;

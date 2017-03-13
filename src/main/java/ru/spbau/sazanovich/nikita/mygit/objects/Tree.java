@@ -20,13 +20,17 @@ public class Tree implements Serializable {
         this(new ArrayList<>());
     }
 
-    public Tree(@NotNull List<TreeObject> children) {
+    private Tree(@NotNull List<TreeObject> children) {
         this.children = children;
     }
 
     @NotNull
     public List<TreeObject> getChildren() {
         return children;
+    }
+
+    public boolean addChild(TreeObject child) {
+        return children.add(child);
     }
 
     /**

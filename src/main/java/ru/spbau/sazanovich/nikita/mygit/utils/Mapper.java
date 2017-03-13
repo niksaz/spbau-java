@@ -1,7 +1,6 @@
 package ru.spbau.sazanovich.nikita.mygit.utils;
 
 import org.jetbrains.annotations.NotNull;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitFilesystemException;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.logs.HeadStatus;
 import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
@@ -34,19 +33,18 @@ public class Mapper {
     }
 
     @NotNull
-    public String map(@NotNull Object object) throws MyGitFilesystemException, IOException, MyGitStateException {
+    public String map(@NotNull Object object) throws MyGitStateException, IOException {
         final String hash = Hasher.getHashFromObject(object);
         final HashParts hashParts = new HashParts(hash);
-        final String directoryName = myGitDirectory + "/.mygit/objects/" + hashParts.getFirst();
-        final String fileName = directoryName + "/" + hashParts.getLast();
-        boolean createdSuccessfully = new File(directoryName).mkdir();
-        if (!createdSuccessfully) {
-            throw new MyGitFilesystemException("could not create " + fileName);
+        final Path directoryPath = Paths.get(myGitDirectory + "/.mygit/objects/" + hashParts.getFirst());
+        final Path filePath = Paths.get(directoryPath.toString(), hashParts.getLast());
+        if (!directoryPath.toFile().exists()) {
+            Files.createDirectory(directoryPath);
         }
-        final File objectFile = new File(fileName);
-        //noinspection ResultOfMethodCallIgnored
-        objectFile.createNewFile();
-        try (FileOutputStream fileOutputStream = new FileOutputStream(objectFile);
+        if (!filePath.toFile().exists()) {
+            Files.createFile(filePath);
+        }
+        try (FileOutputStream fileOutputStream = new FileOutputStream(filePath.toFile());
              ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)
         ) {
             objectOutputStream.writeObject(object);
@@ -58,17 +56,18 @@ public class Mapper {
     public Set<Path> readIndexPaths() throws MyGitStateException, IOException {
         final File indexFile = getIndexFile();
         return Files
-               .lines(indexFile.toPath())
-               .map(Paths::get)
-               .map(Path::toAbsolutePath)
-               .collect(Collectors.toCollection(HashSet::new));
+                .lines(indexFile.toPath())
+                .map(Paths::get)
+                .map(Path::toAbsolutePath)
+                .collect(Collectors.toCollection(HashSet::new));
     }
 
     public void writeBranch(@NotNull String branchName, @NotNull String commitHash) throws IOException {
-        final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + branchName);
-        //noinspection ResultOfMethodCallIgnored
-        branchFile.createNewFile();
-        try (FileWriter writer = new FileWriter(branchFile)
+        final Path branchPath = Paths.get(myGitDirectory.toString(), ".mygit", "branches", branchName);
+        if (!branchPath.toFile().exists()) {
+            Files.createFile(branchPath);
+        }
+        try (FileWriter writer = new FileWriter(branchPath.toFile())
         ) {
             writer.write(commitHash);
         }
@@ -85,12 +84,31 @@ public class Mapper {
         }
     }
 
+    public void moveHeadToCommitHash(@NotNull String commitHash) throws MyGitStateException, IOException {
+        final HeadStatus headStatus = getHeadStatus();
+        HeadStatus currentHeadStatus;
+        if (headStatus.getType().equals(Branch.TYPE)) {
+            final String branchName = headStatus.getName();
+            writeBranch(branchName, commitHash);
+            currentHeadStatus = new HeadStatus(Branch.TYPE, branchName);
+        } else {
+            currentHeadStatus = new HeadStatus(Commit.TYPE, commitHash);
+        }
+        setHeadStatus(currentHeadStatus);
+    }
+
+    public void setHeadStatus(@NotNull HeadStatus headStatus) throws MyGitStateException, IOException {
+        final File headFile = getHeadFile();
+        try (FileWriter fileWriter = new FileWriter(headFile)
+        ) {
+            fileWriter.write(headStatus.getType() + "\n");
+            fileWriter.write(headStatus.getName());
+        }
+    }
+
     @NotNull
     public HeadStatus getHeadStatus() throws MyGitStateException, IOException {
-        final File headFile = new File(myGitDirectory + "/.mygit/HEAD");
-        if (!headFile.exists()) {
-            throw new MyGitStateException("could not find " + headFile.getAbsolutePath());
-        }
+        final File headFile = getHeadFile();
         final List<String> headLines = Files.lines(headFile.toPath()).collect(Collectors.toList());
         if (headLines.size() != 2) {
             throw new MyGitStateException("corrupted HEAD file -- odd number of lines");
@@ -156,6 +174,13 @@ public class Mapper {
     }
 
     @NotNull
+    public String createBlobFromPath(@NotNull Path path) throws MyGitStateException, IOException {
+        final byte[] data = Files.readAllBytes(path);
+        final Blob blob = new Blob(data);
+        return map(blob);
+    }
+
+    @NotNull
     public Object readObject(@NotNull String objectHash) throws MyGitStateException, IOException {
         final HashParts hashParts = new HashParts(objectHash);
         final String objectPath =
@@ -177,15 +202,6 @@ public class Mapper {
     private <T> T readObjectAndCast(@NotNull String objectHash, @NotNull Class<T> objectClass)
             throws MyGitStateException, IOException {
         return objectClass.cast(readObject(objectHash));
-    }
-
-    @NotNull
-    private File getIndexFile() throws MyGitStateException {
-        final File indexFile = new File(myGitDirectory + "/.mygit/index");
-        if (!indexFile.exists()) {
-            throw new MyGitStateException("could not find " + indexFile.getAbsolutePath());
-        }
-        return indexFile;
     }
 
     public void moveFromCommitToCommit(@NotNull Commit fromCommit, Commit toCommit)
@@ -240,5 +256,23 @@ public class Mapper {
     @NotNull
     private String getTypeForPath(@NotNull Path path) {
         return path.toFile().isDirectory() ? Tree.TYPE : Blob.TYPE;
+    }
+
+    @NotNull
+    private File getIndexFile() throws MyGitStateException {
+        final File indexFile = new File(myGitDirectory + "/.mygit/index");
+        if (!indexFile.exists()) {
+            throw new MyGitStateException("could not find " + indexFile.getAbsolutePath());
+        }
+        return indexFile;
+    }
+
+    @NotNull
+    private File getHeadFile() throws MyGitStateException {
+        final File headFile = new File(myGitDirectory + "/.mygit/HEAD");
+        if (!headFile.exists()) {
+            throw new MyGitStateException("could not find " + headFile.getAbsolutePath());
+        }
+        return headFile;
     }
 }

@@ -53,10 +53,11 @@ public class ConsoleApp {
                             System.out.println(RESET_CMD + " requires some files to have an effect");
                             return;
                         }
-                        handler.resetPaths(suffixArgsToList(args));
+                        handler.resetIndexPaths(suffixArgsToList(args));
                         break;
                     case RESET_ALL_CMD:
-                        handler.resetAllPaths();
+                        handler.resetAllIndexPaths();
+                        break;
                     case LOG_CMD:
                         performLogCommand(handler);
                         break;
@@ -70,20 +71,24 @@ public class ConsoleApp {
                             handler.createBranch(args[1]);
                         } else if (args.length == 3 && args[1].equals("-d")) {
                             deleteBranch(handler, args[2]);
+                        } else {
+                            showHelp();
                         }
                         break;
                     case CHECKOUT_CMD:
                         if (args.length > 1) {
-                            boolean moved = handler.checkout(args[1]);
-                            if (!moved) {
-                                System.out.println("You are already here.");
-                            }
+                            handler.checkout(args[1]);
+                        } else {
+                            showHelp();
                         }
                         break;
                     case COMMIT_CMD:
                         if (args.length > 1) {
                             handler.commitWithMessage(args[1]);
+                        } else {
+                            showHelp();
                         }
+                        break;
                     default:
                         showHelp();
                         break;

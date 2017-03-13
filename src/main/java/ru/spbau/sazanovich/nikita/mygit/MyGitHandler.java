@@ -2,10 +2,7 @@ package ru.spbau.sazanovich.nikita.mygit;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitException;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitIllegalArgumentException;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitMissingPrerequisites;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
+import ru.spbau.sazanovich.nikita.mygit.exceptions.*;
 import ru.spbau.sazanovich.nikita.mygit.logs.CommitLog;
 import ru.spbau.sazanovich.nikita.mygit.logs.HeadStatus;
 import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
@@ -70,7 +67,7 @@ public class MyGitHandler {
         performUpdateToIndex(arguments, action);
     }
 
-    public void resetPaths(@NotNull List<String> arguments)
+    public void resetIndexPaths(@NotNull List<String> arguments)
             throws MyGitStateException, MyGitIllegalArgumentException, IOException {
         final Function<Set<Path>, Consumer<Path>> action =
                 paths -> (Consumer<Path>) path -> {
@@ -82,10 +79,10 @@ public class MyGitHandler {
     }
 
 
-    public void resetAllPaths() throws MyGitStateException, IOException {
+    public void resetAllIndexPaths() throws MyGitStateException, IOException {
         mapper.writeIndexPaths(new HashSet<>());
     }
-    
+
     @NotNull
     public HeadStatus getHeadStatus() throws MyGitStateException, IOException {
         return mapper.getHeadStatus();
@@ -107,30 +104,29 @@ public class MyGitHandler {
         return logsHistory;
     }
 
-    public boolean checkout(@NotNull String revisionName)
-            throws MyGitStateException, IOException, MyGitMissingPrerequisites, MyGitIllegalArgumentException {
+    public void checkout(@NotNull String revisionName)
+            throws MyGitStateException, MyGitMissingPrerequisites, MyGitIllegalArgumentException, IOException {
         if (!mapper.readIndexPaths().isEmpty()) {
             throw new MyGitMissingPrerequisites("staging area should be empty before a checkout operation");
         }
-        final String fromCommitHash = mapper.getHeadCommitHash();
+        final Commit fromCommit = mapper.getHeadCommit();
         String toCommitHash;
+        String toHeadType;
         if (listBranches().contains(new Branch(revisionName))) {
             toCommitHash = mapper.getBranchCommitHash(revisionName);
+            toHeadType = Branch.TYPE;
         } else {
             if (listCommitHashes().contains(revisionName)) {
                 toCommitHash = revisionName;
+                toHeadType = Commit.TYPE;
             } else {
                 throw new MyGitIllegalArgumentException("there is no such revision -- " + revisionName);
             }
         }
-        if (fromCommitHash.equals(toCommitHash)) {
-            return false;
-        } else {
-            final Commit fromCommit = mapper.readCommit(fromCommitHash);
-            final Commit toCommit = mapper.readCommit(toCommitHash);
-            mapper.moveFromCommitToCommit(fromCommit, toCommit);
-            return true;
-        }
+        final Commit toCommit = mapper.readCommit(toCommitHash);
+        mapper.moveFromCommitToCommit(fromCommit, toCommit);
+        final HeadStatus toHeadStatus = new HeadStatus(toHeadType, revisionName);
+        mapper.setHeadStatus(toHeadStatus);
     }
 
     @NotNull
@@ -168,7 +164,95 @@ public class MyGitHandler {
 
     public void commitWithMessage(@NotNull String message) throws MyGitStateException, IOException {
         final Tree tree = mapper.getHeadTree();
-        //TODO
+        final Set<Path> indexedPaths = mapper.readIndexPaths();
+        final String rebuiltTreeHash = rebuildTree(tree, myGitDirectory, indexedPaths);
+        final List<String> parentsHashes = new ArrayList<>();
+        parentsHashes.add(mapper.getHeadCommitHash());
+        final Commit commit = new Commit(rebuiltTreeHash, message, parentsHashes);
+        final String commitHash = mapper.map(commit);
+        mapper.moveHeadToCommitHash(commitHash);
+        resetAllIndexPaths();
+    }
+
+    private String rebuildTree(@Nullable Tree tree, @NotNull Path prefixPath, @NotNull Set<Path> indexedPaths)
+            throws MyGitStateException, IOException {
+        final List<Path> filePaths =
+                Files
+                .list(prefixPath)
+                .filter(path -> !isAbsolutePathRepresentsInternal(path))
+                .collect(Collectors.toList());
+        final Tree rebuiltTree = new Tree();
+        final List<TreeObject> childrenList = tree == null ? new ArrayList<>() : tree.getChildren();
+        for (TreeObject child : childrenList) {
+            final Path childPath = Paths.get(prefixPath.toString(), child.getName());
+            boolean contained = filePaths.contains(childPath);
+            switch (child.getType()) {
+                case Tree.TYPE:
+                    final Tree childTree = mapper.readTree(child.getSha());
+                    if (contained) {
+                        filePaths.remove(childPath);
+                        if (childPath.toFile().isDirectory()) {
+                            final String childHash = rebuildTree(childTree, childPath, indexedPaths);
+                            rebuiltTree.addChild(new TreeObject(childHash, child.getName(), child.getType()));
+                        } else {
+                            rebuiltTree.addChild(updateBlobIfIndexed(child, childPath, indexedPaths));
+                        }
+                    } else if (!indexedPaths.contains(childPath)) {
+                        rebuiltTree.addChild(child);
+                    }
+                    break;
+                case Blob.TYPE:
+                    final Blob childBlob = mapper.readBlob(child.getSha());
+                    if (contained) {
+                        filePaths.remove(childPath);
+                        if (childPath.toFile().isDirectory()) {
+                            if (indexedPaths.contains(childPath)) {
+                                final String childHash = rebuildTree(null, childPath, indexedPaths);
+                                rebuiltTree.addChild(new TreeObject(childHash, child.getName(), Tree.TYPE));
+                            } else {
+                                rebuiltTree.addChild(child);
+                            }
+                        } else {
+                            final byte[] committedContent = childBlob.getContent();
+                            final byte[] currentContent = Files.readAllBytes(childPath);
+                            if (Arrays.equals(committedContent, currentContent)) {
+                                rebuiltTree.addChild(child);
+                            } else {
+                                rebuiltTree.addChild(updateBlobIfIndexed(child, childPath, indexedPaths));
+                            }
+                        }
+                    } else if (!indexedPaths.contains(childPath)) {
+                        rebuiltTree.addChild(child);
+                    }
+                    break;
+                default:
+                    throw new MyGitStateException("met an unknown type while traversing the tree -- " + child.getType());
+            }
+        }
+        for (Path path : filePaths) {
+            if (indexedPaths.contains(path)) {
+                if (path.toFile().isDirectory()) {
+                    final String treeHash = rebuildTree(null, path, indexedPaths);
+                    rebuiltTree.addChild(new TreeObject(treeHash, path.getFileName().toString(), Tree.TYPE));
+                } else {
+                    final String blobHash = mapper.createBlobFromPath(path);
+                    rebuiltTree.addChild(new TreeObject(blobHash, path.getFileName().toString(), Blob.TYPE));
+                }
+            }
+        }
+        return mapper.map(rebuiltTree);
+    }
+
+    @NotNull
+    private TreeObject updateBlobIfIndexed(@NotNull TreeObject object, @NotNull Path path,
+                                           @NotNull Set<Path> indexedPaths)
+            throws MyGitStateException, IOException {
+        if (indexedPaths.contains(path)) {
+            final String blobHash = mapper.createBlobFromPath(path);
+            return new TreeObject(blobHash, object.getName(), Blob.TYPE);
+        } else {
+            return object;
+        }
     }
 
     private boolean doesBranchExists(@NotNull String branchName) throws MyGitStateException, IOException {
@@ -200,31 +284,22 @@ public class MyGitHandler {
     @NotNull
     private List<Change> getChangeList(@Nullable Tree tree, @NotNull Path prefixPath, @NotNull Set<Path> indexedPaths)
             throws MyGitStateException, IOException {
-        final File directory = prefixPath.toFile();
-        final File[] arrayOfFiles = directory.listFiles();
-        if (arrayOfFiles == null) {
-            throw new IOException("cannot read directory -- " + directory);
-        }
         final List<Path> filePaths =
-                Arrays
-                .stream(arrayOfFiles)
-                .map(File::toPath)
+                Files
+                .list(prefixPath)
                 .filter(path -> !isAbsolutePathRepresentsInternal(path))
                 .collect(Collectors.toList());
-
         final List<Change> changes = new ArrayList<>();
         final List<TreeObject> childrenList = tree == null ? new ArrayList<>() : tree.getChildren();
-        // TODO: CHECK THIS ONE MORE TIME
         for (TreeObject child : childrenList) {
             final Path childPath = Paths.get(prefixPath.toString(), child.getName());
-            final File childFile = childPath.toFile();
             boolean contained = filePaths.contains(childPath);
             switch (child.getType()) {
                 case Tree.TYPE:
                     final Tree childTree = mapper.readTree(child.getSha());
                     if (contained) {
                         filePaths.remove(childPath);
-                        if (childFile.isDirectory()) {
+                        if (childPath.toFile().isDirectory()) {
                             changes.addAll(getChangeList(childTree, childPath, indexedPaths));
                         } else {
                             if (indexedPaths.contains(childPath)) {
@@ -251,7 +326,7 @@ public class MyGitHandler {
                     final Blob childBlob = mapper.readBlob(child.getSha());
                     if (contained) {
                         filePaths.remove(childPath);
-                        if (childFile.isDirectory()) {
+                        if (childPath.toFile().isDirectory()) {
                             if (indexedPaths.contains(childPath)) {
                                 changes.add(new ChangeToBeCommitted(childPath, FileChangeType.MODIFICATION));
                                 changes.addAll(getChangeList(null, childPath, indexedPaths));

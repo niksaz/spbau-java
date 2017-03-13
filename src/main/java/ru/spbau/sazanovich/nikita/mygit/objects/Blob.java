@@ -1,5 +1,7 @@
 package ru.spbau.sazanovich.nikita.mygit.objects;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.Serializable;
 
 /**
@@ -9,8 +11,14 @@ public class Blob implements Serializable {
 
     public static final String TYPE = "blob";
 
+    @NotNull
     private byte[] content;
 
+    public Blob(@NotNull byte[] content) {
+        this.content = content;
+    }
+
+    @NotNull
     public byte[] getContent() {
         return content;
     }
