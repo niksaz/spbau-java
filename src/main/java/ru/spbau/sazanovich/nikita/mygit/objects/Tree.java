@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -67,8 +68,13 @@ public class Tree implements Serializable {
         }
 
         @Override
-        public String toString() {
-            return "SHA=" + getSha() + ", NAME=" + getName() + ", TYPE=" + getType();
+        public boolean equals(Object that) {
+            return that instanceof TreeObject && getName().equals(((TreeObject) that).getName());
+        }
+
+        @Override
+        public int hashCode() {
+            return name.hashCode();
         }
     }
 }

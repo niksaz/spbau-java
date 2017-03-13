@@ -97,7 +97,7 @@ public class MyGitHandler {
         for (Commit commit : commitTree) {
             final CommitLog log =
                     new CommitLog(Hasher.getHashFromObject(commit), commit.getMessage(),
-                                  commit.getAuthor(), commit.getDateCreated());
+                            commit.getAuthor(), commit.getDateCreated());
             logsHistory.add(log);
         }
         Collections.reverse(logsHistory);
@@ -129,6 +129,36 @@ public class MyGitHandler {
         mapper.setHeadStatus(toHeadStatus);
     }
 
+    public void mergeHeadWithBranch(@NotNull String otherBranch)
+            throws MyGitMissingPrerequisites, MyGitStateException, IOException, MyGitIllegalArgumentException {
+        final HeadStatus headStatus = mapper.getHeadStatus();
+        if (headStatus.getName().equals(Commit.TYPE)) {
+            throw new MyGitMissingPrerequisites("could not merge while you are in HEAD detached state");
+        }
+        if (!listBranches().contains(new Branch(otherBranch))) {
+            throw new MyGitIllegalArgumentException("there is no such branch -- " + otherBranch);
+        }
+        if (headStatus.getName().equals(otherBranch)) {
+            throw new MyGitIllegalArgumentException("can not merge branch with itself");
+        }
+        if (!mapper.readIndexPaths().isEmpty()) {
+            throw new MyGitMissingPrerequisites("staging area should be empty before a merge operation");
+        }
+        final String baseBranch = headStatus.getName();
+        final Tree baseTree = mapper.getBranchTree(baseBranch);
+        final Tree otherTree = mapper.getBranchTree(otherBranch);
+
+        final String mergeTreeHash = mergeTwoTrees(baseTree, otherTree);
+        final List<String> parentsHashes = new ArrayList<>();
+        parentsHashes.add(mapper.getBranchCommitHash(baseBranch));
+        parentsHashes.add(mapper.getBranchCommitHash(otherBranch));
+        final Commit mergeCommit = new Commit(mergeTreeHash, "merge commit", parentsHashes);
+        final String mergeCommitHash = mapper.map(mergeCommit);
+        mapper.writeBranch(baseBranch, mergeCommitHash);
+
+        checkout("master");
+    }
+
     @NotNull
     public List<Branch> listBranches() throws MyGitStateException, IOException {
         final File branchesDirectory = new File(myGitDirectory + "/.mygit/branches/");
@@ -140,9 +170,9 @@ public class MyGitHandler {
             throw new IOException("could not read " + branchesDirectory);
         }
         return Arrays
-               .stream(branches)
-               .map(file -> new Branch(file.getName()))
-               .collect(Collectors.toList());
+                .stream(branches)
+                .map(file -> new Branch(file.getName()))
+                .collect(Collectors.toList());
     }
 
     public void createBranch(@NotNull String branchName)
@@ -178,9 +208,9 @@ public class MyGitHandler {
             throws MyGitStateException, IOException {
         final List<Path> filePaths =
                 Files
-                .list(prefixPath)
-                .filter(path -> !isAbsolutePathRepresentsInternal(path))
-                .collect(Collectors.toList());
+                        .list(prefixPath)
+                        .filter(path -> !isAbsolutePathRepresentsInternal(path))
+                        .collect(Collectors.toList());
         final Tree rebuiltTree = new Tree();
         final List<TreeObject> childrenList = tree == null ? new ArrayList<>() : tree.getChildren();
         for (TreeObject child : childrenList) {
@@ -286,9 +316,9 @@ public class MyGitHandler {
             throws MyGitStateException, IOException {
         final List<Path> filePaths =
                 Files
-                .list(prefixPath)
-                .filter(path -> !isAbsolutePathRepresentsInternal(path))
-                .collect(Collectors.toList());
+                        .list(prefixPath)
+                        .filter(path -> !isAbsolutePathRepresentsInternal(path))
+                        .collect(Collectors.toList());
         final List<Change> changes = new ArrayList<>();
         final List<TreeObject> childrenList = tree == null ? new ArrayList<>() : tree.getChildren();
         for (TreeObject child : childrenList) {
@@ -372,13 +402,13 @@ public class MyGitHandler {
         final Path objectsPath = Paths.get(myGitDirectory.toString(), ".mygit", "objects");
         final List<String> objectHashes =
                 Files
-                .walk(objectsPath)
-                .filter(path -> !path.toFile().isDirectory())
-                .map(path -> {
-                    final Path parent = path.getParent();
-                    return parent.getFileName().toString() + path.getFileName().toString();
-                })
-                .collect(Collectors.toList());
+                        .walk(objectsPath)
+                        .filter(path -> !path.toFile().isDirectory())
+                        .map(path -> {
+                            final Path parent = path.getParent();
+                            return parent.getFileName().toString() + path.getFileName().toString();
+                        })
+                        .collect(Collectors.toList());
         final List<String> commitHashes = new ArrayList<>();
         for (String objectHash : objectHashes) {
             final Object object = mapper.readObject(objectHash);
@@ -422,6 +452,32 @@ public class MyGitHandler {
             }
         }
         return paths;
+    }
+
+    @NotNull
+    private String mergeTwoTrees(@NotNull Tree baseTree, @NotNull Tree otherTree)
+            throws MyGitStateException, IOException {
+        final List<TreeObject> otherList = new ArrayList<>(otherTree.getChildren());
+        final Tree mergedTree = new Tree();
+        for (TreeObject baseChild : baseTree.getChildren()) {
+            int otherIndex = otherList.indexOf(baseChild);
+            final TreeObject otherChild = otherIndex == -1 ? null : otherList.remove(otherIndex);
+            if (otherChild != null
+                    && baseChild.getType().equals(Tree.TYPE)
+                    && otherChild.getType().equals(Tree.TYPE)) {
+                final Tree baseChildTree = mapper.readTree(baseChild.getSha());
+                final Tree otherChildTree = mapper.readTree(otherChild.getSha());
+                final String mergedChildTreeHash = mergeTwoTrees(baseChildTree, otherChildTree);
+                final TreeObject mergedTreeObject = new TreeObject(mergedChildTreeHash, baseChild.getName(), Tree.TYPE);
+                mergedTree.addChild(mergedTreeObject);
+            } else {
+                mergedTree.addChild(baseChild);
+            }
+        }
+        for (TreeObject otherChild : otherList) {
+            mergedTree.addChild(otherChild);
+        }
+        return mapper.map(mergedTree);
     }
 
     private boolean isAbsolutePathRepresentsInternal(@Nullable Path path) {

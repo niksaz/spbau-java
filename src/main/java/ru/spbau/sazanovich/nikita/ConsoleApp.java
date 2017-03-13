@@ -89,6 +89,13 @@ public class ConsoleApp {
                             showHelp();
                         }
                         break;
+                    case MERGE_CMD:
+                        if (args.length > 1) {
+                            handler.mergeHeadWithBranch(args[1]);
+                        } else {
+                            showHelp();
+                        }
+                        break;
                     default:
                         showHelp();
                         break;

@@ -99,7 +99,7 @@ public class Commit implements Serializable, Comparable<Commit> {
         if (result != 0) {
             return result;
         }
-        result = message.compareTo(that.author);
+        result = message.compareTo(that.message);
         if (result != 0) {
             return result;
         }

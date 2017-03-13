@@ -145,6 +145,13 @@ public class Mapper {
     }
 
     @NotNull
+    public Tree getBranchTree(@NotNull String branchName) throws MyGitStateException, IOException {
+        final String branchCommitHash = getBranchCommitHash(branchName);
+        final Commit branchCommit = readCommit(branchCommitHash);
+        return readTree(branchCommit.getTreeHash());
+    }
+
+    @NotNull
     public String getBranchCommitHash(@NotNull String branchName) throws MyGitStateException, IOException {
         final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + branchName);
         if (!branchFile.exists()) {
