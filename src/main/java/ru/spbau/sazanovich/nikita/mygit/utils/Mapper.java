@@ -8,6 +8,7 @@ import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
 import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
+import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeObject;
 import ru.spbau.sazanovich.nikita.mygit.utils.Hasher.HashParts;
 
 import java.io.*;
@@ -136,22 +137,21 @@ public class Mapper {
 
     @NotNull
     public Commit readCommit(@NotNull String commitHash) throws MyGitStateException, IOException {
-        return readObject(commitHash, Commit.class);
+        return readObjectAndCast(commitHash, Commit.class);
     }
 
     @NotNull
     public Tree readTree(@NotNull String treeHash) throws MyGitStateException, IOException {
-        return readObject(treeHash, Tree.class);
+        return readObjectAndCast(treeHash, Tree.class);
     }
 
     @NotNull
     public Blob readBlob(@NotNull String blobHash) throws MyGitStateException, IOException {
-        return readObject(blobHash, Blob.class);
+        return readObjectAndCast(blobHash, Blob.class);
     }
 
     @NotNull
-    private <T> T readObject(@NotNull String objectHash, @NotNull Class<T> objectClass)
-            throws MyGitStateException, IOException {
+    public Object readObject(@NotNull String objectHash) throws MyGitStateException, IOException {
         final HashParts hashParts = new HashParts(objectHash);
         final String objectPath =
                 myGitDirectory + "/.mygit/objects/" + hashParts.getFirst() + "/" + hashParts.getLast();
@@ -160,12 +160,18 @@ public class Mapper {
             throw new MyGitStateException("could not find object's file -- " + objectFile.getAbsolutePath());
         }
         try (FileInputStream fileInputStream = new FileInputStream(objectFile);
-            ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)
+             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)
         ) {
-            return objectClass.cast(objectInputStream.readObject());
+            return objectInputStream.readObject();
         } catch (ClassNotFoundException e) {
             throw new MyGitStateException("could not read object's file + " + e.getMessage());
         }
+    }
+
+    @NotNull
+    private <T> T readObjectAndCast(@NotNull String objectHash, @NotNull Class<T> objectClass)
+            throws MyGitStateException, IOException {
+        return objectClass.cast(readObject(objectHash));
     }
 
     @NotNull
@@ -175,5 +181,59 @@ public class Mapper {
             throw new MyGitStateException("could not find " + indexFile.getAbsolutePath());
         }
         return indexFile;
+    }
+
+    public void moveFromCommitToCommit(@NotNull Commit fromCommit, Commit toCommit)
+            throws MyGitStateException, IOException {
+        final Tree fromTree = readTree(fromCommit.getTreeHash());
+        final Tree toTree = readTree(toCommit.getTreeHash());
+        deleteFilesFromTree(fromTree, myGitDirectory);
+        loadFilesFromTree(toTree, myGitDirectory);
+    }
+
+    private void loadFilesFromTree(@NotNull Tree tree, @NotNull Path path) throws MyGitStateException, IOException {
+        for (TreeObject child : tree.getChildren()) {
+            final Path childPath = Paths.get(path.toString(), child.getName());
+            final File childFile = childPath.toFile();
+            if (child.getType().equals(Blob.TYPE)) {
+                if (childFile.exists() && !getTypeForPath(childPath).equals(Blob.TYPE)) {
+                    Files.delete(childPath);
+                    Files.createFile(childPath);
+                }
+                final Blob childBlob = readBlob(child.getSha());
+                Files.write(childPath, childBlob.getContent());
+            } else {
+                if (childFile.exists() && !getTypeForPath(childPath).equals(Tree.TYPE)) {
+                    Files.delete(childPath);
+                    Files.createDirectory(childPath);
+                }
+                final Tree childTree = readTree(child.getSha());
+                loadFilesFromTree(childTree, childPath);
+            }
+        }
+    }
+
+    private void deleteFilesFromTree(@NotNull Tree tree, @NotNull Path path) throws MyGitStateException, IOException {
+        for (TreeObject child : tree.getChildren()) {
+            final Path childPath = Paths.get(path.toString(), child.getName());
+            final File childFile = childPath.toFile();
+            if (!childFile.exists()) {
+                continue;
+            }
+            if (childFile.isDirectory()) {
+                deleteFilesFromTree(readTree(child.getSha()), childPath);
+                //noinspection ConstantConditions
+                if (childFile.list().length == 0) {
+                    Files.delete(childPath);
+                }
+            } else {
+                Files.delete(childPath);
+            }
+        }
+    }
+
+    @NotNull
+    private String getTypeForPath(@NotNull Path path) {
+        return path.toFile().isDirectory() ? Tree.TYPE : Blob.TYPE;
     }
 }

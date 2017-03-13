@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitException;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitIllegalArgumentException;
+import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitMissingPrerequisites;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.logs.CommitLog;
 import ru.spbau.sazanovich.nikita.mygit.logs.HeadStatus;
@@ -18,14 +19,12 @@ import ru.spbau.sazanovich.nikita.mygit.utils.Mapper;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MyGitHandler {
 
@@ -99,6 +98,38 @@ public class MyGitHandler {
         }
         Collections.reverse(logsHistory);
         return logsHistory;
+    }
+
+    public boolean checkout(@NotNull String revisionName)
+            throws MyGitStateException, IOException, MyGitMissingPrerequisites, MyGitIllegalArgumentException {
+        if (!mapper.readIndexPaths().isEmpty()) {
+            throw new MyGitMissingPrerequisites("staging area should be empty before a checkout operation");
+        }
+        final HeadStatus headStatus = mapper.getHeadStatus();
+        String fromCommitHash;
+        if (headStatus.getType().equals(Branch.TYPE)) {
+            fromCommitHash = mapper.getBranchCommitHash(headStatus.getName());
+        } else {
+            fromCommitHash = headStatus.getName();
+        }
+        String toCommitHash;
+        if (listBranches().contains(new Branch(revisionName))) {
+            toCommitHash = mapper.getBranchCommitHash(revisionName);
+        } else {
+            if (listCommitHashes().contains(revisionName)) {
+                toCommitHash = revisionName;
+            } else {
+                throw new MyGitIllegalArgumentException("there is no such revision -- " + revisionName);
+            }
+        }
+        if (fromCommitHash.equals(toCommitHash)) {
+            return false;
+        } else {
+            final Commit fromCommit = mapper.readCommit(fromCommitHash);
+            final Commit toCommit = mapper.readCommit(toCommitHash);
+            mapper.moveFromCommitToCommit(fromCommit, toCommit);
+            return true;
+        }
     }
 
     @NotNull
@@ -259,6 +290,28 @@ public class MyGitHandler {
             }
         }
         return changes;
+    }
+
+    @NotNull
+    private List<String> listCommitHashes() throws IOException, MyGitStateException {
+        final Path objectsPath = Paths.get(myGitDirectory.toString(), ".mygit", "objects");
+        final List<String> objectHashes =
+                Files
+                .walk(objectsPath)
+                .filter(path -> !path.toFile().isDirectory())
+                .map(path -> {
+                    final Path parent = path.getParent();
+                    return parent.getFileName().toString() + path.getFileName().toString();
+                })
+                .collect(Collectors.toList());
+        final List<String> commitHashes = new ArrayList<>();
+        for (String objectHash : objectHashes) {
+            final Object object = mapper.readObject(objectHash);
+            if (object instanceof Commit) {
+                commitHashes.add(objectHash);
+            }
+        }
+        return commitHashes;
     }
 
     @Nullable

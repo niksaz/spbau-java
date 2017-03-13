@@ -19,9 +19,11 @@ public class MyGit {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void init() throws MyGitFilesystemException, IOException, MyGitStateException {
+        //final Path myGitPath = Paths.get(".mygit");
         if (Files.exists(Paths.get(".mygit"))) {
             throw new MyGitFilesystemException("mygit repository is already created");
         } else {
+            //Files.createFile(Paths.get(".mygit"));
             boolean createdSuccessfully = new File(".mygit").mkdir();
             if (!createdSuccessfully) {
                 throw new MyGitFilesystemException("could not create .mygit/");

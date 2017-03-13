@@ -69,6 +69,14 @@ public class ConsoleApp {
                             deleteBranch(handler, args[2]);
                         }
                         break;
+                    case CHECKOUT_CMD:
+                        if (args.length > 1) {
+                            boolean moved = handler.checkout(args[1]);
+                            if (!moved) {
+                                System.out.println("You are already here.");
+                            }
+                        }
+                        break;
                     default:
                         showHelp();
                         break;
@@ -105,7 +113,7 @@ public class ConsoleApp {
         for (Branch branch : branches) {
             System.out.println(
                     (branch.getName().equals(currentBranchName) ? "* " : "  ") +
-                            branch.getName());
+                     branch.getName());
         }
     }
 
@@ -148,8 +156,8 @@ public class ConsoleApp {
             for (ChangeNotStagedForCommit change : changesNotStagedForCommit) {
                 System.out.println(
                         "\t" +
-                                mapFileChangeTypeToString(change.getFileChangeType()) +
-                                change.getPath());
+                        mapFileChangeTypeToString(change.getFileChangeType()) +
+                        change.getPath());
             }
             System.out.println();
         }
@@ -161,7 +169,7 @@ public class ConsoleApp {
             for (UntrackedFile change : untrackedFiles) {
                 System.out.println(
                         "\t" +
-                                change.getPath());
+                        change.getPath());
             }
             System.out.println();
         }
