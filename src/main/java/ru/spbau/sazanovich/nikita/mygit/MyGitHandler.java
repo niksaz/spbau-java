@@ -24,6 +24,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Class which should be instantiated by a user to interact with the library.
+ */
 public class MyGitHandler {
 
     @NotNull
@@ -32,7 +35,12 @@ public class MyGitHandler {
     @NotNull
     private final Mapper mapper;
 
-    public MyGitHandler() throws MyGitException {
+    /**
+     * Constructs a handler in a current directory.
+     *
+     * @throws MyGitStateException if the directory (or any of the parent directories) is not a MyGit repository
+     */
+    public MyGitHandler() throws MyGitStateException {
         final Path path = findMyGitPath(Paths.get("").toAbsolutePath());
         if (path == null) {
             throw new MyGitStateException("Not a mygit repository (or any of the parent directories)");
@@ -41,11 +49,13 @@ public class MyGitHandler {
         mapper = new Mapper(myGitDirectory);
     }
 
-    @NotNull
-    public Path getMyGitDirectory() {
-        return myGitDirectory;
-    }
-
+    /**
+     * Gets differences between current MyGit repository's HEAD state and the filesystem state.
+     *
+     * @return list of change objects
+     * @throws MyGitStateException if an internal error occurs during operations
+     * @throws IOException if an error occurs during working with a filesystem
+     */
     @NotNull
     public List<Change> getHeadChanges() throws MyGitStateException, IOException {
         final Tree tree = mapper.getHeadTree();
@@ -55,8 +65,16 @@ public class MyGitHandler {
         return changes;
     }
 
+    /**
+     * Adds paths to the current index.
+     *
+     * @param arguments list of paths to add to the index
+     * @throws MyGitIllegalArgumentException if the list contains incorrect/located outside MyGit repository paths
+     * @throws MyGitStateException if an internal error occurs during operations
+     * @throws IOException if an error occurs during working with a filesystem
+     */
     public void addPathsToIndex(@NotNull List<String> arguments)
-            throws MyGitStateException, MyGitIllegalArgumentException, IOException {
+            throws MyGitIllegalArgumentException, MyGitStateException, IOException {
         final Function<Set<Path>, Consumer<Path>> action =
                 paths -> (Consumer<Path>) path -> {
                     if (!paths.contains(path)) {
@@ -66,6 +84,14 @@ public class MyGitHandler {
         performUpdateToIndex(arguments, action);
     }
 
+    /**
+     * Removes paths from the current index.
+     *
+     * @param arguments list of paths to remove from the index
+     * @throws MyGitIllegalArgumentException if the list contains incorrect/located outside MyGit repository paths
+     * @throws MyGitStateException if an internal error occurs during operations
+     * @throws IOException if an error occurs during working with a filesystem
+     */
     public void resetIndexPaths(@NotNull List<String> arguments)
             throws MyGitStateException, MyGitIllegalArgumentException, IOException {
         final Function<Set<Path>, Consumer<Path>> action =
@@ -77,18 +103,37 @@ public class MyGitHandler {
         performUpdateToIndex(arguments, action);
     }
 
-
+    /**
+     * Removes all paths from the current index.
+     *
+     * @throws MyGitStateException if an internal error occurs during operations
+     * @throws IOException if an error occurs during working with a filesystem
+     */
     public void resetAllIndexPaths() throws MyGitStateException, IOException {
         mapper.writeIndexPaths(new HashSet<>());
     }
 
+    /**
+     * Gets the current HEAD state.
+     *
+     * @return a head state
+     * @throws MyGitStateException if an internal error occurs during operations
+     * @throws IOException if an error occurs during working with a filesystem
+     */
     @NotNull
     public HeadStatus getHeadStatus() throws MyGitStateException, IOException {
         return mapper.getHeadStatus();
     }
 
+    /**
+     * Gets the logs from commit's which are reachable from the HEAD's commit.
+     *
+     * @return list of commit's logs
+     * @throws MyGitStateException if an internal error occurs during operations
+     * @throws IOException if an error occurs during working with a filesystem
+     */
     @NotNull
-    public List<CommitLog> getLogsHistory() throws MyGitStateException, IOException {
+    public List<CommitLog> getCommitsLogsHistory() throws MyGitStateException, IOException {
         final Commit headCommit = mapper.getHeadCommit();
         final TreeSet<Commit> commitTree = new TreeSet<>();
         traverseCommitsTree(headCommit, commitTree);
@@ -103,6 +148,17 @@ public class MyGitHandler {
         return logsHistory;
     }
 
+    /**
+     * Checkouts a revision and moves HEAD there.
+     *
+     * Replaces all files which differs from the HEAD's ones if such exist. Index should be empty before checking out.
+     *
+     * @param revisionName a name of revision
+     * @throws MyGitMissingPrerequisites if the index is not empty
+     * @throws MyGitIllegalArgumentException if the revision does not exist
+     * @throws MyGitStateException if an internal error occurs during operations
+     * @throws IOException if an error occurs during working with a filesystem
+     */
     public void checkout(@NotNull String revisionName)
             throws MyGitStateException, MyGitMissingPrerequisites, MyGitIllegalArgumentException, IOException {
         if (!mapper.readIndexPaths().isEmpty()) {
@@ -128,16 +184,28 @@ public class MyGitHandler {
         mapper.setHeadStatus(toHeadStatus);
     }
 
-    public void mergeHeadWithBranch(@NotNull String otherBranch)
+    /**
+     * Perform a merge operation of HEAD and given branch.
+     *
+     * Chooses files based on their last modification's date -- older have a priority. Index should be empty before
+     * merging and HEAD should not be in detached state.
+     *
+     * @param branch branch with which to merge HEAD
+     * @throws MyGitMissingPrerequisites if the index is not empty or currently in a detached HEAD state
+     * @throws MyGitIllegalArgumentException if there is no such branch or a user tries to merge branch with itself
+     * @throws MyGitStateException if an internal error occurs during operations
+     * @throws IOException if an error occurs during working with a filesystem
+     */
+    public void mergeHeadWithBranch(@NotNull String branch)
             throws MyGitMissingPrerequisites, MyGitStateException, IOException, MyGitIllegalArgumentException {
         final HeadStatus headStatus = mapper.getHeadStatus();
         if (headStatus.getName().equals(Commit.TYPE)) {
-            throw new MyGitMissingPrerequisites("could not merge while you are in HEAD detached state");
+            throw new MyGitMissingPrerequisites("could not merge while you are in detached HEAD state");
         }
-        if (!listBranches().contains(new Branch(otherBranch))) {
-            throw new MyGitIllegalArgumentException("there is no such branch -- " + otherBranch);
+        if (!listBranches().contains(new Branch(branch))) {
+            throw new MyGitIllegalArgumentException("there is no such branch -- " + branch);
         }
-        if (headStatus.getName().equals(otherBranch)) {
+        if (headStatus.getName().equals(branch)) {
             throw new MyGitIllegalArgumentException("can not merge branch with itself");
         }
         if (!mapper.readIndexPaths().isEmpty()) {
@@ -145,12 +213,12 @@ public class MyGitHandler {
         }
         final String baseBranch = headStatus.getName();
         final Tree baseTree = mapper.getBranchTree(baseBranch);
-        final Tree otherTree = mapper.getBranchTree(otherBranch);
+        final Tree otherTree = mapper.getBranchTree(branch);
 
         final String mergeTreeHash = mergeTwoTrees(baseTree, otherTree);
         final List<String> parentsHashes = new ArrayList<>();
         parentsHashes.add(mapper.getBranchCommitHash(baseBranch));
-        parentsHashes.add(mapper.getBranchCommitHash(otherBranch));
+        parentsHashes.add(mapper.getBranchCommitHash(branch));
         final Commit mergeCommit = new Commit(mergeTreeHash, "merge commit", parentsHashes);
         final String mergeCommitHash = mapper.map(mergeCommit);
         mapper.writeBranch(baseBranch, mergeCommitHash);
@@ -158,6 +226,13 @@ public class MyGitHandler {
         checkout("master");
     }
 
+    /**
+     * Gets list of branches in MyGit repository.
+     *
+     * @return list of branches
+     * @throws MyGitStateException if an internal error occurs during operations
+     * @throws IOException if an error occurs during working with a filesystem
+     */
     @NotNull
     public List<Branch> listBranches() throws MyGitStateException, IOException {
         final File branchesDirectory = new File(myGitDirectory + "/.mygit/branches/");
@@ -174,6 +249,14 @@ public class MyGitHandler {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Creates a new branch with the given name.
+     *
+     * @param branchName branch name for a new branch
+     * @throws MyGitIllegalArgumentException if the branch with the name already exists
+     * @throws MyGitStateException if an internal error occurs during operations
+     * @throws IOException if an error occurs during working with a filesystem
+     */
     public void createBranch(@NotNull String branchName)
             throws MyGitStateException, IOException, MyGitIllegalArgumentException {
         if (doesBranchExists(branchName)) {
@@ -182,8 +265,23 @@ public class MyGitHandler {
         mapper.writeBranch(branchName, mapper.getHeadCommitHash());
     }
 
+    /**
+     * Removes the branch with the given name.
+     *
+     * @param branchName the name of the branch to delete
+     * @throws MyGitIllegalArgumentException if there is no a branch with this name or
+     * this branch is currently checked out
+     * @throws MyGitStateException if an internal error occurs during operations
+     * @throws IOException if an error occurs during working with a filesystem
+     */
     public void deleteBranch(@NotNull String branchName)
             throws MyGitIllegalArgumentException, IOException, MyGitStateException {
+        final HeadStatus headStatus = getHeadStatus();
+        if (headStatus.getType().equals(Branch.TYPE) && headStatus.getName().equals(branchName)) {
+            throw new MyGitIllegalArgumentException(
+                    "cannot delete branch '" + branchName +
+                    "' checked out at " + myGitDirectory);
+        }
         if (!doesBranchExists(branchName)) {
             throw new MyGitIllegalArgumentException("'" + branchName + "' branch is missing");
         }
@@ -191,6 +289,13 @@ public class MyGitHandler {
         Files.delete(branchFile.toPath());
     }
 
+    /**
+     * Commits all indexed files and moves head to the newly created commit.
+     *
+     * @param message commit's message
+     * @throws MyGitStateException if an internal error occurs during operations
+     * @throws IOException if an error occurs during working with a filesystem
+     */
     public void commitWithMessage(@NotNull String message) throws MyGitStateException, IOException {
         final Tree tree = mapper.getHeadTree();
         final Set<Path> indexedPaths = mapper.readIndexPaths();

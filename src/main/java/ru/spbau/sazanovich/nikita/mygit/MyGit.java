@@ -13,8 +13,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * Class with a static method which is used to initialize a repository.
+ */
 public class MyGit {
 
+    /**
+     * Initialize MyGit repository in a current directory.
+     *
+     * @throws MyGitAlreadyInitialized if the directory already contains .mygit file
+     * @throws MyGitStateException if an internal error occurs during operations
+     * @throws IOException if an error occurs during working with a filesystem
+     */
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void init() throws MyGitAlreadyInitialized, MyGitStateException, IOException {
         final Path myGitPath = Paths.get(".mygit");

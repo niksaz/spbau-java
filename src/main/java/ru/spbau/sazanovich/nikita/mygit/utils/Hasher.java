@@ -64,9 +64,10 @@ public class Hasher {
     }
 
     /**
-     * Used during internal storage -- splitting on a directory name and a file name.
+     * Used during internal storage. Splitting on a directory name and a file name:
+     * first 2 chars goes to the first part, others -- to the last part.
      */
-    public static class HashParts {
+    public static class ShaHashParts {
 
         @NotNull
         private String first;
@@ -79,7 +80,7 @@ public class Hasher {
          * @param hash string which represents sha-1 hash
          * @throws MyGitIllegalArgumentException if the string's length isn't 40 characters
          */
-        public HashParts(@NotNull String hash) throws MyGitIllegalArgumentException {
+        public ShaHashParts(@NotNull String hash) throws MyGitIllegalArgumentException {
             if (hash.length() != HASH_LENGTH) {
                 throw new MyGitIllegalArgumentException("hash length isn't " + HASH_LENGTH);
             }
@@ -87,11 +88,21 @@ public class Hasher {
             last = hash.substring(FIRST_PART_ENDS);
         }
 
+        /**
+         * Gets first part of the hash.
+         *
+         * @return first part of the hash
+         */
         @NotNull
         public String getFirst() {
             return first;
         }
 
+        /**
+         * Gets last part of the hash.
+         *
+         * @return last part of the hash
+         */
         @NotNull
         public String getLast() {
             return last;

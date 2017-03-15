@@ -10,7 +10,7 @@ import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
 import ru.spbau.sazanovich.nikita.mygit.utils.Hasher;
-import ru.spbau.sazanovich.nikita.mygit.utils.Hasher.HashParts;
+import ru.spbau.sazanovich.nikita.mygit.utils.Hasher.ShaHashParts;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -34,14 +34,14 @@ class Mapper {
     @NotNull
     String map(@NotNull Object object) throws MyGitStateException, IOException {
         final String hash = Hasher.getHashFromObject(object);
-        HashParts hashParts;
+        ShaHashParts shaHashParts;
         try {
-            hashParts = new HashParts(hash);
+            shaHashParts = new ShaHashParts(hash);
         } catch (MyGitIllegalArgumentException ignored) {
             throw new MyGitStateException("met an illegal hash value " + hash);
         }
-        final Path directoryPath = Paths.get(myGitDirectory + "/.mygit/objects/" + hashParts.getFirst());
-        final Path filePath = Paths.get(directoryPath.toString(), hashParts.getLast());
+        final Path directoryPath = Paths.get(myGitDirectory + "/.mygit/objects/" + shaHashParts.getFirst());
+        final Path filePath = Paths.get(directoryPath.toString(), shaHashParts.getLast());
         if (!directoryPath.toFile().exists()) {
             Files.createDirectory(directoryPath);
         }
@@ -193,14 +193,14 @@ class Mapper {
 
     @NotNull
     Object readObject(@NotNull String objectHash) throws MyGitStateException, IOException {
-        HashParts hashParts;
+        ShaHashParts shaHashParts;
         try {
-            hashParts = new HashParts(objectHash);
+            shaHashParts = new ShaHashParts(objectHash);
         } catch (MyGitIllegalArgumentException ignored) {
             throw new MyGitStateException("met an illegal hash value " + objectHash);
         }
         final String objectPath =
-                myGitDirectory + "/.mygit/objects/" + hashParts.getFirst() + "/" + hashParts.getLast();
+                myGitDirectory + "/.mygit/objects/" + shaHashParts.getFirst() + "/" + shaHashParts.getLast();
         final File objectFile = new File(objectPath);
         if (!objectFile.exists()) {
             throw new MyGitStateException("could not find object's file -- " + objectFile.getAbsolutePath());

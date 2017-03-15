@@ -3,7 +3,6 @@ package ru.spbau.sazanovich.nikita;
 import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.MyGit;
 import ru.spbau.sazanovich.nikita.mygit.MyGitHandler;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.logs.CommitLog;
 import ru.spbau.sazanovich.nikita.mygit.logs.HeadStatus;
@@ -15,6 +14,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Provides console access to MyGit system.
+ */
 public class ConsoleApp {
 
     private static final String INIT_CMD = "init";
@@ -28,6 +30,11 @@ public class ConsoleApp {
     private static final String COMMIT_CMD = "commit";
     private static final String MERGE_CMD = "merge";
 
+    /**
+     * Entrance point to the console application.
+     *
+     * @param args command line arguments
+     */
     public static void main(String[] args) {
         if (args.length == 0) {
             System.out.println("Enter some arguments");
@@ -70,7 +77,7 @@ public class ConsoleApp {
                         } else if (args.length == 2) {
                             handler.createBranch(args[1]);
                         } else if (args.length == 3 && args[1].equals("-d")) {
-                            deleteBranch(handler, args[2]);
+                            handler.deleteBranch(args[2]);
                         } else {
                             showHelp();
                         }
@@ -106,19 +113,6 @@ public class ConsoleApp {
         }
     }
 
-    private static void deleteBranch(@NotNull MyGitHandler handler, @NotNull String branchName)
-            throws IOException, MyGitIllegalArgumentException, MyGitStateException {
-        final HeadStatus headStatus = handler.getHeadStatus();
-        if (headStatus.getType().equals(Branch.TYPE) && headStatus.getName().equals(branchName)) {
-            System.out.println(
-                    "Unsuccessful operation: cannot delete branch '" +
-                            branchName +
-                            "' checked out at " + handler.getMyGitDirectory());
-        } else {
-            handler.deleteBranch(branchName);
-        }
-    }
-
     private static void printAllBranches(@NotNull MyGitHandler handler) throws MyGitStateException, IOException {
         final List<Branch> branches = handler.listBranches();
         final HeadStatus headStatus = handler.getHeadStatus();
@@ -139,7 +133,7 @@ public class ConsoleApp {
     private static void performLogCommand(@NotNull MyGitHandler handler) throws MyGitStateException, IOException {
         printStatusInfo(handler);
         System.out.println();
-        final List<CommitLog> logsHistory = handler.getLogsHistory();
+        final List<CommitLog> logsHistory = handler.getCommitsLogsHistory();
         for (CommitLog log : logsHistory) {
             System.out.println("commit " + log.getRevisionHash() + "\n" +
                     "Author: " + log.getAuthor() + "\n" +
