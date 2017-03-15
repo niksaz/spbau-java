@@ -5,6 +5,11 @@ package ru.spbau.sazanovich.nikita.mygit.exceptions;
  */
 public class MyGitMissingPrerequisites extends MyGitException {
 
+    /**
+     * Constructs an exception with specified message.
+     *
+     * @param message non-null message to attach to an exception
+     */
     public MyGitMissingPrerequisites(String message) {
         super(message);
     }

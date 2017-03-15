@@ -5,6 +5,9 @@ package ru.spbau.sazanovich.nikita.mygit.exceptions;
  */
 public class MyGitAlreadyInitialized extends MyGitException {
 
+    /**
+     * Constructs an exception with default message {@code "mygit repository is already created"}.
+     */
     public MyGitAlreadyInitialized() {
         super("mygit repository is already created");
     }
