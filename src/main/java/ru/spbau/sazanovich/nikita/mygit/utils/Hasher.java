@@ -16,33 +16,13 @@ import java.security.NoSuchAlgorithmException;
 public class Hasher {
 
     private static final String HASH_ALGORITHM = "SHA-1";
-    private static final int BUFFER_SIZE = 8192;
 
     private static final int FIRST_PART_ENDS = 2;
     private static final int HASH_LENGTH = 40;
 
     @NotNull
-    public static String getHashFromFile(@NotNull String path) throws IOException {
-        return bytesToHex(getByteHashFromFile(path));
-    }
-
-    @NotNull
     public static String getHashFromObject(@NotNull Object object) throws IOException {
         return bytesToHex(getByteHashFromObject(object));
-    }
-
-    @NotNull
-    private static byte[] getByteHashFromFile(@NotNull String path) throws IOException {
-        final MessageDigest messageDigest = getMessageDigest();
-        try (FileInputStream fileInputStream = new FileInputStream(path);
-             DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, messageDigest)
-        ) {
-            final byte[] buffer = new byte[BUFFER_SIZE];
-            //noinspection StatementWithEmptyBody
-            while (digestInputStream.read(buffer) != -1) {
-            }
-        }
-        return messageDigest.digest();
     }
 
     @NotNull

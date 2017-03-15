@@ -12,11 +12,22 @@ public class ChangeToBeCommitted extends Change {
     @NotNull
     private FileChangeType fileChangeType;
 
+    /**
+     * Constructs a change with given path and {@link FileChangeType}.
+     *
+     * @param path path to the change's file
+     * @param fileChangeType change type of the file
+     */
     public ChangeToBeCommitted(@NotNull Path path, @NotNull FileChangeType fileChangeType) {
         super(path);
         this.fileChangeType = fileChangeType;
     }
 
+    /**
+     * Gets change type of the file.
+     *
+     * @return change type of the file
+     */
     @NotNull
     public FileChangeType getFileChangeType() {
         return fileChangeType;

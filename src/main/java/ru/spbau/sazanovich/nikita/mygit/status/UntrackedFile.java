@@ -9,6 +9,11 @@ import java.nio.file.Path;
  */
 public class UntrackedFile extends Change {
 
+    /**
+     * Constructs a change with given path.
+     *
+     * @param path path to the change's file
+     */
     public UntrackedFile(@NotNull Path path) {
         super(path);
     }
