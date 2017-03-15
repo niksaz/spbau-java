@@ -7,11 +7,10 @@ import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
 import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
-import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeObject;
+import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
 import ru.spbau.sazanovich.nikita.mygit.utils.Hasher.HashParts;
 
 import java.io.*;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -218,7 +217,7 @@ public class Mapper {
     }
 
     private void loadFilesFromTree(@NotNull Tree tree, @NotNull Path path) throws MyGitStateException, IOException {
-        for (TreeObject child : tree.getChildren()) {
+        for (TreeEdge child : tree.getChildren()) {
             final Path childPath = Paths.get(path.toString(), child.getName());
             final File childFile = childPath.toFile();
             if (child.getType().equals(Blob.TYPE)) {
@@ -226,28 +225,28 @@ public class Mapper {
                     deleteDirectoryWithFiles(childPath);
                     Files.createFile(childPath);
                 }
-                final Blob childBlob = readBlob(child.getSha());
+                final Blob childBlob = readBlob(child.getHash());
                 Files.write(childPath, childBlob.getContent());
             } else {
                 if (childFile.exists() && !getTypeForPath(childPath).equals(Tree.TYPE)) {
                     Files.delete(childPath);
                     Files.createDirectory(childPath);
                 }
-                final Tree childTree = readTree(child.getSha());
+                final Tree childTree = readTree(child.getHash());
                 loadFilesFromTree(childTree, childPath);
             }
         }
     }
 
     private void deleteFilesFromTree(@NotNull Tree tree, @NotNull Path path) throws MyGitStateException, IOException {
-        for (TreeObject child : tree.getChildren()) {
+        for (TreeEdge child : tree.getChildren()) {
             final Path childPath = Paths.get(path.toString(), child.getName());
             final File childFile = childPath.toFile();
             if (!childFile.exists()) {
                 continue;
             }
             if (childFile.isDirectory()) {
-                deleteFilesFromTree(readTree(child.getSha()), childPath);
+                deleteFilesFromTree(readTree(child.getHash()), childPath);
                 //noinspection ConstantConditions
                 if (childFile.list().length == 0) {
                     Files.delete(childPath);

@@ -9,7 +9,7 @@ import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
 import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
-import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeObject;
+import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
 import ru.spbau.sazanovich.nikita.mygit.status.*;
 import ru.spbau.sazanovich.nikita.mygit.utils.Hasher;
 import ru.spbau.sazanovich.nikita.mygit.utils.Mapper;
@@ -212,18 +212,18 @@ public class MyGitHandler {
                         .filter(path -> !isAbsolutePathRepresentsInternal(path))
                         .collect(Collectors.toList());
         final Tree rebuiltTree = new Tree();
-        final List<TreeObject> childrenList = tree == null ? new ArrayList<>() : tree.getChildren();
-        for (TreeObject child : childrenList) {
+        final List<TreeEdge> childrenList = tree == null ? new ArrayList<>() : tree.getChildren();
+        for (TreeEdge child : childrenList) {
             final Path childPath = Paths.get(prefixPath.toString(), child.getName());
             boolean contained = filePaths.contains(childPath);
             switch (child.getType()) {
                 case Tree.TYPE:
-                    final Tree childTree = mapper.readTree(child.getSha());
+                    final Tree childTree = mapper.readTree(child.getHash());
                     if (contained) {
                         filePaths.remove(childPath);
                         if (childPath.toFile().isDirectory()) {
                             final String childHash = rebuildTree(childTree, childPath, indexedPaths);
-                            rebuiltTree.addChild(new TreeObject(childHash, child.getName(), child.getType()));
+                            rebuiltTree.addChild(new TreeEdge(childHash, child.getName(), child.getType()));
                         } else {
                             rebuiltTree.addChild(updateBlobIfIndexed(child, childPath, indexedPaths));
                         }
@@ -232,13 +232,13 @@ public class MyGitHandler {
                     }
                     break;
                 case Blob.TYPE:
-                    final Blob childBlob = mapper.readBlob(child.getSha());
+                    final Blob childBlob = mapper.readBlob(child.getHash());
                     if (contained) {
                         filePaths.remove(childPath);
                         if (childPath.toFile().isDirectory()) {
                             if (indexedPaths.contains(childPath)) {
                                 final String childHash = rebuildTree(null, childPath, indexedPaths);
-                                rebuiltTree.addChild(new TreeObject(childHash, child.getName(), Tree.TYPE));
+                                rebuiltTree.addChild(new TreeEdge(childHash, child.getName(), Tree.TYPE));
                             } else {
                                 rebuiltTree.addChild(child);
                             }
@@ -263,10 +263,10 @@ public class MyGitHandler {
             if (indexedPaths.contains(path)) {
                 if (path.toFile().isDirectory()) {
                     final String treeHash = rebuildTree(null, path, indexedPaths);
-                    rebuiltTree.addChild(new TreeObject(treeHash, path.getFileName().toString(), Tree.TYPE));
+                    rebuiltTree.addChild(new TreeEdge(treeHash, path.getFileName().toString(), Tree.TYPE));
                 } else {
                     final String blobHash = mapper.createBlobFromPath(path);
-                    rebuiltTree.addChild(new TreeObject(blobHash, path.getFileName().toString(), Blob.TYPE));
+                    rebuiltTree.addChild(new TreeEdge(blobHash, path.getFileName().toString(), Blob.TYPE));
                 }
             }
         }
@@ -274,12 +274,12 @@ public class MyGitHandler {
     }
 
     @NotNull
-    private TreeObject updateBlobIfIndexed(@NotNull TreeObject object, @NotNull Path path,
-                                           @NotNull Set<Path> indexedPaths)
+    private TreeEdge updateBlobIfIndexed(@NotNull TreeEdge object, @NotNull Path path,
+                                         @NotNull Set<Path> indexedPaths)
             throws MyGitStateException, IOException {
         if (indexedPaths.contains(path)) {
             final String blobHash = mapper.createBlobFromPath(path);
-            return new TreeObject(blobHash, object.getName(), Blob.TYPE);
+            return new TreeEdge(blobHash, object.getName(), Blob.TYPE);
         } else {
             return object;
         }
@@ -320,13 +320,13 @@ public class MyGitHandler {
                         .filter(path -> !isAbsolutePathRepresentsInternal(path))
                         .collect(Collectors.toList());
         final List<Change> changes = new ArrayList<>();
-        final List<TreeObject> childrenList = tree == null ? new ArrayList<>() : tree.getChildren();
-        for (TreeObject child : childrenList) {
+        final List<TreeEdge> childrenList = tree == null ? new ArrayList<>() : tree.getChildren();
+        for (TreeEdge child : childrenList) {
             final Path childPath = Paths.get(prefixPath.toString(), child.getName());
             boolean contained = filePaths.contains(childPath);
             switch (child.getType()) {
                 case Tree.TYPE:
-                    final Tree childTree = mapper.readTree(child.getSha());
+                    final Tree childTree = mapper.readTree(child.getHash());
                     if (contained) {
                         filePaths.remove(childPath);
                         if (childPath.toFile().isDirectory()) {
@@ -334,13 +334,13 @@ public class MyGitHandler {
                         } else {
                             if (indexedPaths.contains(childPath)) {
                                 changes.add(new ChangeToBeCommitted(childPath, FileChangeType.MODIFICATION));
-                                for (TreeObject object : childTree.getChildren()) {
+                                for (TreeEdge object : childTree.getChildren()) {
                                     final Path objectPath = Paths.get(childPath.toString(), object.getName());
                                     changes.add(new ChangeToBeCommitted(objectPath, FileChangeType.REMOVAL));
                                 }
                             } else {
                                 changes.add(new ChangeNotStagedForCommit(childPath, FileChangeType.MODIFICATION));
-                                for (TreeObject object : childTree.getChildren()) {
+                                for (TreeEdge object : childTree.getChildren()) {
                                     final Path objectPath = Paths.get(childPath.toString(), object.getName());
                                     changes.add(new ChangeNotStagedForCommit(objectPath, FileChangeType.REMOVAL));
                                 }
@@ -353,7 +353,7 @@ public class MyGitHandler {
                     }
                     break;
                 case Blob.TYPE:
-                    final Blob childBlob = mapper.readBlob(child.getSha());
+                    final Blob childBlob = mapper.readBlob(child.getHash());
                     if (contained) {
                         filePaths.remove(childPath);
                         if (childPath.toFile().isDirectory()) {
@@ -458,32 +458,32 @@ public class MyGitHandler {
     private String mergeTwoTrees(@NotNull Tree baseTree, @NotNull Tree otherTree)
             throws MyGitStateException, IOException {
         final Tree mergedTree = new Tree();
-        final ListIterator<TreeObject> baseIterator = baseTree.getChildren().listIterator();
-        final ListIterator<TreeObject> otherIterator = otherTree.getChildren().listIterator();
+        final ListIterator<TreeEdge> baseIterator = baseTree.getChildren().listIterator();
+        final ListIterator<TreeEdge> otherIterator = otherTree.getChildren().listIterator();
         while (baseIterator.hasNext() && otherIterator.hasNext()) {
-            final TreeObject baseTreeObject = baseIterator.next();
-            final TreeObject otherTreeObject = otherIterator.next();
-            int comparison = baseTreeObject.getName().compareTo(otherTreeObject.getName());
+            final TreeEdge baseTreeEdge = baseIterator.next();
+            final TreeEdge otherTreeEdge = otherIterator.next();
+            int comparison = baseTreeEdge.getName().compareTo(otherTreeEdge.getName());
             if (comparison == 0) {
-                if (baseTreeObject.isDirectory() && otherTreeObject.isDirectory()) {
-                    final Tree baseChildTree = mapper.readTree(baseTreeObject.getName());
-                    final Tree otherChildTree = mapper.readTree(otherTreeObject.getName());
+                if (baseTreeEdge.isDirectory() && otherTreeEdge.isDirectory()) {
+                    final Tree baseChildTree = mapper.readTree(baseTreeEdge.getName());
+                    final Tree otherChildTree = mapper.readTree(otherTreeEdge.getName());
                     final String mergedTreeHash = mergeTwoTrees(baseChildTree, otherChildTree);
-                    final TreeObject mergedTreeObject =
-                            new TreeObject(mergedTreeHash, baseTreeObject.getName(), baseTreeObject.getType());
-                    mergedTree.addChild(mergedTreeObject);
+                    final TreeEdge mergedTreeEdge =
+                            new TreeEdge(mergedTreeHash, baseTreeEdge.getName(), baseTreeEdge.getType());
+                    mergedTree.addChild(mergedTreeEdge);
                 } else {
                     mergedTree.addChild(
-                            baseTreeObject.getDateCreated().compareTo(otherTreeObject.getDateCreated()) > 0
-                            ? baseTreeObject
-                            : otherTreeObject
+                            baseTreeEdge.getDateCreated().compareTo(otherTreeEdge.getDateCreated()) > 0
+                            ? baseTreeEdge
+                            : otherTreeEdge
                     );
                 }
             } else if (comparison < 0) {
-                mergedTree.addChild(baseTreeObject);
+                mergedTree.addChild(baseTreeEdge);
                 otherIterator.previous();
             } else {
-                mergedTree.addChild(otherTreeObject);
+                mergedTree.addChild(otherTreeEdge);
                 baseIterator.previous();
             }
         }

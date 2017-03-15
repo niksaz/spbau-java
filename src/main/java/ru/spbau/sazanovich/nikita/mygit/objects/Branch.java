@@ -8,22 +8,30 @@ import org.jetbrains.annotations.Nullable;
  */
 public class Branch {
 
+    /**
+     * Constant which is used through the library to identify Branch objects.
+     */
     public static final String TYPE = "branch";
 
     @NotNull
     private String name;
 
+    /**
+     * Constructs an object with given name.
+     *
+     * @param name name of the branch
+     */
     public Branch(@NotNull String name) {
         this.name = name;
     }
 
+    /**
+     * Gets name of the branch.
+     *
+     * @return name of the branch
+     */
     @NotNull
     public String getName() {
         return name;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object that) {
-        return that instanceof Branch && name.equals(((Branch) that).getName());
     }
 }
