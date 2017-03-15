@@ -9,8 +9,8 @@ import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
-import ru.spbau.sazanovich.nikita.mygit.utils.Hasher;
-import ru.spbau.sazanovich.nikita.mygit.utils.Hasher.ShaHashParts;
+import ru.spbau.sazanovich.nikita.mygit.utils.SHA1Hasher;
+import ru.spbau.sazanovich.nikita.mygit.utils.SHA1Parts;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -33,10 +33,10 @@ class Mapper {
 
     @NotNull
     String map(@NotNull Object object) throws MyGitStateException, IOException {
-        final String hash = Hasher.getHashFromObject(object);
-        ShaHashParts shaHashParts;
+        final String hash = SHA1Hasher.getHashFromObject(object);
+        SHA1Parts shaHashParts;
         try {
-            shaHashParts = new ShaHashParts(hash);
+            shaHashParts = new SHA1Parts(hash);
         } catch (MyGitIllegalArgumentException ignored) {
             throw new MyGitStateException("met an illegal hash value " + hash);
         }
@@ -193,9 +193,9 @@ class Mapper {
 
     @NotNull
     Object readObject(@NotNull String objectHash) throws MyGitStateException, IOException {
-        ShaHashParts shaHashParts;
+        SHA1Parts shaHashParts;
         try {
-            shaHashParts = new ShaHashParts(objectHash);
+            shaHashParts = new SHA1Parts(objectHash);
         } catch (MyGitIllegalArgumentException ignored) {
             throw new MyGitStateException("met an illegal hash value " + objectHash);
         }

@@ -11,7 +11,7 @@ import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
 import ru.spbau.sazanovich.nikita.mygit.status.*;
-import ru.spbau.sazanovich.nikita.mygit.utils.Hasher;
+import ru.spbau.sazanovich.nikita.mygit.utils.SHA1Hasher;
 
 import java.io.File;
 import java.io.IOException;
@@ -140,7 +140,7 @@ public class MyGitHandler {
         final List<CommitLog> logsHistory = new ArrayList<>();
         for (Commit commit : commitTree) {
             final CommitLog log =
-                    new CommitLog(Hasher.getHashFromObject(commit), commit.getMessage(),
+                    new CommitLog(SHA1Hasher.getHashFromObject(commit), commit.getMessage(),
                             commit.getAuthor(), commit.getDateCreated());
             logsHistory.add(log);
         }
