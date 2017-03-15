@@ -457,25 +457,41 @@ public class MyGitHandler {
     @NotNull
     private String mergeTwoTrees(@NotNull Tree baseTree, @NotNull Tree otherTree)
             throws MyGitStateException, IOException {
-        final List<TreeObject> otherList = new ArrayList<>(otherTree.getChildren());
         final Tree mergedTree = new Tree();
-        for (TreeObject baseChild : baseTree.getChildren()) {
-            int otherIndex = otherList.indexOf(baseChild);
-            final TreeObject otherChild = otherIndex == -1 ? null : otherList.remove(otherIndex);
-            if (otherChild != null
-                    && baseChild.getType().equals(Tree.TYPE)
-                    && otherChild.getType().equals(Tree.TYPE)) {
-                final Tree baseChildTree = mapper.readTree(baseChild.getSha());
-                final Tree otherChildTree = mapper.readTree(otherChild.getSha());
-                final String mergedChildTreeHash = mergeTwoTrees(baseChildTree, otherChildTree);
-                final TreeObject mergedTreeObject = new TreeObject(mergedChildTreeHash, baseChild.getName(), Tree.TYPE);
-                mergedTree.addChild(mergedTreeObject);
+        final ListIterator<TreeObject> baseIterator = baseTree.getChildren().listIterator();
+        final ListIterator<TreeObject> otherIterator = otherTree.getChildren().listIterator();
+        while (baseIterator.hasNext() && otherIterator.hasNext()) {
+            final TreeObject baseTreeObject = baseIterator.next();
+            final TreeObject otherTreeObject = otherIterator.next();
+            int comparison = baseTreeObject.getName().compareTo(otherTreeObject.getName());
+            if (comparison == 0) {
+                if (baseTreeObject.isDirectory() && otherTreeObject.isDirectory()) {
+                    final Tree baseChildTree = mapper.readTree(baseTreeObject.getName());
+                    final Tree otherChildTree = mapper.readTree(otherTreeObject.getName());
+                    final String mergedTreeHash = mergeTwoTrees(baseChildTree, otherChildTree);
+                    final TreeObject mergedTreeObject =
+                            new TreeObject(mergedTreeHash, baseTreeObject.getName(), baseTreeObject.getType());
+                    mergedTree.addChild(mergedTreeObject);
+                } else {
+                    mergedTree.addChild(
+                            baseTreeObject.getDateCreated().compareTo(otherTreeObject.getDateCreated()) <= 0
+                            ? baseTreeObject
+                            : otherTreeObject
+                    );
+                }
+            } else if (comparison < 0) {
+                mergedTree.addChild(baseTreeObject);
+                otherIterator.previous();
             } else {
-                mergedTree.addChild(baseChild);
+                mergedTree.addChild(otherTreeObject);
+                baseIterator.previous();
             }
         }
-        for (TreeObject otherChild : otherList) {
-            mergedTree.addChild(otherChild);
+        while (baseIterator.hasNext()) {
+            mergedTree.addChild(baseIterator.next());
+        }
+        while (otherIterator.hasNext()) {
+            mergedTree.addChild(otherIterator.next());
         }
         return mapper.map(mergedTree);
     }

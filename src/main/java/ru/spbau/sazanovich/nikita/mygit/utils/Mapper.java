@@ -11,13 +11,11 @@ import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeObject;
 import ru.spbau.sazanovich.nikita.mygit.utils.Hasher.HashParts;
 
 import java.io.*;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -225,7 +223,7 @@ public class Mapper {
             final File childFile = childPath.toFile();
             if (child.getType().equals(Blob.TYPE)) {
                 if (childFile.exists() && !getTypeForPath(childPath).equals(Blob.TYPE)) {
-                    Files.delete(childPath);
+                    deleteDirectoryWithFiles(childPath);
                     Files.createFile(childPath);
                 }
                 final Blob childBlob = readBlob(child.getSha());
@@ -281,5 +279,13 @@ public class Mapper {
             throw new MyGitStateException("could not find " + headFile.getAbsolutePath());
         }
         return headFile;
+    }
+
+    private static void deleteDirectoryWithFiles(@NotNull Path directoryPath) throws IOException {
+        Files
+        .walk(directoryPath)
+        .sorted(Comparator.reverseOrder())
+        .map(Path::toFile)
+        .forEach(File::delete);
     }
 }

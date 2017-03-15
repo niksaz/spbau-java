@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -45,11 +45,14 @@ public class Tree implements Serializable {
         private String name;
         @NotNull
         private String type;
+        @NotNull
+        private Date dateCreated;
 
         public TreeObject(@NotNull String sha, @NotNull String name, @NotNull String type) {
             this.sha = sha;
             this.name = name;
             this.type = type;
+            this.dateCreated = new Date();
         }
 
         @NotNull
@@ -67,14 +70,13 @@ public class Tree implements Serializable {
             return type;
         }
 
-        @Override
-        public boolean equals(Object that) {
-            return that instanceof TreeObject && getName().equals(((TreeObject) that).getName());
+        @NotNull
+        public Date getDateCreated() {
+            return dateCreated;
         }
 
-        @Override
-        public int hashCode() {
-            return name.hashCode();
+        public boolean isDirectory() {
+            return getType().equals(Tree.TYPE);
         }
     }
 }
