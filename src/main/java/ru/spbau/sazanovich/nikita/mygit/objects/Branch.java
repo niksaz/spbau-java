@@ -1,7 +1,6 @@
 package ru.spbau.sazanovich.nikita.mygit.objects;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * Class to represent branches info given to the user.

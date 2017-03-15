@@ -12,7 +12,6 @@ import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
 import ru.spbau.sazanovich.nikita.mygit.status.*;
 import ru.spbau.sazanovich.nikita.mygit.utils.Hasher;
-import ru.spbau.sazanovich.nikita.mygit.utils.Mapper;
 
 import java.io.File;
 import java.io.IOException;

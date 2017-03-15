@@ -1,6 +1,7 @@
-package ru.spbau.sazanovich.nikita.mygit.utils;
+package ru.spbau.sazanovich.nikita.mygit;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.logs.HeadStatus;
 import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
@@ -8,6 +9,7 @@ import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
+import ru.spbau.sazanovich.nikita.mygit.utils.Hasher;
 import ru.spbau.sazanovich.nikita.mygit.utils.Hasher.HashParts;
 
 import java.io.*;
@@ -18,21 +20,26 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Class which is used to map object and files to
+ * Class which is used to make updates to internal representation in a filesystem.
  */
-public class Mapper {
+class Mapper {
 
     @NotNull
     private final Path myGitDirectory;
 
-    public Mapper(@NotNull Path path) {
+    Mapper(@NotNull Path path) {
         this.myGitDirectory = path;
     }
 
     @NotNull
-    public String map(@NotNull Object object) throws MyGitStateException, IOException {
+    String map(@NotNull Object object) throws MyGitStateException, IOException {
         final String hash = Hasher.getHashFromObject(object);
-        final HashParts hashParts = new HashParts(hash);
+        HashParts hashParts;
+        try {
+            hashParts = new HashParts(hash);
+        } catch (MyGitIllegalArgumentException ignored) {
+            throw new MyGitStateException("met an illegal hash value " + hash);
+        }
         final Path directoryPath = Paths.get(myGitDirectory + "/.mygit/objects/" + hashParts.getFirst());
         final Path filePath = Paths.get(directoryPath.toString(), hashParts.getLast());
         if (!directoryPath.toFile().exists()) {
@@ -50,7 +57,7 @@ public class Mapper {
     }
 
     @NotNull
-    public Set<Path> readIndexPaths() throws MyGitStateException, IOException {
+    Set<Path> readIndexPaths() throws MyGitStateException, IOException {
         final File indexFile = getIndexFile();
         return Files
                 .lines(indexFile.toPath())
@@ -59,7 +66,7 @@ public class Mapper {
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
-    public void writeBranch(@NotNull String branchName, @NotNull String commitHash) throws IOException {
+    void writeBranch(@NotNull String branchName, @NotNull String commitHash) throws IOException {
         final Path branchPath = Paths.get(myGitDirectory.toString(), ".mygit", "branches", branchName);
         if (!branchPath.toFile().exists()) {
             Files.createFile(branchPath);
@@ -70,7 +77,7 @@ public class Mapper {
         }
     }
 
-    public void writeIndexPaths(@NotNull Set<Path> paths) throws MyGitStateException, IOException {
+    void writeIndexPaths(@NotNull Set<Path> paths) throws MyGitStateException, IOException {
         final File indexFile = getIndexFile();
         try (FileWriter fileWriter = new FileWriter(indexFile);
              BufferedWriter writer = new BufferedWriter(fileWriter)
@@ -81,7 +88,7 @@ public class Mapper {
         }
     }
 
-    public void moveHeadToCommitHash(@NotNull String commitHash) throws MyGitStateException, IOException {
+    void moveHeadToCommitHash(@NotNull String commitHash) throws MyGitStateException, IOException {
         final HeadStatus headStatus = getHeadStatus();
         HeadStatus currentHeadStatus;
         if (headStatus.getType().equals(Branch.TYPE)) {
@@ -94,7 +101,7 @@ public class Mapper {
         setHeadStatus(currentHeadStatus);
     }
 
-    public void setHeadStatus(@NotNull HeadStatus headStatus) throws MyGitStateException, IOException {
+    void setHeadStatus(@NotNull HeadStatus headStatus) throws MyGitStateException, IOException {
         final File headFile = getHeadFile();
         try (FileWriter fileWriter = new FileWriter(headFile)
         ) {
@@ -104,7 +111,7 @@ public class Mapper {
     }
 
     @NotNull
-    public HeadStatus getHeadStatus() throws MyGitStateException, IOException {
+    HeadStatus getHeadStatus() throws MyGitStateException, IOException {
         final File headFile = getHeadFile();
         final List<String> headLines = Files.lines(headFile.toPath()).collect(Collectors.toList());
         if (headLines.size() != 2) {
@@ -119,7 +126,7 @@ public class Mapper {
     }
 
     @NotNull
-    public String getHeadCommitHash() throws MyGitStateException, IOException {
+    String getHeadCommitHash() throws MyGitStateException, IOException {
         final HeadStatus headStatus = getHeadStatus();
         String commitHash;
         if (headStatus.getType().equals(Branch.TYPE)) {
@@ -131,25 +138,25 @@ public class Mapper {
     }
 
     @NotNull
-    public Commit getHeadCommit() throws MyGitStateException, IOException {
+    Commit getHeadCommit() throws MyGitStateException, IOException {
         return readCommit(getHeadCommitHash());
     }
 
     @NotNull
-    public Tree getHeadTree() throws MyGitStateException, IOException {
+    Tree getHeadTree() throws MyGitStateException, IOException {
         final Commit headCommit = getHeadCommit();
         return readTree(headCommit.getTreeHash());
     }
 
     @NotNull
-    public Tree getBranchTree(@NotNull String branchName) throws MyGitStateException, IOException {
+    Tree getBranchTree(@NotNull String branchName) throws MyGitStateException, IOException {
         final String branchCommitHash = getBranchCommitHash(branchName);
         final Commit branchCommit = readCommit(branchCommitHash);
         return readTree(branchCommit.getTreeHash());
     }
 
     @NotNull
-    public String getBranchCommitHash(@NotNull String branchName) throws MyGitStateException, IOException {
+    String getBranchCommitHash(@NotNull String branchName) throws MyGitStateException, IOException {
         final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + branchName);
         if (!branchFile.exists()) {
             throw new MyGitStateException("could not find branch '" + branchName + "'");
@@ -163,30 +170,35 @@ public class Mapper {
     }
 
     @NotNull
-    public Commit readCommit(@NotNull String commitHash) throws MyGitStateException, IOException {
+    Commit readCommit(@NotNull String commitHash) throws MyGitStateException, IOException {
         return readObjectAndCast(commitHash, Commit.class);
     }
 
     @NotNull
-    public Tree readTree(@NotNull String treeHash) throws MyGitStateException, IOException {
+    Tree readTree(@NotNull String treeHash) throws MyGitStateException, IOException {
         return readObjectAndCast(treeHash, Tree.class);
     }
 
     @NotNull
-    public Blob readBlob(@NotNull String blobHash) throws MyGitStateException, IOException {
+    Blob readBlob(@NotNull String blobHash) throws MyGitStateException, IOException {
         return readObjectAndCast(blobHash, Blob.class);
     }
 
     @NotNull
-    public String createBlobFromPath(@NotNull Path path) throws MyGitStateException, IOException {
+    String createBlobFromPath(@NotNull Path path) throws MyGitStateException, IOException {
         final byte[] data = Files.readAllBytes(path);
         final Blob blob = new Blob(data);
         return map(blob);
     }
 
     @NotNull
-    public Object readObject(@NotNull String objectHash) throws MyGitStateException, IOException {
-        final HashParts hashParts = new HashParts(objectHash);
+    Object readObject(@NotNull String objectHash) throws MyGitStateException, IOException {
+        HashParts hashParts;
+        try {
+            hashParts = new HashParts(objectHash);
+        } catch (MyGitIllegalArgumentException ignored) {
+            throw new MyGitStateException("met an illegal hash value " + objectHash);
+        }
         final String objectPath =
                 myGitDirectory + "/.mygit/objects/" + hashParts.getFirst() + "/" + hashParts.getLast();
         final File objectFile = new File(objectPath);
@@ -202,18 +214,18 @@ public class Mapper {
         }
     }
 
-    @NotNull
-    private <T> T readObjectAndCast(@NotNull String objectHash, @NotNull Class<T> objectClass)
-            throws MyGitStateException, IOException {
-        return objectClass.cast(readObject(objectHash));
-    }
-
-    public void moveFromCommitToCommit(@NotNull Commit fromCommit, Commit toCommit)
+    void moveFromCommitToCommit(@NotNull Commit fromCommit, Commit toCommit)
             throws MyGitStateException, IOException {
         final Tree fromTree = readTree(fromCommit.getTreeHash());
         final Tree toTree = readTree(toCommit.getTreeHash());
         deleteFilesFromTree(fromTree, myGitDirectory);
         loadFilesFromTree(toTree, myGitDirectory);
+    }
+
+    @NotNull
+    private <T> T readObjectAndCast(@NotNull String objectHash, @NotNull Class<T> objectClass)
+            throws MyGitStateException, IOException {
+        return objectClass.cast(readObject(objectHash));
     }
 
     private void loadFilesFromTree(@NotNull Tree tree, @NotNull Path path) throws MyGitStateException, IOException {

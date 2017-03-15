@@ -1,17 +1,18 @@
 package ru.spbau.sazanovich.nikita.mygit.utils;
 
 import org.jetbrains.annotations.NotNull;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
+import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitIllegalArgumentException;
 
 import javax.xml.bind.DatatypeConverter;
-import java.io.*;
-import java.security.DigestInputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * Hashes files using SHA1 algorithm. Used to map files stored in a repository.
+ * Hashes objects using SHA-1 algorithm.
  */
 public class Hasher {
 
@@ -20,6 +21,13 @@ public class Hasher {
     private static final int FIRST_PART_ENDS = 2;
     private static final int HASH_LENGTH = 40;
 
+    /**
+     * Computes SHA-1 hash for a given object.
+     *
+     * @param object object which hash should be computed
+     * @return string representation of sha-1 hash
+     * @throws IOException if an exception occurs in a hasher
+     */
     @NotNull
     public static String getHashFromObject(@NotNull Object object) throws IOException {
         return bytesToHex(getByteHashFromObject(object));
@@ -58,28 +66,34 @@ public class Hasher {
     /**
      * Used during internal storage -- splitting on a directory name and a file name.
      */
-    static class HashParts {
+    public static class HashParts {
 
         @NotNull
         private String first;
         @NotNull
         private String last;
 
-        HashParts(@NotNull String hash) throws MyGitStateException {
+        /**
+         * Constructs hash parts from the given string.
+         *
+         * @param hash string which represents sha-1 hash
+         * @throws MyGitIllegalArgumentException if the string's length isn't 40 characters
+         */
+        public HashParts(@NotNull String hash) throws MyGitIllegalArgumentException {
             if (hash.length() != HASH_LENGTH) {
-                throw new MyGitStateException("hash length isn't " + HASH_LENGTH);
+                throw new MyGitIllegalArgumentException("hash length isn't " + HASH_LENGTH);
             }
             first = hash.substring(0, FIRST_PART_ENDS);
             last = hash.substring(FIRST_PART_ENDS);
         }
 
         @NotNull
-        String getFirst() {
+        public String getFirst() {
             return first;
         }
 
         @NotNull
-        String getLast() {
+        public String getLast() {
             return last;
         }
     }

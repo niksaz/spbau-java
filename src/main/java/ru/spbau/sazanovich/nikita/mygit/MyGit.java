@@ -7,7 +7,6 @@ import ru.spbau.sazanovich.nikita.mygit.logs.HeadStatus;
 import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
-import ru.spbau.sazanovich.nikita.mygit.utils.Mapper;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -1,4 +1,4 @@
 /**
- * Provides handlers of library's user requests.
+ * Provides handlers of user requests to the library.
  */
 package ru.spbau.sazanovich.nikita.mygit;
