@@ -474,7 +474,7 @@ public class MyGitHandler {
                     mergedTree.addChild(mergedTreeObject);
                 } else {
                     mergedTree.addChild(
-                            baseTreeObject.getDateCreated().compareTo(otherTreeObject.getDateCreated()) <= 0
+                            baseTreeObject.getDateCreated().compareTo(otherTreeObject.getDateCreated()) > 0
                             ? baseTreeObject
                             : otherTreeObject
                     );
