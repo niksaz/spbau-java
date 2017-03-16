@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher;
 import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher.HashParts;
+import ru.spbau.sazanovich.nikita.testing.MyGitInitialized;
 
 import java.io.FileInputStream;
 import java.io.FileWriter;
@@ -23,16 +24,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class MapperTest {
+public class MapperTest extends MyGitInitialized {
 
-    @Rule
-    public final TemporaryFolder folder = new TemporaryFolder();
-
-    private Path myGitPath;
-
-    @Before
+    @Override
     public void initializeMyGit() throws Exception {
-        myGitPath = folder.getRoot().toPath();
+        super.initializeMyGit();
         final Path myGitInternalPath = Paths.get(myGitPath.toString(), ".mygit");
         Files.createDirectory(myGitInternalPath);
         Files.createFile(Paths.get(myGitInternalPath.toString(), "HEAD"));

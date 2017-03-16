@@ -1,8 +1,9 @@
 package ru.spbau.sazanovich.nikita.mygit;
 
 import org.junit.Test;
+import ru.spbau.sazanovich.nikita.testing.MyGitInitialized;
 
-public class MyGitHandlerTest {
+public class MyGitHandlerTest extends MyGitInitialized {
 
     @Test
     public void getHeadChanges() throws Exception {
