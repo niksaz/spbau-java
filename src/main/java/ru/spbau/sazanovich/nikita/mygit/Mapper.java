@@ -43,7 +43,8 @@ class Mapper {
         } catch (MyGitIllegalArgumentException ignored) {
             throw new MyGitStateException("met an illegal hash value " + hash);
         }
-        final Path directoryPath = Paths.get(myGitDirectory + "/.mygit/objects/" + shaHashParts.getFirst());
+        final Path directoryPath =
+                Paths.get(myGitDirectory.toString(),".mygit", "objects", shaHashParts.getFirst());
         final Path filePath = Paths.get(directoryPath.toString(), shaHashParts.getLast());
         if (!directoryPath.toFile().exists()) {
             Files.createDirectory(directoryPath);
