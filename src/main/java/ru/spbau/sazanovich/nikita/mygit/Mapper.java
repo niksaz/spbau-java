@@ -70,17 +70,6 @@ class Mapper {
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
-    void writeBranch(@NotNull String branchName, @NotNull String commitHash) throws IOException {
-        final Path branchPath = Paths.get(myGitDirectory.toString(), ".mygit", "branches", branchName);
-        if (!branchPath.toFile().exists()) {
-            Files.createFile(branchPath);
-        }
-        try (FileWriter writer = new FileWriter(branchPath.toFile())
-        ) {
-            writer.write(commitHash);
-        }
-    }
-
     void writeIndexPaths(@NotNull Set<Path> paths) throws MyGitStateException, IOException {
         final File indexFile = getIndexFile();
         try (FileWriter fileWriter = new FileWriter(indexFile);
@@ -89,6 +78,17 @@ class Mapper {
             for (Path path : paths) {
                 writer.write(myGitDirectory.relativize(path).toString() + "\n");
             }
+        }
+    }
+
+    void writeBranch(@NotNull String branchName, @NotNull String commitHash) throws IOException {
+        final Path branchPath = Paths.get(myGitDirectory.toString(), ".mygit", "branches", branchName);
+        if (!branchPath.toFile().exists()) {
+            Files.createFile(branchPath);
+        }
+        try (FileWriter writer = new FileWriter(branchPath.toFile())
+        ) {
+            writer.write(commitHash);
         }
     }
 

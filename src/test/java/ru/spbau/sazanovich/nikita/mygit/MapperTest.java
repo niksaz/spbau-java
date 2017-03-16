@@ -8,10 +8,14 @@ import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher;
 import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher.HashParts;
 
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.ObjectInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -65,15 +69,49 @@ public class MapperTest {
 
     @Test
     public void readIndexPaths() throws Exception {
-    }
+        final Set<Path> paths = new HashSet<>();
+        final Path path1 = Paths.get(myGitPath.toString(), "file1.txt");
+        final Path path2 = Paths.get(myGitPath.toString(), "file2.txt");
+        final Path path3 = Paths.get(myGitPath.toString(), "file3.txt");
+        paths.add(path1);
+        paths.add(path2);
+        paths.add(path3);
+        final Path indexPath = Paths.get(myGitPath.toString(), ".mygit", "index");
+        try (FileWriter fileWriter = new FileWriter(indexPath.toFile())
+        ) {
+            fileWriter.write(path1 + "\n");
+            fileWriter.write(path2 + "\n");
+            fileWriter.write(path3 + "\n");
+        }
 
-    @Test
-    public void writeBranch() throws Exception {
-
+        final Mapper mapper = new Mapper(myGitPath, mock(MyGitHasher.class));
+        final Set<Path> readPath = mapper.readIndexPaths();
+        assertEquals(paths, readPath);
     }
 
     @Test
     public void writeIndexPaths() throws Exception {
+        final Set<Path> absolutePaths = new HashSet<>();
+        final Set<Path> relativePaths = new HashSet<>();
+        final Path path1 = Paths.get(myGitPath.toString(), "file1.txt");
+        final Path path2 = Paths.get(myGitPath.toString(), "file2.txt");
+        final Path path3 = Paths.get(myGitPath.toString(), "file3.txt");
+        absolutePaths.add(path1);
+        absolutePaths.add(path2);
+        absolutePaths.add(path3);
+        relativePaths.add(myGitPath.relativize(path1));
+        relativePaths.add(myGitPath.relativize(path2));
+        relativePaths.add(myGitPath.relativize(path3));
+        final Mapper mapper = new Mapper(myGitPath, mock(MyGitHasher.class));
+        mapper.writeIndexPaths(absolutePaths);
+
+        final Path indexPath = Paths.get(myGitPath.toString(), ".mygit", "index");
+        final Set<Path> writtenPaths = Files.lines(indexPath).map(line -> Paths.get(line)).collect(Collectors.toSet());
+        assertEquals(relativePaths, writtenPaths);
+    }
+
+    @Test
+    public void writeBranch() throws Exception {
 
     }
 
@@ -146,5 +184,4 @@ public class MapperTest {
     public void moveFromCommitToCommit() throws Exception {
 
     }
-
 }
