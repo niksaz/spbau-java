@@ -10,6 +10,8 @@ import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 import ru.spbau.sazanovich.nikita.mygit.status.*;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,12 +43,13 @@ public class ConsoleApp {
             showHelp();
             return;
         }
+        final Path currentDirectory = Paths.get("");
         try {
             if (args[0].equals(INIT_CMD)) {
-                MyGit.init();
+                MyGit.init(currentDirectory);
                 System.out.println("Successfully initialized mygit repository.");
             } else {
-                final MyGitHandler handler = new MyGitHandler();
+                final MyGitHandler handler = new MyGitHandler(currentDirectory);
                 switch (args[0]) {
                     case ADD_CMD:
                         if (args.length == 1) {

@@ -19,15 +19,17 @@ import java.nio.file.Paths;
 public class MyGit {
 
     /**
-     * Initialize MyGit repository in a current directory.
+     * Initialize MyGit repository in a given directory.
      *
+     * @param directory directory to initialize MyGit in
      * @throws MyGitAlreadyInitialized if the directory already contains .mygit file
      * @throws MyGitStateException if an internal error occurs during operations
      * @throws IOException if an error occurs during working with a filesystem
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static void init() throws MyGitAlreadyInitialized, MyGitStateException, IOException {
-        final Path myGitPath = Paths.get(".mygit");
+    public static void init(@NotNull Path directory)
+            throws MyGitAlreadyInitialized, MyGitStateException, IOException {
+        final Path myGitPath = Paths.get(directory.toString(), ".mygit");
         if (myGitPath.toFile().exists()) {
             throw new MyGitAlreadyInitialized();
         } else {

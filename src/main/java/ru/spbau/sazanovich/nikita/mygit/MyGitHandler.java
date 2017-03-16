@@ -36,12 +36,13 @@ public class MyGitHandler {
     private final Mapper mapper;
 
     /**
-     * Constructs a handler in a current directory.
+     * Constructs a handler in a given directory.
      *
+     * @param directory current directory for a handler
      * @throws MyGitStateException if the directory (or any of the parent directories) is not a MyGit repository
      */
-    public MyGitHandler() throws MyGitStateException {
-        final Path path = findMyGitPath(Paths.get("").toAbsolutePath());
+    public MyGitHandler(@NotNull Path directory) throws MyGitStateException {
+        final Path path = findMyGitPath(directory.toAbsolutePath());
         if (path == null) {
             throw new MyGitStateException("Not a mygit repository (or any of the parent directories)");
         }
