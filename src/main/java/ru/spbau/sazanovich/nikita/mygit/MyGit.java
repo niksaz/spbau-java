@@ -7,6 +7,7 @@ import ru.spbau.sazanovich.nikita.mygit.logs.HeadStatus;
 import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
+import ru.spbau.sazanovich.nikita.mygit.utils.SHA1Hasher;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,7 +35,7 @@ public class MyGit {
             throw new MyGitAlreadyInitialized();
         } else {
             Files.createDirectory(myGitPath);
-            final Mapper mapper = new Mapper(myGitPath.toAbsolutePath().getParent());
+            final Mapper mapper = new Mapper(myGitPath.toAbsolutePath().getParent(), new SHA1Hasher());
             Files.createFile(Paths.get(myGitPath.toString(), "HEAD"));
             mapper.setHeadStatus(new HeadStatus(Branch.TYPE, "master"));
             Files.createFile(Paths.get(myGitPath.toString(), "index"));

@@ -9,8 +9,8 @@ import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
-import ru.spbau.sazanovich.nikita.mygit.utils.SHA1Hasher;
-import ru.spbau.sazanovich.nikita.mygit.utils.SHA1Parts;
+import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher;
+import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher.HashParts;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -26,17 +26,20 @@ class Mapper {
 
     @NotNull
     private final Path myGitDirectory;
+    @NotNull
+    private final MyGitHasher hasher;
 
-    Mapper(@NotNull Path path) {
+    Mapper(@NotNull Path path, @NotNull MyGitHasher hasher) {
         this.myGitDirectory = path;
+        this.hasher = hasher;
     }
 
     @NotNull
     String map(@NotNull Object object) throws MyGitStateException, IOException {
-        final String hash = SHA1Hasher.getHashFromObject(object);
-        SHA1Parts shaHashParts;
+        final String hash = hasher.getHashFromObject(object);
+        HashParts shaHashParts;
         try {
-            shaHashParts = new SHA1Parts(hash);
+            shaHashParts = hasher.splitHash(hash);
         } catch (MyGitIllegalArgumentException ignored) {
             throw new MyGitStateException("met an illegal hash value " + hash);
         }
@@ -193,9 +196,9 @@ class Mapper {
 
     @NotNull
     Object readObject(@NotNull String objectHash) throws MyGitStateException, IOException {
-        SHA1Parts shaHashParts;
+        HashParts shaHashParts;
         try {
-            shaHashParts = new SHA1Parts(objectHash);
+            shaHashParts = hasher.splitHash(objectHash);
         } catch (MyGitIllegalArgumentException ignored) {
             throw new MyGitStateException("met an illegal hash value " + objectHash);
         }
@@ -220,6 +223,17 @@ class Mapper {
         final Tree toTree = readTree(toCommit.getTreeHash());
         deleteFilesFromTree(fromTree, myGitDirectory);
         loadFilesFromTree(toTree, myGitDirectory);
+    }
+
+    /**
+     * Computes the object's hash using current hasher.
+     *
+     * @param object an object to hash
+     * @return hash of the object
+     * @throws IOException if an exception occurs in a hasher
+     */
+    String getObjectHash(@NotNull Object object) throws IOException {
+        return hasher.getHashFromObject(object);
     }
 
     @NotNull

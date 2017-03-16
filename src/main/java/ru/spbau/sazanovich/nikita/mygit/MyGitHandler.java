@@ -47,7 +47,7 @@ public class MyGitHandler {
             throw new MyGitStateException("Not a mygit repository (or any of the parent directories)");
         }
         myGitDirectory = path;
-        mapper = new Mapper(myGitDirectory);
+        mapper = new Mapper(myGitDirectory, new SHA1Hasher());
     }
 
     /**
@@ -141,7 +141,7 @@ public class MyGitHandler {
         final List<CommitLog> logsHistory = new ArrayList<>();
         for (Commit commit : commitTree) {
             final CommitLog log =
-                    new CommitLog(SHA1Hasher.getHashFromObject(commit), commit.getMessage(),
+                    new CommitLog(mapper.getObjectHash(commit), commit.getMessage(),
                             commit.getAuthor(), commit.getDateCreated());
             logsHistory.add(log);
         }
