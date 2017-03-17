@@ -14,10 +14,10 @@ public class MyGitInitialized {
     @Rule
     public final TemporaryFolder folder = new TemporaryFolder();
 
-    protected Path myGitPath;
+    protected Path myGitRepositoryPath;
 
     @Before
     public void initializeMyGit() throws Exception {
-        myGitPath = folder.getRoot().toPath();
+        myGitRepositoryPath = folder.getRoot().toPath();
     }
 }

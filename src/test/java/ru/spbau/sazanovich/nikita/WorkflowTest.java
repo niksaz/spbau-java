@@ -26,13 +26,13 @@ public class WorkflowTest extends MyGitInitialized {
     @Override
     public void initializeMyGit() throws Exception {
         super.initializeMyGit();
-        MyGit.init(myGitPath);
-        handler = new MyGitHandler(myGitPath);
+        MyGit.init(myGitRepositoryPath);
+        handler = new MyGitHandler(myGitRepositoryPath);
     }
 
     @Test
     public void workflowWithMutualChangesMerge() throws Exception {
-        final Path filePath = Paths.get(myGitPath.toString(), "file.txt");
+        final Path filePath = Paths.get(myGitRepositoryPath.toString(), "file.txt");
         Files.createFile(filePath);
         final List<Change> changeList = handler.getHeadChanges();
         assertEquals(1, changeList.size());
@@ -68,9 +68,9 @@ public class WorkflowTest extends MyGitInitialized {
         assertEquals(1, logsHistory.size());
         final String initialRevisionHash = logsHistory.get(0).getRevisionHash();
 
-        final Path readmePath = Paths.get(myGitPath.toString(), "README.md");
+        final Path readmePath = Paths.get(myGitRepositoryPath.toString(), "README.md");
         Files.createFile(readmePath);
-        final Path inputsPath = Paths.get(myGitPath.toString(), "inputs");
+        final Path inputsPath = Paths.get(myGitRepositoryPath.toString(), "inputs");
         Files.createDirectory(inputsPath);
         final Path someInputPath = Paths.get(inputsPath.toString(), "input1.txt");
         Files.createFile(someInputPath);
@@ -79,7 +79,7 @@ public class WorkflowTest extends MyGitInitialized {
         handler.commitWithMessage("inputs directory added");
 
         handler.checkout(initialRevisionHash);
-        final Path howToFile = Paths.get(myGitPath.toString(), "HOWTO.md");
+        final Path howToFile = Paths.get(myGitRepositoryPath.toString(), "HOWTO.md");
         Files.createFile(howToFile);
         Files.createFile(inputsPath);
         handler.addPathsToIndex(Arrays.asList(howToFile.toString(), inputsPath.toString()));
