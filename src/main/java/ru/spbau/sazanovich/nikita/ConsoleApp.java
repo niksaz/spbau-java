@@ -43,7 +43,7 @@ public class ConsoleApp {
             showHelp();
             return;
         }
-        final Path currentDirectory = Paths.get("");
+        final Path currentDirectory = Paths.get(System.getProperty("user.dir"));
         try {
             if (args[0].equals(INIT_CMD)) {
                 MyGit.init(currentDirectory);

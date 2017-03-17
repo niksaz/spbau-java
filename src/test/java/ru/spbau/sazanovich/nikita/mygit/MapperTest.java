@@ -1,9 +1,6 @@
 package ru.spbau.sazanovich.nikita.mygit;
 
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher;
 import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher.HashParts;
 import ru.spbau.sazanovich.nikita.testing.MyGitInitialized;
@@ -87,19 +84,15 @@ public class MapperTest extends MyGitInitialized {
 
     @Test
     public void writeIndexPaths() throws Exception {
-        final Set<Path> absolutePaths = new HashSet<>();
         final Set<Path> relativePaths = new HashSet<>();
         final Path path1 = Paths.get(myGitPath.toString(), "file1.txt");
         final Path path2 = Paths.get(myGitPath.toString(), "file2.txt");
         final Path path3 = Paths.get(myGitPath.toString(), "file3.txt");
-        absolutePaths.add(path1);
-        absolutePaths.add(path2);
-        absolutePaths.add(path3);
         relativePaths.add(myGitPath.relativize(path1));
         relativePaths.add(myGitPath.relativize(path2));
         relativePaths.add(myGitPath.relativize(path3));
         final Mapper mapper = new Mapper(myGitPath, mock(MyGitHasher.class));
-        mapper.writeIndexPaths(absolutePaths);
+        mapper.writeIndexPaths(relativePaths);
 
         final Path indexPath = Paths.get(myGitPath.toString(), ".mygit", "index");
         final Set<Path> writtenPaths = Files.lines(indexPath).map(line -> Paths.get(line)).collect(Collectors.toSet());

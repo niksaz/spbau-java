@@ -29,7 +29,10 @@ class Mapper {
     @NotNull
     private final MyGitHasher hasher;
 
-    Mapper(@NotNull Path path, @NotNull MyGitHasher hasher) {
+    Mapper(@NotNull Path path, @NotNull MyGitHasher hasher) throws MyGitIllegalArgumentException {
+        if (!path.isAbsolute()) {
+            throw new MyGitIllegalArgumentException("path parameter should be an absolute");
+        }
         this.myGitDirectory = path;
         this.hasher = hasher;
     }
@@ -66,7 +69,6 @@ class Mapper {
         return Files
                 .lines(indexFile.toPath())
                 .map(Paths::get)
-                .map(Path::toAbsolutePath)
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
@@ -76,7 +78,7 @@ class Mapper {
              BufferedWriter writer = new BufferedWriter(fileWriter)
         ) {
             for (Path path : paths) {
-                writer.write(myGitDirectory.relativize(path).toString() + "\n");
+                writer.write(path + "\n");
             }
         }
     }
@@ -246,17 +248,21 @@ class Mapper {
     private void loadFilesFromTree(@NotNull Tree tree, @NotNull Path path) throws MyGitStateException, IOException {
         for (TreeEdge child : tree.getChildren()) {
             final Path childPath = Paths.get(path.toString(), child.getName());
-            final File childFile = childPath.toFile();
+
             if (child.getType().equals(Blob.TYPE)) {
-                if (childFile.exists() && !getTypeForPath(childPath).equals(Blob.TYPE)) {
+                if (Files.exists(childPath) && !getTypeForPath(childPath).equals(Blob.TYPE)) {
                     deleteDirectoryWithFiles(childPath);
+                }
+                if (!Files.exists(childPath)) {
                     Files.createFile(childPath);
                 }
                 final Blob childBlob = readBlob(child.getHash());
                 Files.write(childPath, childBlob.getContent());
             } else {
-                if (childFile.exists() && !getTypeForPath(childPath).equals(Tree.TYPE)) {
+                if (Files.exists(childPath) && !getTypeForPath(childPath).equals(Tree.TYPE)) {
                     Files.delete(childPath);
+                }
+                if (!Files.exists(childPath)) {
                     Files.createDirectory(childPath);
                 }
                 final Tree childTree = readTree(child.getHash());
@@ -273,10 +279,14 @@ class Mapper {
                 continue;
             }
             if (childFile.isDirectory()) {
-                deleteFilesFromTree(readTree(child.getHash()), childPath);
-                //noinspection ConstantConditions
-                if (childFile.list().length == 0) {
-                    Files.delete(childPath);
+                if (child.isDirectory()) {
+                    deleteFilesFromTree(readTree(child.getHash()), childPath);
+                    //noinspection ConstantConditions
+                    if (childFile.list().length == 0) {
+                        Files.delete(childPath);
+                    }
+                } else {
+                    deleteDirectoryWithFiles(childPath);
                 }
             } else {
                 Files.delete(childPath);

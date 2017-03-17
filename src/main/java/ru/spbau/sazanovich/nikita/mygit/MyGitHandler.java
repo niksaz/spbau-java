@@ -31,6 +31,8 @@ public class MyGitHandler {
 
     @NotNull
     private final Path myGitDirectory;
+    @NotNull
+    private final Path currentDirectory;
 
     @NotNull
     private final Mapper mapper;
@@ -38,11 +40,16 @@ public class MyGitHandler {
     /**
      * Constructs a handler in a given directory.
      *
-     * @param directory current directory for a handler
+     * @param currentDirectory a path to the current directory for a handler
+     * @throws MyGitIllegalArgumentException if the directory path is not absolute
      * @throws MyGitStateException if the directory (or any of the parent directories) is not a MyGit repository
      */
-    public MyGitHandler(@NotNull Path directory) throws MyGitStateException {
-        final Path path = findMyGitPath(directory.toAbsolutePath());
+    public MyGitHandler(@NotNull Path currentDirectory) throws MyGitIllegalArgumentException, MyGitStateException {
+        if (!currentDirectory.isAbsolute()) {
+            throw new MyGitIllegalArgumentException("parameter should be an absolute path");
+        }
+        this.currentDirectory = currentDirectory;
+        final Path path = findMyGitPath(currentDirectory);
         if (path == null) {
             throw new MyGitStateException("Not a mygit repository (or any of the parent directories)");
         }
@@ -224,7 +231,7 @@ public class MyGitHandler {
         final String mergeCommitHash = mapper.map(mergeCommit);
         mapper.writeBranch(baseBranch, mergeCommitHash);
 
-        checkout("master");
+        checkout(baseBranch);
     }
 
     /**
@@ -313,9 +320,9 @@ public class MyGitHandler {
             throws MyGitStateException, IOException {
         final List<Path> filePaths =
                 Files
-                        .list(prefixPath)
-                        .filter(path -> !isAbsolutePathRepresentsInternal(path))
-                        .collect(Collectors.toList());
+                .list(prefixPath)
+                .filter(path -> !isAbsolutePathRepresentsInternal(path))
+                .collect(Collectors.toList());
         final Tree rebuiltTree = new Tree();
         final List<TreeEdge> childrenList = tree == null ? new ArrayList<>() : tree.getChildren();
         for (TreeEdge child : childrenList) {
@@ -332,7 +339,7 @@ public class MyGitHandler {
                         } else {
                             rebuiltTree.addChild(updateBlobIfIndexed(child, childPath, indexedPaths));
                         }
-                    } else if (!indexedPaths.contains(childPath)) {
+                    } else if (!indexedPaths.contains(myGitDirectory.relativize(childPath))) {
                         rebuiltTree.addChild(child);
                     }
                     break;
@@ -341,7 +348,7 @@ public class MyGitHandler {
                     if (contained) {
                         filePaths.remove(childPath);
                         if (childPath.toFile().isDirectory()) {
-                            if (indexedPaths.contains(childPath)) {
+                            if (indexedPaths.contains(myGitDirectory.relativize(childPath))) {
                                 final String childHash = rebuildTree(null, childPath, indexedPaths);
                                 rebuiltTree.addChild(new TreeEdge(childHash, child.getName(), Tree.TYPE));
                             } else {
@@ -356,7 +363,7 @@ public class MyGitHandler {
                                 rebuiltTree.addChild(updateBlobIfIndexed(child, childPath, indexedPaths));
                             }
                         }
-                    } else if (!indexedPaths.contains(childPath)) {
+                    } else if (!indexedPaths.contains(myGitDirectory.relativize(childPath))) {
                         rebuiltTree.addChild(child);
                     }
                     break;
@@ -365,7 +372,7 @@ public class MyGitHandler {
             }
         }
         for (Path path : filePaths) {
-            if (indexedPaths.contains(path)) {
+            if (indexedPaths.contains(myGitDirectory.relativize(path))) {
                 if (path.toFile().isDirectory()) {
                     final String treeHash = rebuildTree(null, path, indexedPaths);
                     rebuiltTree.addChild(new TreeEdge(treeHash, path.getFileName().toString(), Tree.TYPE));
@@ -382,7 +389,7 @@ public class MyGitHandler {
     private TreeEdge updateBlobIfIndexed(@NotNull TreeEdge object, @NotNull Path path,
                                          @NotNull Set<Path> indexedPaths)
             throws MyGitStateException, IOException {
-        if (indexedPaths.contains(path)) {
+        if (indexedPaths.contains(myGitDirectory.relativize(path))) {
             final String blobHash = mapper.createBlobFromPath(path);
             return new TreeEdge(blobHash, object.getName(), Blob.TYPE);
         } else {
@@ -437,7 +444,7 @@ public class MyGitHandler {
                         if (childPath.toFile().isDirectory()) {
                             changes.addAll(getChangeList(childTree, childPath, indexedPaths));
                         } else {
-                            if (indexedPaths.contains(childPath)) {
+                            if (indexedPaths.contains(myGitDirectory.relativize(childPath))) {
                                 changes.add(new ChangeToBeCommitted(childPath, FileChangeType.MODIFICATION));
                                 for (TreeEdge object : childTree.getChildren()) {
                                     final Path objectPath = Paths.get(childPath.toString(), object.getName());
@@ -451,7 +458,7 @@ public class MyGitHandler {
                                 }
                             }
                         }
-                    } else if (indexedPaths.contains(childPath)) {
+                    } else if (indexedPaths.contains(myGitDirectory.relativize(childPath))) {
                         changes.add(new ChangeToBeCommitted(childPath, FileChangeType.REMOVAL));
                     } else {
                         changes.add(new ChangeNotStagedForCommit(childPath, FileChangeType.REMOVAL));
@@ -462,7 +469,7 @@ public class MyGitHandler {
                     if (contained) {
                         filePaths.remove(childPath);
                         if (childPath.toFile().isDirectory()) {
-                            if (indexedPaths.contains(childPath)) {
+                            if (indexedPaths.contains(myGitDirectory.relativize(childPath))) {
                                 changes.add(new ChangeToBeCommitted(childPath, FileChangeType.MODIFICATION));
                                 changes.addAll(getChangeList(null, childPath, indexedPaths));
                             } else {
@@ -472,14 +479,14 @@ public class MyGitHandler {
                             final byte[] committedContent = childBlob.getContent();
                             final byte[] currentContent = Files.readAllBytes(childPath);
                             if (!Arrays.equals(committedContent, currentContent)) {
-                                if (indexedPaths.contains(childPath)) {
+                                if (indexedPaths.contains(myGitDirectory.relativize(childPath))) {
                                     changes.add(new ChangeToBeCommitted(childPath, FileChangeType.MODIFICATION));
                                 } else {
                                     changes.add(new ChangeNotStagedForCommit(childPath, FileChangeType.MODIFICATION));
                                 }
                             }
                         }
-                    } else if (indexedPaths.contains(childPath)) {
+                    } else if (indexedPaths.contains(myGitDirectory.relativize(childPath))) {
                         changes.add(new ChangeToBeCommitted(childPath, FileChangeType.REMOVAL));
                     } else {
                         changes.add(new ChangeNotStagedForCommit(childPath, FileChangeType.REMOVAL));
@@ -490,7 +497,7 @@ public class MyGitHandler {
             }
         }
         for (Path path : filePaths) {
-            if (indexedPaths.contains(path)) {
+            if (indexedPaths.contains(myGitDirectory.relativize(path))) {
                 changes.add(new ChangeToBeCommitted(path, FileChangeType.ADDITION));
                 if (path.toFile().isDirectory()) {
                     changes.addAll(getChangeList(null, path, indexedPaths));
@@ -547,12 +554,15 @@ public class MyGitHandler {
             } catch (InvalidPathException e) {
                 throw new MyGitIllegalArgumentException("invalid path -- " + e.getMessage());
             }
-            path = path.toAbsolutePath();
+            if (!path.isAbsolute()) {
+                path = currentDirectory.resolve(path).normalize();
+            }
             if (!path.startsWith(myGitDirectory)) {
                 throw new MyGitIllegalArgumentException(
                         "files should be located in the mygit repository's directory, but an argument is " + path);
             }
-            if (!isAbsolutePathRepresentsInternal(path)) {
+            path = myGitDirectory.relativize(path);
+            if (!pathContainsMyGitAsSubpath(path)) {
                 paths.add(path);
             }
         }

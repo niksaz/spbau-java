@@ -36,5 +36,4 @@ public class ConsoleAppTest {
         stringSet.add((String) object4);
         assertEquals(stringSet, filteredSet);
     }
-
 }

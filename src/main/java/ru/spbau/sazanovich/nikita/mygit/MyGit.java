@@ -2,6 +2,7 @@ package ru.spbau.sazanovich.nikita.mygit;
 
 import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitAlreadyInitialized;
+import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.logs.HeadStatus;
 import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
@@ -22,14 +23,18 @@ public class MyGit {
     /**
      * Initialize MyGit repository in a given directory.
      *
-     * @param directory directory to initialize MyGit in
+     * @param directory an absolute path to a directory to initialize MyGit in
+     * @throws MyGitIllegalArgumentException if the directory path is not absolute
      * @throws MyGitAlreadyInitialized if the directory already contains .mygit file
      * @throws MyGitStateException if an internal error occurs during operations
      * @throws IOException if an error occurs during working with a filesystem
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void init(@NotNull Path directory)
-            throws MyGitAlreadyInitialized, MyGitStateException, IOException {
+            throws MyGitIllegalArgumentException, MyGitAlreadyInitialized, MyGitStateException, IOException {
+        if (!directory.isAbsolute()) {
+            throw new MyGitIllegalArgumentException("path parameter should be an absolute");
+        }
         final Path myGitPath = Paths.get(directory.toString(), ".mygit");
         if (myGitPath.toFile().exists()) {
             throw new MyGitAlreadyInitialized();
