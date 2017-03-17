@@ -116,6 +116,20 @@ public class ConsoleApp {
         }
     }
 
+    @NotNull
+    static List<String> suffixArgsToList(@NotNull String[] args) {
+        return Arrays.asList(args).subList(1, args.length);
+    }
+
+    @NotNull
+    static <T, S extends T> List<S> filterSubclass(List<T> list, Class<S> subclassClass) {
+        return list
+                .stream()
+                .filter(subclassClass::isInstance)
+                .map(subclassClass::cast)
+                .collect(Collectors.toList());
+    }
+
     private static void printAllBranches(@NotNull MyGitHandler handler) throws MyGitStateException, IOException {
         final List<Branch> branches = handler.listBranches();
         final HeadStatus headStatus = handler.getHeadStatus();
@@ -232,19 +246,5 @@ public class ConsoleApp {
             default:
                 return "";
         }
-    }
-
-    @NotNull
-    private static List<String> suffixArgsToList(@NotNull String[] args) {
-        return Arrays.asList(args).subList(1, args.length);
-    }
-
-    @NotNull
-    private static <T, S extends T> List<S> filterSubclass(List<T> list, Class<S> subclassClass) {
-        return list
-                .stream()
-                .filter(subclassClass::isInstance)
-                .map(subclassClass::cast)
-                .collect(Collectors.toList());
     }
 }
