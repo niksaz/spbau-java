@@ -3,7 +3,7 @@ package ru.spbau.sazanovich.nikita.mygit;
 import org.junit.Test;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitAlreadyInitialized;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitIllegalArgumentException;
-import ru.spbau.sazanovich.nikita.testing.MyGitInitialized;
+import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,12 +14,12 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class MyGitTest extends MyGitInitialized {
+public class MyGitTest extends FolderInitialized {
 
     @Test
     public void init() throws Exception {
-        MyGit.init(myGitRepositoryPath);
-        final Path myGitDirectory = Paths.get(myGitRepositoryPath.toString(), ".mygit");
+        MyGit.init(folderPath);
+        final Path myGitDirectory = Paths.get(folderPath.toString(), ".mygit");
         assertTrue(Files.exists(myGitDirectory));
         assertTrue(Files.isDirectory(myGitDirectory));
         final Path headPath = Paths.get(myGitDirectory.toString(), "HEAD");
@@ -50,7 +50,7 @@ public class MyGitTest extends MyGitInitialized {
 
     @Test(expected = MyGitAlreadyInitialized.class)
     public void initInAlreadyInitialized() throws Exception {
-        Files.createDirectory(Paths.get(myGitRepositoryPath.toString(), ".mygit"));
-        MyGit.init(myGitRepositoryPath);
+        Files.createDirectory(Paths.get(folderPath.toString(), ".mygit"));
+        MyGit.init(folderPath);
     }
 }

@@ -9,15 +9,15 @@ import java.nio.file.Path;
 /**
  * Represents common routines for tests -- creating a folder, initializing the path.
  */
-public class MyGitInitialized {
+public class FolderInitialized {
 
     @Rule
     public final TemporaryFolder folder = new TemporaryFolder();
 
-    protected Path myGitRepositoryPath;
+    protected Path folderPath;
 
     @Before
-    public void initializeMyGit() throws Exception {
-        myGitRepositoryPath = folder.getRoot().toPath();
+    public void initialize() throws Exception {
+        folderPath = folder.getRoot().toPath();
     }
 }

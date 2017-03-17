@@ -6,7 +6,7 @@ import ru.spbau.sazanovich.nikita.mygit.MyGitHandler;
 import ru.spbau.sazanovich.nikita.mygit.logs.CommitLog;
 import ru.spbau.sazanovich.nikita.mygit.status.Change;
 import ru.spbau.sazanovich.nikita.mygit.status.UntrackedFile;
-import ru.spbau.sazanovich.nikita.testing.MyGitInitialized;
+import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,20 +19,20 @@ import static java.lang.Thread.sleep;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class WorkflowTest extends MyGitInitialized {
+public class WorkflowTest extends FolderInitialized {
 
     private MyGitHandler handler;
 
     @Override
-    public void initializeMyGit() throws Exception {
-        super.initializeMyGit();
-        MyGit.init(myGitRepositoryPath);
-        handler = new MyGitHandler(myGitRepositoryPath);
+    public void initialize() throws Exception {
+        super.initialize();
+        MyGit.init(folderPath);
+        handler = new MyGitHandler(folderPath);
     }
 
     @Test
     public void workflowWithMutualChangesMerge() throws Exception {
-        final Path filePath = Paths.get(myGitRepositoryPath.toString(), "file.txt");
+        final Path filePath = Paths.get(folderPath.toString(), "file.txt");
         Files.createFile(filePath);
         final List<Change> changeList = handler.getHeadChanges();
         assertEquals(1, changeList.size());
@@ -68,9 +68,9 @@ public class WorkflowTest extends MyGitInitialized {
         assertEquals(1, logsHistory.size());
         final String initialRevisionHash = logsHistory.get(0).getRevisionHash();
 
-        final Path readmePath = Paths.get(myGitRepositoryPath.toString(), "README.md");
+        final Path readmePath = Paths.get(folderPath.toString(), "README.md");
         Files.createFile(readmePath);
-        final Path inputsPath = Paths.get(myGitRepositoryPath.toString(), "inputs");
+        final Path inputsPath = Paths.get(folderPath.toString(), "inputs");
         Files.createDirectory(inputsPath);
         final Path someInputPath = Paths.get(inputsPath.toString(), "input1.txt");
         Files.createFile(someInputPath);
@@ -79,7 +79,7 @@ public class WorkflowTest extends MyGitInitialized {
         handler.commitWithMessage("inputs directory added");
 
         handler.checkout(initialRevisionHash);
-        final Path howToFile = Paths.get(myGitRepositoryPath.toString(), "HOWTO.md");
+        final Path howToFile = Paths.get(folderPath.toString(), "HOWTO.md");
         Files.createFile(howToFile);
         Files.createFile(inputsPath);
         handler.addPathsToIndex(Arrays.asList(howToFile.toString(), inputsPath.toString()));

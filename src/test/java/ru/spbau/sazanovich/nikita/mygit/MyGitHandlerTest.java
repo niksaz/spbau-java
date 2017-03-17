@@ -2,7 +2,7 @@ package ru.spbau.sazanovich.nikita.mygit;
 
 import org.junit.Test;
 import ru.spbau.sazanovich.nikita.mygit.status.*;
-import ru.spbau.sazanovich.nikita.testing.MyGitInitialized;
+import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,20 +14,20 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class MyGitHandlerTest extends MyGitInitialized {
+public class MyGitHandlerTest extends FolderInitialized {
 
     private MyGitHandler handler;
 
     @Override
-    public void initializeMyGit() throws Exception {
-        super.initializeMyGit();
-        MyGit.init(myGitRepositoryPath);
-        handler = new MyGitHandler(myGitRepositoryPath);
+    public void initialize() throws Exception {
+        super.initialize();
+        MyGit.init(folderPath);
+        handler = new MyGitHandler(folderPath);
     }
 
     @Test
     public void getHeadChanges() throws Exception {
-        final Path inputsPath = Paths.get(myGitRepositoryPath.toString(), "inputs");
+        final Path inputsPath = Paths.get(folderPath.toString(), "inputs");
         Files.createDirectory(inputsPath);
         handler.addPathsToIndex(Collections.singletonList(inputsPath.toString()));
         List<Change> changes = handler.getHeadChanges();

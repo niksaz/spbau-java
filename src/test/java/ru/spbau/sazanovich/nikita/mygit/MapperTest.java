@@ -3,7 +3,7 @@ package ru.spbau.sazanovich.nikita.mygit;
 import org.junit.Test;
 import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher;
 import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher.HashParts;
-import ru.spbau.sazanovich.nikita.testing.MyGitInitialized;
+import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
 
 import java.io.FileInputStream;
 import java.io.FileWriter;
@@ -21,12 +21,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class MapperTest extends MyGitInitialized {
+public class MapperTest extends FolderInitialized {
 
     @Override
-    public void initializeMyGit() throws Exception {
-        super.initializeMyGit();
-        final Path myGitInternalPath = Paths.get(myGitRepositoryPath.toString(), ".mygit");
+    public void initialize() throws Exception {
+        super.initialize();
+        final Path myGitInternalPath = Paths.get(folderPath.toString(), ".mygit");
         Files.createDirectory(myGitInternalPath);
         Files.createFile(Paths.get(myGitInternalPath.toString(), "HEAD"));
         Files.createFile(Paths.get(myGitInternalPath.toString(), "index"));
@@ -45,12 +45,12 @@ public class MapperTest extends MyGitInitialized {
         when(mockedParts.getLast()).thenReturn(mockedHash.substring(2));
         when(mockHasher.splitHash(any())).thenReturn(mockedParts);
 
-        final Mapper mapper = new Mapper(myGitRepositoryPath, mockHasher);
+        final Mapper mapper = new Mapper(folderPath, mockHasher);
         final String mappedHash = mapper.map(objectToMap);
         assertEquals(mockedHash, mappedHash);
 
         final Path mappedObjectPath =
-                Paths.get(myGitRepositoryPath.toString(), ".mygit", "objects", mockedParts.getFirst(), mockedParts.getLast());
+                Paths.get(folderPath.toString(), ".mygit", "objects", mockedParts.getFirst(), mockedParts.getLast());
         assertTrue(mappedObjectPath.toFile().exists());
         try (FileInputStream inputStream = new FileInputStream(mappedObjectPath.toFile());
              ObjectInputStream objectInputStream = new ObjectInputStream(inputStream)
@@ -63,13 +63,13 @@ public class MapperTest extends MyGitInitialized {
     @Test
     public void readIndexPaths() throws Exception {
         final Set<Path> paths = new HashSet<>();
-        final Path path1 = Paths.get(myGitRepositoryPath.toString(), "file1.txt");
-        final Path path2 = Paths.get(myGitRepositoryPath.toString(), "file2.txt");
-        final Path path3 = Paths.get(myGitRepositoryPath.toString(), "file3.txt");
+        final Path path1 = Paths.get(folderPath.toString(), "file1.txt");
+        final Path path2 = Paths.get(folderPath.toString(), "file2.txt");
+        final Path path3 = Paths.get(folderPath.toString(), "file3.txt");
         paths.add(path1);
         paths.add(path2);
         paths.add(path3);
-        final Path indexPath = Paths.get(myGitRepositoryPath.toString(), ".mygit", "index");
+        final Path indexPath = Paths.get(folderPath.toString(), ".mygit", "index");
         try (FileWriter fileWriter = new FileWriter(indexPath.toFile())
         ) {
             fileWriter.write(path1 + "\n");
@@ -77,7 +77,7 @@ public class MapperTest extends MyGitInitialized {
             fileWriter.write(path3 + "\n");
         }
 
-        final Mapper mapper = new Mapper(myGitRepositoryPath, mock(MyGitHasher.class));
+        final Mapper mapper = new Mapper(folderPath, mock(MyGitHasher.class));
         final Set<Path> readPath = mapper.readIndexPaths();
         assertEquals(paths, readPath);
     }
@@ -85,16 +85,16 @@ public class MapperTest extends MyGitInitialized {
     @Test
     public void writeIndexPaths() throws Exception {
         final Set<Path> relativePaths = new HashSet<>();
-        final Path path1 = Paths.get(myGitRepositoryPath.toString(), "file1.txt");
-        final Path path2 = Paths.get(myGitRepositoryPath.toString(), "file2.txt");
-        final Path path3 = Paths.get(myGitRepositoryPath.toString(), "file3.txt");
-        relativePaths.add(myGitRepositoryPath.relativize(path1));
-        relativePaths.add(myGitRepositoryPath.relativize(path2));
-        relativePaths.add(myGitRepositoryPath.relativize(path3));
-        final Mapper mapper = new Mapper(myGitRepositoryPath, mock(MyGitHasher.class));
+        final Path path1 = Paths.get(folderPath.toString(), "file1.txt");
+        final Path path2 = Paths.get(folderPath.toString(), "file2.txt");
+        final Path path3 = Paths.get(folderPath.toString(), "file3.txt");
+        relativePaths.add(folderPath.relativize(path1));
+        relativePaths.add(folderPath.relativize(path2));
+        relativePaths.add(folderPath.relativize(path3));
+        final Mapper mapper = new Mapper(folderPath, mock(MyGitHasher.class));
         mapper.writeIndexPaths(relativePaths);
 
-        final Path indexPath = Paths.get(myGitRepositoryPath.toString(), ".mygit", "index");
+        final Path indexPath = Paths.get(folderPath.toString(), ".mygit", "index");
         final Set<Path> writtenPaths = Files.lines(indexPath).map(line -> Paths.get(line)).collect(Collectors.toSet());
         assertEquals(relativePaths, writtenPaths);
     }
