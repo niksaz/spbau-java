@@ -28,6 +28,12 @@ public class CommandLineArgsHandlerTest extends FolderInitialized {
     }
 
     @Test
+    public void handleHelp() throws Exception {
+        final String[] args = {"help"};
+        handler.handle(args);
+    }
+
+    @Test
     public void handleInit() throws Exception {
         final String[] args = {"init"};
         handler.handle(args);
