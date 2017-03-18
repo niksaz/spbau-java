@@ -32,6 +32,7 @@ class CommandLineArgsHandler {
     private static final String CHECKOUT_CMD = "checkout";
     private static final String COMMIT_CMD = "commit";
     private static final String MERGE_CMD = "merge";
+    private static final String HELP_CMD = "help";
 
     @NotNull
     private final PrintStream printStream;
@@ -54,7 +55,7 @@ class CommandLineArgsHandler {
      * Parses command line arguments and executes them if parsed successfully.
      *
      * @param args command line arguments
-     * @return {@code true} if parsed successfully; {@code false} otherwise
+     * @return {@code true} if the command exists in MyGit library; {@code false} otherwise
      * @throws MyGitException if an exception occurred in MyGit system
      * @throws IOException if an error occurs during working with a filesystem
      */
@@ -68,6 +69,9 @@ class CommandLineArgsHandler {
         } else {
             final MyGitHandler handler = new MyGitHandler(currentDirectory);
             switch (args[0]) {
+                case HELP_CMD:
+                    showHelp();
+                    break;
                 case ADD_CMD:
                     if (args.length > 1) {
                         handler.addPathsToIndex(suffixArgsToList(args));
@@ -237,7 +241,9 @@ class CommandLineArgsHandler {
                         "  " + BRANCH_CMD + " [<name> | -d <name>]\n" +
                         "  " + CHECKOUT_CMD + " <branch> | <revision>\n" +
                         "  " + COMMIT_CMD + " <message>\n" +
-                        "  " + MERGE_CMD + " <branch>");
+                        "  " + MERGE_CMD + " <branch>\n" +
+                        "\n" +
+                        "'mygit help' list all available commands.");
     }
 
     private static String mapFileChangeTypeToString(@NotNull FileChangeType fileChangeType) {

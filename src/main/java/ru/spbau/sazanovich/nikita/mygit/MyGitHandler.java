@@ -162,15 +162,15 @@ public class MyGitHandler {
      * Replaces all files which differs from the HEAD's ones if such exist. Index should be empty before checking out.
      *
      * @param revisionName a name of revision
-     * @throws MyGitMissingPrerequisites if the index is not empty
+     * @throws MyGitMissingPrerequisitesException if the index is not empty
      * @throws MyGitIllegalArgumentException if the revision does not exist
      * @throws MyGitStateException if an internal error occurs during operations
      * @throws IOException if an error occurs during working with a filesystem
      */
     public void checkout(@NotNull String revisionName)
-            throws MyGitStateException, MyGitMissingPrerequisites, MyGitIllegalArgumentException, IOException {
+            throws MyGitStateException, MyGitMissingPrerequisitesException, MyGitIllegalArgumentException, IOException {
         if (!mapper.readIndexPaths().isEmpty()) {
-            throw new MyGitMissingPrerequisites("staging area should be empty before a checkout operation");
+            throw new MyGitMissingPrerequisitesException("staging area should be empty before a checkout operation");
         }
         final Commit fromCommit = mapper.getHeadCommit();
         String toCommitHash;
@@ -199,16 +199,16 @@ public class MyGitHandler {
      * merging and HEAD should not be in detached state.
      *
      * @param branch branch with which to merge HEAD
-     * @throws MyGitMissingPrerequisites if the index is not empty or currently in a detached HEAD state
+     * @throws MyGitMissingPrerequisitesException if the index is not empty or currently in a detached HEAD state
      * @throws MyGitIllegalArgumentException if there is no such branch or a user tries to merge branch with itself
      * @throws MyGitStateException if an internal error occurs during operations
      * @throws IOException if an error occurs during working with a filesystem
      */
     public void mergeHeadWithBranch(@NotNull String branch)
-            throws MyGitMissingPrerequisites, MyGitStateException, IOException, MyGitIllegalArgumentException {
+            throws MyGitMissingPrerequisitesException, MyGitStateException, IOException, MyGitIllegalArgumentException {
         final HeadStatus headStatus = mapper.getHeadStatus();
         if (headStatus.getName().equals(Commit.TYPE)) {
-            throw new MyGitMissingPrerequisites("could not merge while you are in detached HEAD state");
+            throw new MyGitMissingPrerequisitesException("could not merge while you are in detached HEAD state");
         }
         if (!listBranches().contains(new Branch(branch))) {
             throw new MyGitIllegalArgumentException("there is no such branch -- " + branch);
@@ -217,7 +217,7 @@ public class MyGitHandler {
             throw new MyGitIllegalArgumentException("can not merge branch with itself");
         }
         if (!mapper.readIndexPaths().isEmpty()) {
-            throw new MyGitMissingPrerequisites("staging area should be empty before a merge operation");
+            throw new MyGitMissingPrerequisitesException("staging area should be empty before a merge operation");
         }
         final String baseBranch = headStatus.getName();
         final Tree baseTree = mapper.getBranchTree(baseBranch);

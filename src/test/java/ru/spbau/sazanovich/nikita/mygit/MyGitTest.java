@@ -1,7 +1,7 @@
 package ru.spbau.sazanovich.nikita.mygit;
 
 import org.junit.Test;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitAlreadyInitialized;
+import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitAlreadyInitializedException;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
 
@@ -48,7 +48,7 @@ public class MyGitTest extends FolderInitialized {
         MyGit.init(Paths.get(""));
     }
 
-    @Test(expected = MyGitAlreadyInitialized.class)
+    @Test(expected = MyGitAlreadyInitializedException.class)
     public void initInAlreadyInitialized() throws Exception {
         Files.createDirectory(Paths.get(folderPath.toString(), ".mygit"));
         MyGit.init(folderPath);
