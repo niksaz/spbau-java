@@ -166,44 +166,42 @@ class CommandLineArgsHandler {
     private void performStatusCommand(@NotNull MyGitHandler handler) throws MyGitStateException, IOException {
         printStatusInfo(handler);
 
-        final List<Change> changes = handler.getHeadChanges();
-        final List<ChangeToBeCommitted> changesToBeCommitted =
-                filterSubclass(changes, ChangeToBeCommitted.class);
+        final List<FileDifference> fileDifferences = handler.getHeadChanges();
+        final List<FileDifference> changesToBeCommitted =
+                filterDifferencesByStatus(fileDifferences, FileDifferenceStageStatus.TO_BE_COMMITTED);
         if (changesToBeCommitted.size() != 0) {
             printStream.println("Changes to be committed:\n");
-            for (ChangeToBeCommitted change : changesToBeCommitted) {
-                printStream.println(
-                        "\t" +
-                                mapFileChangeTypeToString(change.getFileChangeType()) +
-                                change.getPath());
-            }
-            printStream.println();
+            printDifferencesWithoutStatus(changesToBeCommitted);
         }
 
-        final List<ChangeNotStagedForCommit> changesNotStagedForCommit =
-                filterSubclass(changes, ChangeNotStagedForCommit.class);
+        final List<FileDifference> changesNotStagedForCommit =
+                filterDifferencesByStatus(fileDifferences, FileDifferenceStageStatus.NOT_STAGED_FOR_COMMIT);
         if (changesNotStagedForCommit.size() != 0) {
             printStream.println("Changes not staged for commit:\n");
-            for (ChangeNotStagedForCommit change : changesNotStagedForCommit) {
-                printStream.println(
-                        "\t" +
-                                mapFileChangeTypeToString(change.getFileChangeType()) +
-                                change.getPath());
-            }
-            printStream.println();
+            printDifferencesWithoutStatus(changesNotStagedForCommit);
         }
 
-        final List<UntrackedFile> untrackedFiles =
-                filterSubclass(changes, UntrackedFile.class);
+        final List<FileDifference> untrackedFiles =
+                filterDifferencesByStatus(fileDifferences, FileDifferenceStageStatus.UNTRACKED);
         if (untrackedFiles.size() != 0) {
             printStream.println("Untracked files:\n");
-            for (UntrackedFile change : untrackedFiles) {
+            for (FileDifference change : untrackedFiles) {
                 printStream.println(
                         "\t" +
                                 change.getPath());
             }
             printStream.println();
         }
+    }
+
+    private void printDifferencesWithoutStatus(@NotNull List<FileDifference> changes) {
+        for (FileDifference change : changes) {
+            printStream.println(
+                    "\t" +
+                            mapFileChangeTypeToString(change.getType()) +
+                            change.getPath());
+        }
+        printStream.println();
     }
 
     private void printStatusInfo(@NotNull MyGitHandler handler) throws MyGitStateException, IOException {
@@ -240,8 +238,8 @@ class CommandLineArgsHandler {
                         "'mygit help' list all available commands.");
     }
 
-    private static String mapFileChangeTypeToString(@NotNull FileChangeType fileChangeType) {
-        switch (fileChangeType) {
+    private static String mapFileChangeTypeToString(@NotNull FileDifferenceType fileDifferenceType) {
+        switch (fileDifferenceType) {
             case ADDITION:
                 return "new file:   ";
             case REMOVAL:
@@ -257,11 +255,11 @@ class CommandLineArgsHandler {
     }
 
     @NotNull
-    private static <T, S extends T> List<S> filterSubclass(List<T> list, Class<S> subclassClass) {
+    private static List<FileDifference> filterDifferencesByStatus(@NotNull List<FileDifference> list,
+                                                                  @NotNull FileDifferenceStageStatus status) {
         return list
                 .stream()
-                .filter(subclassClass::isInstance)
-                .map(subclassClass::cast)
+                .filter(diff -> diff.getStageStatus().equals(status))
                 .collect(Collectors.toList());
     }
 }

@@ -79,17 +79,15 @@ public class MyGitHandler {
     /**
      * Gets differences between current MyGit repository's HEAD state and the filesystem state.
      *
-     * @return list of change objects
+     * @return list of differences between MyGit repository's HEAD state and the filesystem state
      * @throws MyGitStateException if an internal error occurs during operations
      * @throws IOException         if an error occurs during working with a filesystem
      */
     @NotNull
-    public List<Change> getHeadChanges() throws MyGitStateException, IOException {
+    public List<FileDifference> getHeadChanges() throws MyGitStateException, IOException {
         final Tree tree = internalStateAccessor.getHeadTree();
         final Set<Path> indexedPaths = internalStateAccessor.readIndexPaths();
-        final List<Change> changes = getChangeList(tree, myGitDirectory, indexedPaths);
-        changes.forEach(change -> change.relativizePath(myGitDirectory));
-        return changes;
+        return getChangeList(tree, myGitDirectory, indexedPaths);
     }
 
     /**
@@ -442,15 +440,20 @@ public class MyGitHandler {
         }
     }
 
+    /**
+     * Returns a list of differences in files between filesystem and MyGit's HEAD status.
+     * The list contains relative paths.
+     */
+    // TODO make them relative
     @NotNull
-    private List<Change> getChangeList(@Nullable Tree tree, @NotNull Path prefixPath, @NotNull Set<Path> indexedPaths)
+    private List<FileDifference> getChangeList(@Nullable Tree tree, @NotNull Path prefixPath, @NotNull Set<Path> indexedPaths)
             throws MyGitStateException, IOException {
         final List<Path> filePaths =
                 Files
                         .list(prefixPath)
                         .filter(path -> !isAbsolutePathRepresentsInternal(path))
                         .collect(Collectors.toList());
-        final List<Change> changes = new ArrayList<>();
+        final List<FileDifference> fileDifferences = new ArrayList<>();
         final List<TreeEdge> childrenList = tree == null ? new ArrayList<>() : tree.getChildren();
         for (TreeEdge child : childrenList) {
             final Path childPath = Paths.get(prefixPath.toString(), child.getName());
@@ -461,26 +464,26 @@ public class MyGitHandler {
                     if (contained) {
                         filePaths.remove(childPath);
                         if (childPath.toFile().isDirectory()) {
-                            changes.addAll(getChangeList(childTree, childPath, indexedPaths));
+                            fileDifferences.addAll(getChangeList(childTree, childPath, indexedPaths));
                         } else {
                             if (indexedPaths.contains(myGitDirectory.relativize(childPath))) {
-                                changes.add(new ChangeToBeCommitted(childPath, FileChangeType.MODIFICATION));
+                                fileDifferences.add(new FileDifference(childPath, FileDifferenceType.MODIFICATION, FileDifferenceStageStatus.TO_BE_COMMITTED));
                                 for (TreeEdge object : childTree.getChildren()) {
                                     final Path objectPath = Paths.get(childPath.toString(), object.getName());
-                                    changes.add(new ChangeToBeCommitted(objectPath, FileChangeType.REMOVAL));
+                                    fileDifferences.add(new FileDifference(objectPath, FileDifferenceType.REMOVAL, FileDifferenceStageStatus.TO_BE_COMMITTED));
                                 }
                             } else {
-                                changes.add(new ChangeNotStagedForCommit(childPath, FileChangeType.MODIFICATION));
+                                fileDifferences.add(new FileDifference(childPath, FileDifferenceType.MODIFICATION, FileDifferenceStageStatus.NOT_STAGED_FOR_COMMIT));
                                 for (TreeEdge object : childTree.getChildren()) {
                                     final Path objectPath = Paths.get(childPath.toString(), object.getName());
-                                    changes.add(new ChangeNotStagedForCommit(objectPath, FileChangeType.REMOVAL));
+                                    fileDifferences.add(new FileDifference(objectPath, FileDifferenceType.REMOVAL, FileDifferenceStageStatus.NOT_STAGED_FOR_COMMIT));
                                 }
                             }
                         }
                     } else if (indexedPaths.contains(myGitDirectory.relativize(childPath))) {
-                        changes.add(new ChangeToBeCommitted(childPath, FileChangeType.REMOVAL));
+                        fileDifferences.add(new FileDifference(childPath, FileDifferenceType.REMOVAL, FileDifferenceStageStatus.TO_BE_COMMITTED));
                     } else {
-                        changes.add(new ChangeNotStagedForCommit(childPath, FileChangeType.REMOVAL));
+                        fileDifferences.add(new FileDifference(childPath, FileDifferenceType.REMOVAL, FileDifferenceStageStatus.NOT_STAGED_FOR_COMMIT));
                     }
                     break;
                 case Blob.TYPE:
@@ -489,26 +492,26 @@ public class MyGitHandler {
                         filePaths.remove(childPath);
                         if (childPath.toFile().isDirectory()) {
                             if (indexedPaths.contains(myGitDirectory.relativize(childPath))) {
-                                changes.add(new ChangeToBeCommitted(childPath, FileChangeType.MODIFICATION));
-                                changes.addAll(getChangeList(null, childPath, indexedPaths));
+                                fileDifferences.add(new FileDifference(childPath, FileDifferenceType.MODIFICATION, FileDifferenceStageStatus.TO_BE_COMMITTED));
+                                fileDifferences.addAll(getChangeList(null, childPath, indexedPaths));
                             } else {
-                                changes.add(new ChangeNotStagedForCommit(childPath, FileChangeType.MODIFICATION));
+                                fileDifferences.add(new FileDifference(childPath, FileDifferenceType.MODIFICATION, FileDifferenceStageStatus.NOT_STAGED_FOR_COMMIT));
                             }
                         } else {
                             final byte[] committedContent = childBlob.getContent();
                             final byte[] currentContent = Files.readAllBytes(childPath);
                             if (!Arrays.equals(committedContent, currentContent)) {
                                 if (indexedPaths.contains(myGitDirectory.relativize(childPath))) {
-                                    changes.add(new ChangeToBeCommitted(childPath, FileChangeType.MODIFICATION));
+                                    fileDifferences.add(new FileDifference(childPath, FileDifferenceType.MODIFICATION, FileDifferenceStageStatus.TO_BE_COMMITTED));
                                 } else {
-                                    changes.add(new ChangeNotStagedForCommit(childPath, FileChangeType.MODIFICATION));
+                                    fileDifferences.add(new FileDifference(childPath, FileDifferenceType.MODIFICATION, FileDifferenceStageStatus.NOT_STAGED_FOR_COMMIT));
                                 }
                             }
                         }
                     } else if (indexedPaths.contains(myGitDirectory.relativize(childPath))) {
-                        changes.add(new ChangeToBeCommitted(childPath, FileChangeType.REMOVAL));
+                        fileDifferences.add(new FileDifference(childPath, FileDifferenceType.REMOVAL, FileDifferenceStageStatus.TO_BE_COMMITTED));
                     } else {
-                        changes.add(new ChangeNotStagedForCommit(childPath, FileChangeType.REMOVAL));
+                        fileDifferences.add(new FileDifference(childPath, FileDifferenceType.REMOVAL, FileDifferenceStageStatus.NOT_STAGED_FOR_COMMIT));
                     }
                     break;
                 default:
@@ -517,15 +520,15 @@ public class MyGitHandler {
         }
         for (Path path : filePaths) {
             if (indexedPaths.contains(myGitDirectory.relativize(path))) {
-                changes.add(new ChangeToBeCommitted(path, FileChangeType.ADDITION));
+                fileDifferences.add(new FileDifference(path, FileDifferenceType.ADDITION, FileDifferenceStageStatus.TO_BE_COMMITTED));
                 if (path.toFile().isDirectory()) {
-                    changes.addAll(getChangeList(null, path, indexedPaths));
+                    fileDifferences.addAll(getChangeList(null, path, indexedPaths));
                 }
             } else {
-                changes.add(new UntrackedFile(path));
+                fileDifferences.add(new FileDifference(path, FileDifferenceType.ADDITION, FileDifferenceStageStatus.UNTRACKED));
             }
         }
-        return changes;
+        return fileDifferences;
     }
 
     @NotNull

@@ -1,9 +1,10 @@
 package ru.spbau.sazanovich.nikita.mygit.status;
 
 /**
- * Enum which represents different types of modifications made to files.
+ * Enum which represents a {@link FileDifference FileDifference's} type of difference of a filesystem file version
+ * compared to the HEAD's MyGit one.
  */
-public enum FileChangeType {
+public enum FileDifferenceType {
     /**
      * Represents a new file.
      */

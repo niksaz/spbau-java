@@ -3,8 +3,7 @@ package ru.spbau.sazanovich.nikita;
 import org.junit.Test;
 import ru.spbau.sazanovich.nikita.mygit.MyGitHandler;
 import ru.spbau.sazanovich.nikita.mygit.logs.CommitLog;
-import ru.spbau.sazanovich.nikita.mygit.status.Change;
-import ru.spbau.sazanovich.nikita.mygit.status.UntrackedFile;
+import ru.spbau.sazanovich.nikita.mygit.status.FileDifference;
 import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
 
 import java.nio.file.Files;
@@ -17,6 +16,7 @@ import java.util.List;
 import static java.lang.Thread.sleep;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static ru.spbau.sazanovich.nikita.mygit.status.FileDifferenceStageStatus.UNTRACKED;
 
 public class WorkflowTest extends FolderInitialized {
 
@@ -33,9 +33,9 @@ public class WorkflowTest extends FolderInitialized {
     public void workflowWithMutualChangesMerge() throws Exception {
         final Path filePath = Paths.get(folderPath.toString(), "file.txt");
         Files.createFile(filePath);
-        final List<Change> changeList = handler.getHeadChanges();
-        assertEquals(1, changeList.size());
-        assertTrue(changeList.get(0) instanceof UntrackedFile);
+        final List<FileDifference> fileDifferenceList = handler.getHeadChanges();
+        assertEquals(1, fileDifferenceList.size());
+        assertTrue(fileDifferenceList.get(0).getStageStatus().equals(UNTRACKED));
 
         handler.addPathsToIndex(Collections.singletonList(filePath.toString()));
         handler.commitWithMessage("first file");
@@ -95,7 +95,7 @@ public class WorkflowTest extends FolderInitialized {
         assertTrue(Files.exists(howToFile));
         assertTrue(Files.exists(readmePath));
 
-        final List<Change> changes = handler.getHeadChanges();
-        assertTrue(changes.isEmpty());
+        final List<FileDifference> fileDifferences = handler.getHeadChanges();
+        assertTrue(fileDifferences.isEmpty());
     }
 }
