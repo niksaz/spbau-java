@@ -1,6 +1,7 @@
 package ru.spbau.sazanovich.nikita.mygit;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitAlreadyInitializedException;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.logs.HeadStatus;
@@ -11,6 +12,7 @@ import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
 import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher;
 import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher.HashParts;
+import ru.spbau.sazanovich.nikita.mygit.utils.SHA1Hasher;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -22,14 +24,14 @@ import java.util.stream.Collectors;
 /**
  * Class which is used to make updates to internal representation in a filesystem.
  */
-class Mapper {
+class InternalStateAccessor {
 
     @NotNull
     private final Path myGitDirectory;
     @NotNull
     private final MyGitHasher hasher;
 
-    Mapper(@NotNull Path path, @NotNull MyGitHasher hasher) throws MyGitIllegalArgumentException {
+    InternalStateAccessor(@NotNull Path path, @NotNull MyGitHasher hasher) throws MyGitIllegalArgumentException {
         if (!path.isAbsolute()) {
             throw new MyGitIllegalArgumentException("path parameter should be an absolute");
         }
@@ -92,6 +94,11 @@ class Mapper {
         ) {
             writer.write(commitHash);
         }
+    }
+
+    void deleteBranch(@NotNull String branchName) throws IOException {
+        final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + branchName);
+        Files.delete(branchFile.toPath());
     }
 
     void moveHeadToCommitHash(@NotNull String commitHash) throws MyGitStateException, IOException {
@@ -323,5 +330,51 @@ class Mapper {
         .sorted(Comparator.reverseOrder())
         .map(Path::toFile)
         .forEach(File::delete);
+    }
+
+    @NotNull
+    List<Branch> listBranches() throws MyGitStateException, IOException {
+        final File branchesDirectory = new File(myGitDirectory + "/.mygit/branches/");
+        if (!branchesDirectory.exists()) {
+            throw new MyGitStateException("could not find " + branchesDirectory);
+        }
+        final File[] branches = branchesDirectory.listFiles();
+        if (branches == null) {
+            throw new IOException("could not read " + branchesDirectory);
+        }
+        return Arrays
+                .stream(branches)
+                .map(file -> new Branch(file.getName()))
+                .collect(Collectors.toList());
+    }
+
+    static void init(@NotNull Path directory)
+            throws MyGitAlreadyInitializedException, MyGitStateException, IOException {
+        final Path myGitPath = Paths.get(directory.toString(), ".mygit");
+        if (Files.exists(myGitPath)) {
+            throw new MyGitAlreadyInitializedException();
+        }
+        Files.createDirectory(myGitPath);
+        InternalStateAccessor internalStateAccessor;
+        try {
+            internalStateAccessor = new InternalStateAccessor(directory, new SHA1Hasher());
+        } catch (MyGitIllegalArgumentException ignored) {
+            throw new IllegalStateException();
+        }
+        Files.createFile(Paths.get(myGitPath.toString(), "HEAD"));
+        internalStateAccessor.setHeadStatus(new HeadStatus(Branch.TYPE, "master"));
+        Files.createFile(Paths.get(myGitPath.toString(), "index"));
+        Files.createDirectory(Paths.get(myGitPath.toString(), "objects"));
+        Files.createDirectory(Paths.get(myGitPath.toString(), "branches"));
+        final String commitHash = createInitialCommit(internalStateAccessor);
+        internalStateAccessor.writeBranch("master", commitHash);
+    }
+
+    @NotNull
+    private static String createInitialCommit(@NotNull InternalStateAccessor internalStateAccessor)
+            throws MyGitStateException, IOException {
+        final String treeHash = internalStateAccessor.map(new Tree());
+        final Commit primaryCommit = new Commit(treeHash);
+        return internalStateAccessor.map(primaryCommit);
     }
 }

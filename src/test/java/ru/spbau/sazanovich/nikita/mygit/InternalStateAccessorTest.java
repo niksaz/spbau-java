@@ -21,7 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class MapperTest extends FolderInitialized {
+public class InternalStateAccessorTest extends FolderInitialized {
 
     @Override
     public void initialize() throws Exception {
@@ -45,8 +45,8 @@ public class MapperTest extends FolderInitialized {
         when(mockedParts.getLast()).thenReturn(mockedHash.substring(2));
         when(mockHasher.splitHash(any())).thenReturn(mockedParts);
 
-        final Mapper mapper = new Mapper(folderPath, mockHasher);
-        final String mappedHash = mapper.map(objectToMap);
+        final InternalStateAccessor internalStateAccessor = new InternalStateAccessor(folderPath, mockHasher);
+        final String mappedHash = internalStateAccessor.map(objectToMap);
         assertEquals(mockedHash, mappedHash);
 
         final Path mappedObjectPath =
@@ -77,8 +77,8 @@ public class MapperTest extends FolderInitialized {
             fileWriter.write(path3 + "\n");
         }
 
-        final Mapper mapper = new Mapper(folderPath, mock(MyGitHasher.class));
-        final Set<Path> readPath = mapper.readIndexPaths();
+        final InternalStateAccessor internalStateAccessor = new InternalStateAccessor(folderPath, mock(MyGitHasher.class));
+        final Set<Path> readPath = internalStateAccessor.readIndexPaths();
         assertEquals(paths, readPath);
     }
 
@@ -91,8 +91,8 @@ public class MapperTest extends FolderInitialized {
         relativePaths.add(folderPath.relativize(path1));
         relativePaths.add(folderPath.relativize(path2));
         relativePaths.add(folderPath.relativize(path3));
-        final Mapper mapper = new Mapper(folderPath, mock(MyGitHasher.class));
-        mapper.writeIndexPaths(relativePaths);
+        final InternalStateAccessor internalStateAccessor = new InternalStateAccessor(folderPath, mock(MyGitHasher.class));
+        internalStateAccessor.writeIndexPaths(relativePaths);
 
         final Path indexPath = Paths.get(folderPath.toString(), ".mygit", "index");
         final Set<Path> writtenPaths = Files.lines(indexPath).map(line -> Paths.get(line)).collect(Collectors.toSet());
