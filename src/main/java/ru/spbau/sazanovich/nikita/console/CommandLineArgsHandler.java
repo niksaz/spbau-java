@@ -166,7 +166,7 @@ class CommandLineArgsHandler {
     private void performStatusCommand(@NotNull MyGitHandler handler) throws MyGitStateException, IOException {
         printStatusInfo(handler);
 
-        final List<FileDifference> fileDifferences = handler.getHeadChanges();
+        final List<FileDifference> fileDifferences = handler.getHeadDifferences();
         final List<FileDifference> changesToBeCommitted =
                 filterDifferencesByStatus(fileDifferences, FileDifferenceStageStatus.TO_BE_COMMITTED);
         if (changesToBeCommitted.size() != 0) {

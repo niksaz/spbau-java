@@ -33,7 +33,7 @@ public class WorkflowTest extends FolderInitialized {
     public void workflowWithMutualChangesMerge() throws Exception {
         final Path filePath = Paths.get(folderPath.toString(), "file.txt");
         Files.createFile(filePath);
-        final List<FileDifference> fileDifferenceList = handler.getHeadChanges();
+        final List<FileDifference> fileDifferenceList = handler.getHeadDifferences();
         assertEquals(1, fileDifferenceList.size());
         assertTrue(fileDifferenceList.get(0).getStageStatus().equals(UNTRACKED));
 
@@ -95,7 +95,7 @@ public class WorkflowTest extends FolderInitialized {
         assertTrue(Files.exists(howToFile));
         assertTrue(Files.exists(readmePath));
 
-        final List<FileDifference> fileDifferences = handler.getHeadChanges();
+        final List<FileDifference> fileDifferences = handler.getHeadDifferences();
         assertTrue(fileDifferences.isEmpty());
     }
 }

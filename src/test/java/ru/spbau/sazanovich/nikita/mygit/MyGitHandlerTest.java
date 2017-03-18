@@ -32,7 +32,7 @@ public class MyGitHandlerTest extends FolderInitialized {
         final Path inputsPath = Paths.get(folderPath.toString(), "inputs");
         Files.createDirectory(inputsPath);
         handler.addPathsToIndex(Collections.singletonList(inputsPath.toString()));
-        List<FileDifference> fileDifferences = handler.getHeadChanges();
+        List<FileDifference> fileDifferences = handler.getHeadDifferences();
         assertEquals(1, fileDifferences.size());
         assertTrue(fileDifferences.get(0).getStageStatus().equals(TO_BE_COMMITTED));
         assertTrue(fileDifferences.get(0).getType().equals(ADDITION));
@@ -42,7 +42,7 @@ public class MyGitHandlerTest extends FolderInitialized {
         Files.createFile(input1Path);
         final Path input2Path = Paths.get(inputsPath.toString(), "input2.txt");
         Files.createFile(input2Path);
-        fileDifferences = handler.getHeadChanges();
+        fileDifferences = handler.getHeadDifferences();
         assertEquals(2, fileDifferences.size());
         assertTrue(fileDifferences.get(0).getStageStatus().equals(UNTRACKED));
         assertTrue(fileDifferences.get(1).getStageStatus().equals(UNTRACKED));
@@ -50,7 +50,7 @@ public class MyGitHandlerTest extends FolderInitialized {
         handler.commitWithMessage("inputs 1 & 2");
 
         Files.delete(input1Path);
-        fileDifferences = handler.getHeadChanges();
+        fileDifferences = handler.getHeadDifferences();
         assertEquals(1, fileDifferences.size());
         assertTrue(fileDifferences.get(0).getStageStatus().equals(NOT_STAGED_FOR_COMMIT));
         assertTrue(fileDifferences.get(0).getType().equals(REMOVAL));
@@ -58,7 +58,7 @@ public class MyGitHandlerTest extends FolderInitialized {
         handler.commitWithMessage("removed 1");
 
         Files.write(input2Path, new byte[10]);
-        fileDifferences = handler.getHeadChanges();
+        fileDifferences = handler.getHeadDifferences();
         assertEquals(1, fileDifferences.size());
         assertTrue(fileDifferences.get(0).getStageStatus().equals(NOT_STAGED_FOR_COMMIT));
         assertTrue(fileDifferences.get(0).getType().equals(MODIFICATION));
