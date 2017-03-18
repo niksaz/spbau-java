@@ -20,6 +20,8 @@ public class ConsoleApp {
         final CommandLineArgsHandler handler = new CommandLineArgsHandler(System.out, currentDirectory);
         try {
             handler.handle(args);
+        } catch (CommandNotSupportedException e) {
+            System.out.println("Entered command is not supported: " + e.getMessage());
         } catch (Exception e) {
             System.out.println("Unsuccessful operation: " + e.getMessage());
         }

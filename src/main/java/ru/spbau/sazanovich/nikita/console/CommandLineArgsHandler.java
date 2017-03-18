@@ -43,7 +43,7 @@ class CommandLineArgsHandler {
      * Constructs a handler that writes output to the given {@code printStream}
      * and assumes it is in {@code currentDirectory}.
      *
-     * @param printStream output stream
+     * @param printStream      output stream
      * @param currentDirectory a path to a current directory
      */
     CommandLineArgsHandler(@NotNull PrintStream printStream, @NotNull Path currentDirectory) {
@@ -55,86 +55,81 @@ class CommandLineArgsHandler {
      * Parses command line arguments and executes them if parsed successfully.
      *
      * @param args command line arguments
-     * @return {@code true} if the command exists in MyGit library; {@code false} otherwise
-     * @throws MyGitException if an exception occurred in MyGit system
-     * @throws IOException if an error occurs during working with a filesystem
+     * @throws CommandNotSupportedException if the command does not exist in MyGit library
+     * @throws MyGitException               if an exception occurred in MyGit system
+     * @throws IOException                  if an error occurs during working with a filesystem
      */
-    boolean handle(@NotNull String[] args) throws MyGitException, IOException {
+    void handle(@NotNull String[] args) throws CommandNotSupportedException, MyGitException, IOException {
         if (args.length == 0) {
-            printStream.println("Enter some arguments");
-        } else if (args[0].equals(INIT_CMD)) {
+            throw new CommandNotSupportedException("Enter some arguments");
+        }
+        if (args[0].equals(HELP_CMD)) {
+            showHelp();
+            return;
+        }
+        if (args[0].equals(INIT_CMD)) {
             MyGit.init(currentDirectory);
             printStream.println("Successfully initialized mygit repository.");
-            return true;
-        } else {
-            final MyGitHandler handler = new MyGitHandler(currentDirectory);
-            switch (args[0]) {
-                case HELP_CMD:
-                    showHelp();
-                    break;
-                case ADD_CMD:
-                    if (args.length > 1) {
-                        handler.addPathsToIndex(suffixArgsToList(args));
-                        return true;
-                    }
-                    printStream.println(ADD_CMD + " requires some files to have an effect");
-                    break;
-                case RESET_CMD:
-                    if (args.length > 1) {
-                        handler.resetIndexPaths(suffixArgsToList(args));
-                        return true;
-                    }
-                    printStream.println(RESET_CMD + " requires some files to have an effect");
-                    break;
-                case RESET_ALL_CMD:
-                    handler.resetAllIndexPaths();
-                    return true;
-                case LOG_CMD:
-                    performLogCommand(handler);
-                    return true;
-                case STATUS_CMD:
-                    performStatusCommand(handler);
-                    return true;
-                case BRANCH_CMD:
-                    if (args.length == 1) {
-                        printAllBranches(handler);
-                        return true;
-                    } else if (args.length == 2) {
-                        handler.createBranch(args[1]);
-                        return true;
-                    } else if (args.length == 3 && args[1].equals("-d")) {
-                        handler.deleteBranch(args[2]);
-                        return true;
-                    }
-                    printStream.println(BRANCH_CMD + " entered too many arguments");
-                    break;
-                case CHECKOUT_CMD:
-                    if (args.length > 1) {
-                        handler.checkout(args[1]);
-                        return true;
-                    }
-                    printStream.println(CHECKOUT_CMD + " requires a revision name");
-                    break;
-                case COMMIT_CMD:
-                    if (args.length > 1) {
-                        handler.commitWithMessage(args[1]);
-                        return true;
-                    }
-                    printStream.println(COMMIT_CMD + " requires a message");
-                    break;
-                case MERGE_CMD:
-                    if (args.length > 1) {
-                        handler.mergeHeadWithBranch(args[1]);
-                        return true;
-                    }
-                    printStream.println(MERGE_CMD + " requires another branch");
-                    break;
-                default:
-                    break;
-            }
+            return;
         }
-        showHelp();
-        return false;
+        final MyGitHandler handler = new MyGitHandler(currentDirectory);
+        switch (args[0]) {
+            case ADD_CMD:
+                if (args.length > 1) {
+                    handler.addPathsToIndex(suffixArgsToList(args));
+                    return;
+                }
+                throw new CommandNotSupportedException(ADD_CMD + " requires some files to have an effect");
+            case RESET_CMD:
+                if (args.length > 1) {
+                    handler.resetIndexPaths(suffixArgsToList(args));
+                    return;
+                }
+                throw new CommandNotSupportedException(RESET_CMD + " requires some files to have an effect");
+            case RESET_ALL_CMD:
+                handler.resetAllIndexPaths();
+                return;
+            case LOG_CMD:
+                performLogCommand(handler);
+                return;
+            case STATUS_CMD:
+                performStatusCommand(handler);
+                return;
+            case BRANCH_CMD:
+                if (args.length == 1) {
+                    printAllBranches(handler);
+                    return;
+                }
+                if (args.length == 2) {
+                    handler.createBranch(args[1]);
+                    return;
+                }
+                if (args.length == 3 && args[1].equals("-d")) {
+                    handler.deleteBranch(args[2]);
+                    return;
+                }
+                throw new CommandNotSupportedException(BRANCH_CMD + " entered too many arguments");
+            case CHECKOUT_CMD:
+                if (args.length > 1) {
+                    handler.checkout(args[1]);
+                    return;
+                }
+                throw new CommandNotSupportedException(CHECKOUT_CMD + " requires a revision name");
+            case COMMIT_CMD:
+                if (args.length > 1) {
+                    handler.commitWithMessage(args[1]);
+                    return;
+                }
+                throw new CommandNotSupportedException(COMMIT_CMD + " requires a message");
+            case MERGE_CMD:
+                if (args.length > 1) {
+                    handler.mergeHeadWithBranch(args[1]);
+                    return;
+                }
+                throw new CommandNotSupportedException(MERGE_CMD + " requires another branch");
+            default:
+                break;
+        }
     }
 
     private void printAllBranches(@NotNull MyGitHandler handler) throws MyGitStateException, IOException {

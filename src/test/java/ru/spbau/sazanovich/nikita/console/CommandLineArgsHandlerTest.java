@@ -22,75 +22,75 @@ public class CommandLineArgsHandlerTest extends FolderInitialized {
         handler = new CommandLineArgsHandler(FAKE_STREAM, folderPath);
     }
 
-    @Test
+    @Test(expected = CommandNotSupportedException.class)
     public void handleEmpty() throws Exception {
-        assertFalse(handler.handle(new String[0]));
+        handler.handle(new String[0]);
     }
 
     @Test
     public void handleInit() throws Exception {
         final String[] args = {"init"};
-        assertTrue(handler.handle(args));
+        handler.handle(args);
     }
 
     @Test
     public void handleAdd() throws Exception {
         MyGit.init(folderPath);
         final String[] args = {"add", "."};
-        assertTrue(handler.handle(args));
+        handler.handle(args);
     }
 
     @Test
     public void handleReset() throws Exception {
         MyGit.init(folderPath);
         final String[] args = {"reset", "."};
-        assertTrue(handler.handle(args));
+        handler.handle(args);
     }
 
     @Test
     public void handleResetAll() throws Exception {
         MyGit.init(folderPath);
         final String[] args = {"resetall"};
-        assertTrue(handler.handle(args));
+        handler.handle(args);
     }
 
     @Test
     public void handleLog() throws Exception {
         MyGit.init(folderPath);
         final String[] args = {"log"};
-        assertTrue(handler.handle(args));
+        handler.handle(args);
     }
 
     @Test
     public void handleStatus() throws Exception {
         MyGit.init(folderPath);
         final String[] args = {"status"};
-        assertTrue(handler.handle(args));
+        handler.handle(args);
     }
 
     @Test
     public void handleBranch() throws Exception {
         MyGit.init(folderPath);
         final String[] argsToList = {"branch"};
-        assertTrue(handler.handle(argsToList));
+        handler.handle(argsToList);
         final String[] argsToCreate = {"branch", "test"};
-        assertTrue(handler.handle(argsToCreate));
+        handler.handle(argsToCreate);
         final String[] argsToDelete = {"branch", "-d", "test"};
-        assertTrue(handler.handle(argsToDelete));
+        handler.handle(argsToDelete);
     }
 
     @Test
     public void handleCheckout() throws Exception {
         MyGit.init(folderPath);
         final String[] args = {"checkout", "master"};
-        assertTrue(handler.handle(args));
+        handler.handle(args);
     }
 
     @Test
     public void handleCommit() throws Exception {
         MyGit.init(folderPath);
         final String[] args = {"commit", "hello"};
-        assertTrue(handler.handle(args));
+        handler.handle(args);
     }
 
     @Test
@@ -99,6 +99,6 @@ public class CommandLineArgsHandlerTest extends FolderInitialized {
         final String[] branchCreateArgs = {"branch", "test"};
         handler.handle(branchCreateArgs);
         final String[] args = {"merge", "test"};
-        assertTrue(handler.handle(args));
+        handler.handle(args);
     }
 }
