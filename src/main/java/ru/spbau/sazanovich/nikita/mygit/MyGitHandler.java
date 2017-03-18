@@ -344,53 +344,17 @@ public class MyGitHandler {
         final List<TreeEdge> childrenList = tree == null ? new ArrayList<>() : tree.getChildren();
         for (TreeEdge child : childrenList) {
             final Path childPath = Paths.get(prefixPath.toString(), child.getName());
-            boolean contained = filePaths.contains(childPath);
-            switch (child.getType()) {
-                case Tree.TYPE:
-                    final Tree childTree = internalStateAccessor.readTree(child.getHash());
-                    if (contained) {
-                        filePaths.remove(childPath);
-                        if (childPath.toFile().isDirectory()) {
-                            final String childHash = rebuildTree(childTree, childPath, indexedPaths);
-                            rebuiltTree.addChild(new TreeEdge(childHash, child.getName(), child.getType()));
-                        } else {
-                            rebuiltTree.addChild(updateBlobIfIndexed(child, childPath, indexedPaths));
-                        }
-                    } else if (!indexedPaths.contains(myGitDirectory.relativize(childPath))) {
-                        rebuiltTree.addChild(child);
-                    }
-                    break;
-                case Blob.TYPE:
-                    final Blob childBlob = internalStateAccessor.readBlob(child.getHash());
-                    if (contained) {
-                        filePaths.remove(childPath);
-                        if (childPath.toFile().isDirectory()) {
-                            if (indexedPaths.contains(myGitDirectory.relativize(childPath))) {
-                                final String childHash = rebuildTree(null, childPath, indexedPaths);
-                                rebuiltTree.addChild(new TreeEdge(childHash, child.getName(), Tree.TYPE));
-                            } else {
-                                rebuiltTree.addChild(child);
-                            }
-                        } else {
-                            final byte[] committedContent = childBlob.getContent();
-                            final byte[] currentContent = Files.readAllBytes(childPath);
-                            if (Arrays.equals(committedContent, currentContent)) {
-                                rebuiltTree.addChild(child);
-                            } else {
-                                rebuiltTree.addChild(updateBlobIfIndexed(child, childPath, indexedPaths));
-                            }
-                        }
-                    } else if (!indexedPaths.contains(myGitDirectory.relativize(childPath))) {
-                        rebuiltTree.addChild(child);
-                    }
-                    break;
-                default:
-                    throw new MyGitStateException("met an unknown type while traversing the tree -- " + child.getType());
+            if (filePaths.contains(childPath)) {
+                filePaths.remove(childPath);
+            }
+            final TreeEdge rebuiltTreeEdge = rebuildTreeEdge(child, childPath, indexedPaths);
+            if (rebuiltTreeEdge != null) {
+                rebuiltTree.addChild(rebuiltTreeEdge);
             }
         }
         for (Path path : filePaths) {
             if (indexedPaths.contains(myGitDirectory.relativize(path))) {
-                if (path.toFile().isDirectory()) {
+                if (Files.isDirectory(path)) {
                     final String treeHash = rebuildTree(null, path, indexedPaths);
                     rebuiltTree.addChild(new TreeEdge(treeHash, path.getFileName().toString(), Tree.TYPE));
                 } else {
@@ -400,6 +364,54 @@ public class MyGitHandler {
             }
         }
         return internalStateAccessor.map(rebuiltTree);
+    }
+
+    @Nullable
+    private TreeEdge rebuildTreeEdge(@NotNull TreeEdge child, @NotNull Path childPath,
+                                     @NotNull Set<Path> indexedPaths)
+            throws MyGitStateException, IOException {
+        final boolean isPresentInFilesystem = Files.exists(childPath);
+        switch (child.getType()) {
+            case Tree.TYPE:
+                final Tree childTree = internalStateAccessor.readTree(child.getHash());
+                if (isPresentInFilesystem) {
+                    if (childPath.toFile().isDirectory()) {
+                        final String childHash = rebuildTree(childTree, childPath, indexedPaths);
+                        return new TreeEdge(childHash, child.getName(), child.getType());
+                    } else {
+                        return updateBlobIfIndexed(child, childPath, indexedPaths);
+                    }
+                } else if (!indexedPaths.contains(myGitDirectory.relativize(childPath))) {
+                    return child;
+                }
+                break;
+            case Blob.TYPE:
+                final Blob childBlob = internalStateAccessor.readBlob(child.getHash());
+                if (isPresentInFilesystem) {
+                    if (childPath.toFile().isDirectory()) {
+                        if (indexedPaths.contains(myGitDirectory.relativize(childPath))) {
+                            final String childHash = rebuildTree(null, childPath, indexedPaths);
+                            return new TreeEdge(childHash, child.getName(), Tree.TYPE);
+                        } else {
+                            return child;
+                        }
+                    } else {
+                        final byte[] committedContent = childBlob.getContent();
+                        final byte[] currentContent = Files.readAllBytes(childPath);
+                        if (Arrays.equals(committedContent, currentContent)) {
+                            return child;
+                        } else {
+                            return updateBlobIfIndexed(child, childPath, indexedPaths);
+                        }
+                    }
+                } else if (!indexedPaths.contains(myGitDirectory.relativize(childPath))) {
+                    return child;
+                }
+                break;
+            default:
+                throw new MyGitStateException("met an unknown type while traversing the tree -- " + child.getType());
+        }
+        return null;
     }
 
     @NotNull
@@ -518,24 +530,7 @@ public class MyGitHandler {
 
     @NotNull
     private List<String> listCommitHashes() throws IOException, MyGitStateException {
-        final Path objectsPath = Paths.get(myGitDirectory.toString(), ".mygit", "objects");
-        final List<String> objectHashes =
-                Files
-                        .walk(objectsPath)
-                        .filter(path -> !path.toFile().isDirectory())
-                        .map(path -> {
-                            final Path parent = path.getParent();
-                            return parent.getFileName().toString() + path.getFileName().toString();
-                        })
-                        .collect(Collectors.toList());
-        final List<String> commitHashes = new ArrayList<>();
-        for (String objectHash : objectHashes) {
-            final Object object = internalStateAccessor.readObject(objectHash);
-            if (object instanceof Commit) {
-                commitHashes.add(objectHash);
-            }
-        }
-        return commitHashes;
+        return internalStateAccessor.listCommitHashes();
     }
 
     @Nullable

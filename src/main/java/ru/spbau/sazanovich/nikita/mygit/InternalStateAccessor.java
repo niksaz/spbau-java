@@ -205,7 +205,7 @@ class InternalStateAccessor {
     }
 
     @NotNull
-    Object readObject(@NotNull String objectHash) throws MyGitStateException, IOException {
+    private Object readObject(@NotNull String objectHash) throws MyGitStateException, IOException {
         HashParts shaHashParts;
         try {
             shaHashParts = hasher.splitHash(objectHash);
@@ -346,6 +346,28 @@ class InternalStateAccessor {
                 .stream(branches)
                 .map(file -> new Branch(file.getName()))
                 .collect(Collectors.toList());
+    }
+
+    @NotNull
+    List<String> listCommitHashes() throws MyGitStateException, IOException {
+        final Path objectsPath = Paths.get(myGitDirectory.toString(), ".mygit", "objects");
+        final List<String> objectHashes =
+                Files
+                        .walk(objectsPath)
+                        .filter(path -> !path.toFile().isDirectory())
+                        .map(path -> {
+                            final Path parent = path.getParent();
+                            return parent.getFileName().toString() + path.getFileName().toString();
+                        })
+                        .collect(Collectors.toList());
+        final List<String> commitHashes = new ArrayList<>();
+        for (String objectHash : objectHashes) {
+            final Object object = readObject(objectHash);
+            if (object instanceof Commit) {
+                commitHashes.add(objectHash);
+            }
+        }
+        return commitHashes;
     }
 
     static void init(@NotNull Path directory)
