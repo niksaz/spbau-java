@@ -1,7 +1,6 @@
 package ru.spbau.sazanovich.nikita.console;
 
 import org.jetbrains.annotations.NotNull;
-import ru.spbau.sazanovich.nikita.mygit.MyGit;
 import ru.spbau.sazanovich.nikita.mygit.MyGitHandler;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitException;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
@@ -68,7 +67,7 @@ class CommandLineArgsHandler {
             return;
         }
         if (args[0].equals(INIT_CMD)) {
-            MyGit.init(currentDirectory);
+            MyGitHandler.init(currentDirectory);
             printStream.println("Successfully initialized mygit repository.");
             return;
         }

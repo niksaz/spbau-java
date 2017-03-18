@@ -14,11 +14,11 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class MyGitTest extends FolderInitialized {
+public class MyGitHandlerInitTest extends FolderInitialized {
 
     @Test
     public void init() throws Exception {
-        MyGit.init(folderPath);
+        MyGitHandler.init(folderPath);
         final Path myGitDirectory = Paths.get(folderPath.toString(), ".mygit");
         assertTrue(Files.exists(myGitDirectory));
         assertTrue(Files.isDirectory(myGitDirectory));
@@ -45,12 +45,12 @@ public class MyGitTest extends FolderInitialized {
 
     @Test(expected = MyGitIllegalArgumentException.class)
     public void initNotInAbsolute() throws Exception {
-        MyGit.init(Paths.get(""));
+        MyGitHandler.init(Paths.get(""));
     }
 
     @Test(expected = MyGitAlreadyInitializedException.class)
     public void initInAlreadyInitialized() throws Exception {
         Files.createDirectory(Paths.get(folderPath.toString(), ".mygit"));
-        MyGit.init(folderPath);
+        MyGitHandler.init(folderPath);
     }
 }

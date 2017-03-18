@@ -1,7 +1,6 @@
 package ru.spbau.sazanovich.nikita;
 
 import org.junit.Test;
-import ru.spbau.sazanovich.nikita.mygit.MyGit;
 import ru.spbau.sazanovich.nikita.mygit.MyGitHandler;
 import ru.spbau.sazanovich.nikita.mygit.logs.CommitLog;
 import ru.spbau.sazanovich.nikita.mygit.status.Change;
@@ -26,7 +25,7 @@ public class WorkflowTest extends FolderInitialized {
     @Override
     public void initialize() throws Exception {
         super.initialize();
-        MyGit.init(folderPath);
+        MyGitHandler.init(folderPath);
         handler = new MyGitHandler(folderPath);
     }
 

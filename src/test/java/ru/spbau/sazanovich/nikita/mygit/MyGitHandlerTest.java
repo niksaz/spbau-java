@@ -21,7 +21,7 @@ public class MyGitHandlerTest extends FolderInitialized {
     @Override
     public void initialize() throws Exception {
         super.initialize();
-        MyGit.init(folderPath);
+        MyGitHandler.init(folderPath);
         handler = new MyGitHandler(folderPath);
     }
 
