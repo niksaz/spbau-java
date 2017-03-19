@@ -1,5 +1,9 @@
 package ru.spbau.sazanovich.nikita.mygit.objects;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,6 +16,8 @@ import java.util.List;
  * Object which stores commit's associated information -- hash of the base {@link Tree} object,
  * message, author, date of creation and parent commits.
  */
+@EqualsAndHashCode
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Commit implements Serializable, Comparable<Commit> {
 
     /**
@@ -20,15 +26,22 @@ public class Commit implements Serializable, Comparable<Commit> {
     public static final String TYPE = "commit";
 
     @NotNull
-    private String treeHash;
+    @Getter
+    private final String treeHash;
     @NotNull
-    private String message;
+    @Getter
+    private final String message;
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     @NotNull
-    private String author;
+    @Getter
+    private final List<String> parentsHashes;
     @NotNull
-    private Date dateCreated;
+    @Getter
+    private final String author;
     @NotNull
-    private List<String> parentsHashes;
+    @Getter
+    private final Date dateCreated;
+
 
     /**
      * Constructs a commit with given treeHash, default message -- "repository initialized", empty parent's list,
@@ -50,84 +63,6 @@ public class Commit implements Serializable, Comparable<Commit> {
      */
     public Commit(@NotNull String treeHash, @NotNull String message, @NotNull List<String> parentsHashes) {
         this(treeHash, message, parentsHashes, getUsername(), new Date());
-    }
-
-    /**
-     * Gets hash of the base tree.
-     *
-     * @return hash of the base tree
-     */
-    @NotNull
-    public String getTreeHash() {
-        return treeHash;
-    }
-
-    /**
-     * Gets commit's message.
-     *
-     * @return commit's message
-     */
-    @NotNull
-    public String getMessage() {
-        return message;
-    }
-
-    /**
-     * Gets author of the commit.
-     *
-     * @return author of the commit
-     */
-    @NotNull
-    public String getAuthor() {
-        return author;
-    }
-
-    /**
-     * Gets date of the commit's creation.
-     *
-     * @return date of the commit's creation
-     */
-    @NotNull
-    public Date getDateCreated() {
-        return dateCreated;
-    }
-
-    /**
-     * Gets list of parent commit's hashes.
-     *
-     * @return list of parent commit's hashes
-     */
-    @NotNull
-    public List<String> getParentsHashes() {
-        return parentsHashes;
-    }
-
-    /**
-     * Compares this object to the other. They are considered equal iff
-     * the other one is instance of Commit and all fields are equal.
-     *
-     * @param that object to which this one is compared
-     * @return {@code true} if two object are equal; {@code false} otherwise
-     */
-    @Override
-    public boolean equals(@Nullable  Object that) {
-        return that instanceof Commit && compareTo(((Commit) that)) == 0;
-    }
-
-    /**
-     * Hashes the object. Uses all fields during hashing.
-     *
-     * @return hash code
-     */
-    @Override
-    public int hashCode() {
-        int result = 17;
-        result = 31 * result + treeHash.hashCode();
-        result = 31 * result + message.hashCode();
-        result = 31 * result + author.hashCode();
-        result = 31 * result + dateCreated.hashCode();
-        result = 31 * result + parentsHashes.hashCode();
-        return result;
     }
 
     /**
@@ -167,15 +102,6 @@ public class Commit implements Serializable, Comparable<Commit> {
             }
         }
         return 0;
-    }
-
-    private Commit(@NotNull String treeHash, @NotNull String message, @NotNull List<String> parentsHashes,
-                   @NotNull String author, @NotNull Date date) {
-        this.treeHash = treeHash;
-        this.message = message;
-        this.author = author;
-        this.dateCreated = date;
-        this.parentsHashes = parentsHashes;
     }
 
     @NotNull

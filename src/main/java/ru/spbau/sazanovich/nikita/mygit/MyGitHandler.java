@@ -448,7 +448,6 @@ public class MyGitHandler {
      * Returns a list of differences in files between filesystem and MyGit's HEAD status.
      * The list contains relative paths.
      */
-    // TODO make them relative
     @NotNull
     private List<FileDifference> getTreeDifferenceList(@Nullable Tree tree, @NotNull Path prefixPath, @NotNull Set<Path> indexedPaths)
             throws MyGitStateException, IOException {

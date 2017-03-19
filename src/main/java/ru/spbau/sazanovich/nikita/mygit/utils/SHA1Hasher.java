@@ -1,5 +1,6 @@
 package ru.spbau.sazanovich.nikita.mygit.utils;
 
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitIllegalArgumentException;
 
@@ -55,8 +56,10 @@ public class SHA1Hasher implements MyGitHasher {
         private static final int HASH_LENGTH = 40;
 
         @NotNull
+        @Getter
         private String first;
         @NotNull
+        @Getter
         private String last;
 
         /**
@@ -71,26 +74,6 @@ public class SHA1Hasher implements MyGitHasher {
             }
             first = hash.substring(0, FIRST_PART_ENDS);
             last = hash.substring(FIRST_PART_ENDS);
-        }
-
-        /**
-         * Gets first part of the hash.
-         *
-         * @return first part of the hash
-         */
-        @NotNull
-        public String getFirst() {
-            return first;
-        }
-
-        /**
-         * Gets last part of the hash.
-         *
-         * @return last part of the hash
-         */
-        @NotNull
-        public String getLast() {
-            return last;
         }
     }
 

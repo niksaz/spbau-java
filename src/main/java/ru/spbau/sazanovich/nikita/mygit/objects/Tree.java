@@ -1,5 +1,8 @@
 package ru.spbau.sazanovich.nikita.mygit.objects;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
@@ -10,6 +13,7 @@ import java.util.List;
 /**
  * Object which corresponds to a directory in filesystems. Stores several blobs and subtrees.
  */
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Tree implements Serializable {
 
     /**
@@ -18,6 +22,7 @@ public class Tree implements Serializable {
     public static final String TYPE = "tree";
 
     @NotNull
+    @Getter
     private final List<TreeEdge> children;
 
     /**
@@ -25,16 +30,6 @@ public class Tree implements Serializable {
      */
     public Tree() {
         this(new ArrayList<>());
-    }
-
-    /**
-     * Gets a list of tree's children objects.
-     *
-     * @return a list of tree's children objects
-     */
-    @NotNull
-    public List<TreeEdge> getChildren() {
-        return children;
     }
 
     /**
@@ -53,12 +48,16 @@ public class Tree implements Serializable {
     public static class TreeEdge implements Serializable {
 
         @NotNull
+        @Getter
         private String hash;
         @NotNull
+        @Getter
         private String name;
         @NotNull
+        @Getter
         private String type;
         @NotNull
+        @Getter
         private Date dateCreated;
 
         /**
@@ -76,46 +75,6 @@ public class Tree implements Serializable {
         }
 
         /**
-         * Gets hash of the file, associated with the edge.
-         *
-         * @return hash of the file, associated with the edge
-         */
-        @NotNull
-        public String getHash() {
-            return hash;
-        }
-
-        /**
-         * Gets name of the file, associated with the edge.
-         *
-         * @return name of the file, associated with the edge
-         */
-        @NotNull
-        public String getName() {
-            return name;
-        }
-
-        /**
-         * Gets type of the file, associated with the edge.
-         *
-         * @return type of the file, associated with the edge
-         */
-        @NotNull
-        public String getType() {
-            return type;
-        }
-
-        /**
-         * Gets date of the edge's creation.
-         *
-         * @return date of the edge's creation
-         */
-        @NotNull
-        public Date getDateCreated() {
-            return dateCreated;
-        }
-
-        /**
          * Checks whether the file is directory.
          *
          * @return {@code true} if it is directory; {@code false} otherwise
@@ -123,9 +82,5 @@ public class Tree implements Serializable {
         public boolean isDirectory() {
             return getType().equals(Tree.TYPE);
         }
-    }
-
-    private Tree(@NotNull List<TreeEdge> children) {
-        this.children = children;
     }
 }
