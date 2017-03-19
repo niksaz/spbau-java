@@ -1,4 +1,4 @@
-package ru.spbau.sazanovich.nikita.mygit.status;
+package ru.spbau.sazanovich.nikita.mygit.objects;
 
 /**
  * Enum which represents a {@link FileDifference FileDifference's} type of difference of a filesystem file version

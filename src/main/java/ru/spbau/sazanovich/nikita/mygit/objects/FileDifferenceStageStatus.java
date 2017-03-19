@@ -1,4 +1,4 @@
-package ru.spbau.sazanovich.nikita.mygit.status;
+package ru.spbau.sazanovich.nikita.mygit.objects;
 
 /**
  * Enum representing {@link FileDifference FileDifference's} status in a MyGit stage area.

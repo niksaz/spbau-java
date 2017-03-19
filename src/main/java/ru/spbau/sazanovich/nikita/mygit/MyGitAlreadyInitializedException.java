@@ -1,4 +1,4 @@
-package ru.spbau.sazanovich.nikita.mygit.exceptions;
+package ru.spbau.sazanovich.nikita.mygit;
 
 /**
  * Exception which is occurred during mygit work with OS filesystem.

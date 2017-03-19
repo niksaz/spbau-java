@@ -2,12 +2,9 @@ package ru.spbau.sazanovich.nikita.console;
 
 import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.MyGitHandler;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitException;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
-import ru.spbau.sazanovich.nikita.mygit.logs.CommitLog;
-import ru.spbau.sazanovich.nikita.mygit.logs.HeadStatus;
-import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
-import ru.spbau.sazanovich.nikita.mygit.status.*;
+import ru.spbau.sazanovich.nikita.mygit.MyGitException;
+import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
+import ru.spbau.sazanovich.nikita.mygit.objects.*;
 
 import java.io.IOException;
 import java.io.PrintStream;

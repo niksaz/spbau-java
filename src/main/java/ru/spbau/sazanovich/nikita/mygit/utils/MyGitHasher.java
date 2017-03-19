@@ -1,7 +1,7 @@
 package ru.spbau.sazanovich.nikita.mygit.utils;
 
 import org.jetbrains.annotations.NotNull;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitIllegalArgumentException;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
 
 import java.io.IOException;
 

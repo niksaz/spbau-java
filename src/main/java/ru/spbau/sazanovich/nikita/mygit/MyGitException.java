@@ -1,4 +1,4 @@
-package ru.spbau.sazanovich.nikita.mygit.exceptions;
+package ru.spbau.sazanovich.nikita.mygit;
 
 import org.jetbrains.annotations.NotNull;
 

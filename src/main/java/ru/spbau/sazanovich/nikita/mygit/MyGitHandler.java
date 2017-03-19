@@ -2,18 +2,8 @@ package ru.spbau.sazanovich.nikita.mygit;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitAlreadyInitializedException;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitIllegalArgumentException;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitMissingPrerequisitesException;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
-import ru.spbau.sazanovich.nikita.mygit.logs.CommitLog;
-import ru.spbau.sazanovich.nikita.mygit.logs.HeadStatus;
-import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
-import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
-import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
-import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
+import ru.spbau.sazanovich.nikita.mygit.objects.*;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
-import ru.spbau.sazanovich.nikita.mygit.status.*;
 import ru.spbau.sazanovich.nikita.mygit.utils.SHA1Hasher;
 
 import java.io.IOException;
@@ -26,8 +16,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static ru.spbau.sazanovich.nikita.mygit.status.FileDifferenceStageStatus.*;
-import static ru.spbau.sazanovich.nikita.mygit.status.FileDifferenceType.*;
+import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceStageStatus.*;
+import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceType.*;
 
 /**
  * Class which should be instantiated by a user to interact with the library. Handles command and delegating internal

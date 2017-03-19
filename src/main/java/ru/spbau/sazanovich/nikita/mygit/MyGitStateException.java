@@ -1,4 +1,4 @@
-package ru.spbau.sazanovich.nikita.mygit.exceptions;
+package ru.spbau.sazanovich.nikita.mygit;
 
 /**
  * Exception which represents an incorrect usage of mygit.

@@ -1,8 +1,6 @@
 package ru.spbau.sazanovich.nikita.mygit;
 
 import org.junit.Test;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitAlreadyInitializedException;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
 
 import java.nio.file.Files;

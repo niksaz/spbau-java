@@ -1,4 +1,4 @@
-package ru.spbau.sazanovich.nikita.mygit.logs;
+package ru.spbau.sazanovich.nikita.mygit.objects;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package ru.spbau.sazanovich.nikita.mygit.exceptions;
+package ru.spbau.sazanovich.nikita.mygit;
 
 /**
  * Calling command when you are in a state where performing the command is not possible.

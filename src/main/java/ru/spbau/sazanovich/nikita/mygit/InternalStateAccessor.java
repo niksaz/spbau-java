@@ -1,10 +1,7 @@
 package ru.spbau.sazanovich.nikita.mygit;
 
 import org.jetbrains.annotations.NotNull;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitAlreadyInitializedException;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitIllegalArgumentException;
-import ru.spbau.sazanovich.nikita.mygit.exceptions.MyGitStateException;
-import ru.spbau.sazanovich.nikita.mygit.logs.HeadStatus;
+import ru.spbau.sazanovich.nikita.mygit.objects.HeadStatus;
 import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
 import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 import ru.spbau.sazanovich.nikita.mygit.objects.Commit;

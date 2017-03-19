@@ -2,8 +2,8 @@ package ru.spbau.sazanovich.nikita;
 
 import org.junit.Test;
 import ru.spbau.sazanovich.nikita.mygit.MyGitHandler;
-import ru.spbau.sazanovich.nikita.mygit.logs.CommitLog;
-import ru.spbau.sazanovich.nikita.mygit.status.FileDifference;
+import ru.spbau.sazanovich.nikita.mygit.objects.CommitLog;
+import ru.spbau.sazanovich.nikita.mygit.objects.FileDifference;
 import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
 
 import java.nio.file.Files;
@@ -16,7 +16,7 @@ import java.util.List;
 import static java.lang.Thread.sleep;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static ru.spbau.sazanovich.nikita.mygit.status.FileDifferenceStageStatus.UNTRACKED;
+import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceStageStatus.UNTRACKED;
 
 public class WorkflowTest extends FolderInitialized {
 
