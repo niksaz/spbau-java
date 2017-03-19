@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
  */
 @EqualsAndHashCode
 @AllArgsConstructor
+@Getter
 public class Branch {
 
     /**
@@ -18,6 +19,5 @@ public class Branch {
     public static final String TYPE = "branch";
 
     @NotNull
-    @Getter
     private final String name;
 }

@@ -18,6 +18,7 @@ import java.util.List;
  */
 @EqualsAndHashCode
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Getter
 public class Commit implements Serializable, Comparable<Commit> {
 
     /**
@@ -26,20 +27,15 @@ public class Commit implements Serializable, Comparable<Commit> {
     public static final String TYPE = "commit";
 
     @NotNull
-    @Getter
     private final String treeHash;
     @NotNull
-    @Getter
     private final String message;
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     @NotNull
-    @Getter
     private final List<String> parentsHashes;
     @NotNull
-    @Getter
     private final String author;
     @NotNull
-    @Getter
     private final Date dateCreated;
 
 

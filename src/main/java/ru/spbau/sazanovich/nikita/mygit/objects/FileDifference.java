@@ -10,15 +10,13 @@ import java.nio.file.Path;
  * Basic class for all differences between MyGit repository's HEAD state and a filesystem state.
  */
 @AllArgsConstructor
+@Getter
 public class FileDifference {
 
     @NotNull
-    @Getter
     private Path path;
     @NotNull
-    @Getter
     private final FileDifferenceType type;
     @NotNull
-    @Getter
     private final FileDifferenceStageStatus stageStatus;
 }

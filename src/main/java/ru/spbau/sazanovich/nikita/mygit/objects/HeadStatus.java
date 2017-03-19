@@ -8,12 +8,11 @@ import org.jetbrains.annotations.NotNull;
  * Represents the status of MyGit repository's HEAD.
  */
 @AllArgsConstructor
+@Getter
 public class HeadStatus {
 
     @NotNull
-    @Getter
     private String type;
     @NotNull
-    @Getter
     private String name;
 }

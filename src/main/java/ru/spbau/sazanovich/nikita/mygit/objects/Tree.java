@@ -14,6 +14,7 @@ import java.util.List;
  * Object which corresponds to a directory in filesystems. Stores several blobs and subtrees.
  */
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Getter
 public class Tree implements Serializable {
 
     /**
@@ -22,7 +23,6 @@ public class Tree implements Serializable {
     public static final String TYPE = "tree";
 
     @NotNull
-    @Getter
     private final List<TreeEdge> children;
 
     /**
@@ -45,19 +45,17 @@ public class Tree implements Serializable {
     /**
      * Objects which are put into {@link Tree} object to represent edges in a filesystem graph.
      */
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    @Getter
     public static class TreeEdge implements Serializable {
 
         @NotNull
-        @Getter
         private String hash;
         @NotNull
-        @Getter
         private String name;
         @NotNull
-        @Getter
         private String type;
         @NotNull
-        @Getter
         private Date dateCreated;
 
         /**
@@ -68,10 +66,7 @@ public class Tree implements Serializable {
          * @param type type of the file, associated with the edge (Branch.Type or Blob.Type)
          */
         public TreeEdge(@NotNull String hash, @NotNull String name, @NotNull String type) {
-            this.hash = hash;
-            this.name = name;
-            this.type = type;
-            this.dateCreated = new Date();
+            this(hash, name, type, new Date());
         }
 
         /**
