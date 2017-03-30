@@ -114,7 +114,11 @@ public class MD5Util {
             }
             for (RecursiveTask<byte[]> task : tasks) {
                 try {
-                    messageDigest.update(task.get());
+                    final byte[] result = task.get();
+                    if (result == null) {
+                        throw new IOException("IOException");
+                    }
+                    messageDigest.update(result);
                 } catch (Exception e) {
                     throw new IllegalStateException("Error in ForkJoinPool during execution", e);
                 }
