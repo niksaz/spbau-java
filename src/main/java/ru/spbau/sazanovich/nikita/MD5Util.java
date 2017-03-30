@@ -18,7 +18,11 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 import java.util.stream.Collectors;
 
-class MD5Util {
+/**
+ * Class which is able to compute MD5 hash of a file.
+ * Computation may be performed in single-threaded or concurrent environments.
+ */
+public class MD5Util {
 
     private static final String HASH_ALGORITHM = "MD5";
     private static final int BUFFER_SIZE = 4096;
@@ -41,11 +45,27 @@ class MD5Util {
         pool = new ForkJoinPool(threadsInPool);
     }
 
+    /**
+     * Computes MD5 hash from a file at a given path. Returns result as a byte array.
+     *
+     * @param filePathString file's path string
+     * @return hash's byte array with
+     * @throws IllegalArgumentException if filePathString is not a valid path
+     * @throws IOException if an exception occurred during working with filesystem
+     */
     @NotNull
     public String getHashFromFile(@NotNull String filePathString) throws IllegalArgumentException, IOException {
         return DatatypeConverter.printHexBinary(getHashBytesFromFile(filePathString));
     }
 
+    /**
+     * Computes MD5 hash from a file at a given path. Returns result as a string.
+     *
+     * @param filePathString file's path string
+     * @return hash's string
+     * @throws IllegalArgumentException if filePathString is not a valid path
+     * @throws IOException if an exception occurred during working with filesystem
+     */
     @NotNull
     public byte[] getHashBytesFromFile(@NotNull String filePathString) throws IllegalArgumentException, IOException {
         final Path path;
