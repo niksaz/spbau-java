@@ -1,6 +1,7 @@
 package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ru.spbau.sazanovich.nikita.mygit.MyGitAlreadyInitializedException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
@@ -37,6 +38,11 @@ class InternalStateAccessor {
         }
         this.myGitDirectory = path;
         this.hasher = hasher;
+    }
+
+    @NotNull
+    Path getMyGitDirectory() {
+        return myGitDirectory;
     }
 
     @NotNull
@@ -371,6 +377,19 @@ class InternalStateAccessor {
         return commitHashes;
     }
 
+    @Nullable
+    static Path findMyGitDirectoryPath(@Nullable Path currentDirectory) {
+        if (currentDirectory == null) {
+            return null;
+        }
+        final Path possibleMyGitDirectory = Paths.get(currentDirectory.toString(), ".mygit");
+        if (Files.exists(possibleMyGitDirectory)) {
+            return currentDirectory;
+        } else {
+            return findMyGitDirectoryPath(currentDirectory.getParent());
+        }
+    }
+
     static void init(@NotNull Path directory)
             throws MyGitAlreadyInitializedException, MyGitStateException, IOException {
         final Path myGitPath = Paths.get(directory.toString(), ".mygit");
@@ -399,5 +418,18 @@ class InternalStateAccessor {
         final String treeHash = internalStateAccessor.map(new Tree());
         final Commit primaryCommit = new Commit(treeHash);
         return internalStateAccessor.map(primaryCommit);
+    }
+
+    boolean isAbsolutePathRepresentsInternal(@Nullable Path path) {
+        return pathContainsMyGitAsSubpath(myGitDirectory.relativize(path));
+    }
+
+    static boolean pathContainsMyGitAsSubpath(@Nullable Path path) {
+        return path != null && (path.endsWith(".mygit") || pathContainsMyGitAsSubpath(path.getParent()));
+    }
+
+    @NotNull
+    Path relativizeWithMyGitDirectory(@NotNull Path path) {
+        return myGitDirectory.relativize(path);
     }
 }

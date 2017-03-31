@@ -2,7 +2,10 @@ package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ru.spbau.sazanovich.nikita.mygit.*;
+import ru.spbau.sazanovich.nikita.mygit.MyGitAlreadyInitializedException;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
+import ru.spbau.sazanovich.nikita.mygit.MyGitMissingPrerequisitesException;
+import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.objects.*;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
 import ru.spbau.sazanovich.nikita.mygit.utils.SHA1Hasher;
@@ -16,9 +19,6 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceStageStatus.*;
-import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceType.*;
 
 /**
  * Class which should be instantiated by a user to interact with the library. Handles command and delegating internal
@@ -59,7 +59,7 @@ public class MyGitCommandHandler {
             throw new MyGitIllegalArgumentException("parameter should be an absolute path");
         }
         this.currentDirectory = currentDirectory;
-        final Path path = findMyGitPath(currentDirectory);
+        final Path path = InternalStateAccessor.findMyGitDirectoryPath(currentDirectory);
         if (path == null) {
             throw new MyGitStateException("Not a mygit repository (or any of the parent directories)");
         }
@@ -76,9 +76,7 @@ public class MyGitCommandHandler {
      */
     @NotNull
     public List<FileDifference> getHeadDifferences() throws MyGitStateException, IOException {
-        final Tree tree = internalStateAccessor.getHeadTree();
-        final Set<Path> indexedPaths = internalStateAccessor.readIndexPaths();
-        return getTreeDifferenceList(tree, myGitDirectory, indexedPaths);
+        return new StatusCommand(internalStateAccessor).perform();
     }
 
     /**
@@ -327,7 +325,7 @@ public class MyGitCommandHandler {
         final List<Path> filePaths =
                 Files
                         .list(prefixPath)
-                        .filter(path -> !isAbsolutePathRepresentsInternal(path))
+                        .filter(path -> !internalStateAccessor.isAbsolutePathRepresentsInternal(path))
                         .collect(Collectors.toList());
         final Tree rebuiltTree = new Tree();
         final List<TreeEdge> childrenList = tree == null ? new ArrayList<>() : tree.getChildren();
@@ -431,123 +429,9 @@ public class MyGitCommandHandler {
         }
     }
 
-    /**
-     * Returns a list of differences in files between filesystem and MyGit's HEAD status.
-     * The list contains relative paths.
-     */
-    @NotNull
-    private List<FileDifference> getTreeDifferenceList(@Nullable Tree tree, @NotNull Path prefixPath, @NotNull Set<Path> indexedPaths)
-            throws MyGitStateException, IOException {
-        final List<Path> filePaths =
-                Files
-                        .list(prefixPath)
-                        .filter(path -> !isAbsolutePathRepresentsInternal(path))
-                        .collect(Collectors.toList());
-        final List<FileDifference> fileDifferenceList = new ArrayList<>();
-        final List<TreeEdge> childrenList = tree == null ? new ArrayList<>() : tree.getChildren();
-        for (TreeEdge child : childrenList) {
-            final Path childPath = Paths.get(prefixPath.toString(), child.getName());
-            if (filePaths.contains(childPath)) {
-                filePaths.remove(childPath);
-            }
-            addChildDifferenceToList(child, childPath, indexedPaths, fileDifferenceList);
-        }
-        for (Path path : filePaths) {
-            final Path relativePath = myGitDirectory.relativize(path);
-            if (indexedPaths.contains(relativePath)) {
-                fileDifferenceList.add(new FileDifference(relativePath, ADDITION, TO_BE_COMMITTED));
-                if (Files.isDirectory(path)) {
-                    fileDifferenceList.addAll(getTreeDifferenceList(null, path, indexedPaths));
-                }
-            } else {
-                fileDifferenceList.add(new FileDifference(relativePath, ADDITION, UNTRACKED));
-            }
-        }
-        return fileDifferenceList;
-    }
-
-    private void addChildDifferenceToList(@NotNull TreeEdge child, @NotNull Path path,
-                                          @NotNull Set<Path> indexedPaths,
-                                          @NotNull List<FileDifference> differences)
-            throws MyGitStateException, IOException {
-        final Path relativePath = myGitDirectory.relativize(path);
-        final boolean isPresentInFilesystem = Files.exists(path);
-        if (child.getType().equals(Tree.TYPE)) {
-            final Tree childTree = internalStateAccessor.readTree(child.getHash());
-            if (isPresentInFilesystem) {
-                if (Files.isDirectory(path)) {
-                    differences.addAll(getTreeDifferenceList(childTree, path, indexedPaths));
-                } else {
-                    if (indexedPaths.contains(relativePath)) {
-                        differences.add(new FileDifference(relativePath, MODIFICATION, TO_BE_COMMITTED));
-                        for (TreeEdge object : childTree.getChildren()) {
-                            Path objectPath = Paths.get(path.toString(), object.getName());
-                            objectPath = myGitDirectory.relativize(objectPath);
-                            differences.add(new FileDifference(objectPath, REMOVAL, TO_BE_COMMITTED));
-                        }
-                    } else {
-                        differences.add(new FileDifference(relativePath, MODIFICATION, NOT_STAGED_FOR_COMMIT));
-                        for (TreeEdge object : childTree.getChildren()) {
-                            Path objectPath = Paths.get(path.toString(), object.getName());
-                            objectPath = myGitDirectory.relativize(objectPath);
-                            differences.add(new FileDifference(objectPath, REMOVAL, NOT_STAGED_FOR_COMMIT));
-                        }
-                    }
-                }
-            } else if (indexedPaths.contains(relativePath)) {
-                differences.add(new FileDifference(relativePath, REMOVAL, TO_BE_COMMITTED));
-            } else {
-                differences.add(new FileDifference(relativePath, REMOVAL, NOT_STAGED_FOR_COMMIT));
-            }
-            return;
-        }
-        if (child.getType().equals(Blob.TYPE)) {
-            final Blob childBlob = internalStateAccessor.readBlob(child.getHash());
-            if (isPresentInFilesystem) {
-                if (Files.isDirectory(path)) {
-                    if (indexedPaths.contains(relativePath)) {
-                        differences.add(new FileDifference(relativePath, MODIFICATION, TO_BE_COMMITTED));
-                        differences.addAll(getTreeDifferenceList(null, path, indexedPaths));
-                    } else {
-                        differences.add(new FileDifference(relativePath, MODIFICATION, NOT_STAGED_FOR_COMMIT));
-                    }
-                } else {
-                    final byte[] committedContent = childBlob.getContent();
-                    final byte[] currentContent = Files.readAllBytes(path);
-                    if (!Arrays.equals(committedContent, currentContent)) {
-                        if (indexedPaths.contains(relativePath)) {
-                            differences.add(new FileDifference(relativePath, MODIFICATION, TO_BE_COMMITTED));
-                        } else {
-                            differences.add(new FileDifference(relativePath, MODIFICATION, NOT_STAGED_FOR_COMMIT));
-                        }
-                    }
-                }
-            } else if (indexedPaths.contains(relativePath)) {
-                differences.add(new FileDifference(relativePath, REMOVAL, TO_BE_COMMITTED));
-            } else {
-                differences.add(new FileDifference(relativePath, REMOVAL, NOT_STAGED_FOR_COMMIT));
-            }
-            return;
-        }
-        throw new MyGitStateException("met an unknown type while traversing the tree -- " + child.getType());
-    }
-
     @NotNull
     private List<String> listCommitHashes() throws IOException, MyGitStateException {
         return internalStateAccessor.listCommitHashes();
-    }
-
-    @Nullable
-    private Path findMyGitPath(@Nullable Path currentDirectory) {
-        if (currentDirectory == null) {
-            return null;
-        }
-        final Path possibleMyGitDirectory = Paths.get(currentDirectory.toString(), ".mygit");
-        if (Files.exists(possibleMyGitDirectory)) {
-            return currentDirectory;
-        } else {
-            return findMyGitPath(currentDirectory.getParent());
-        }
     }
 
     @NotNull
@@ -568,7 +452,7 @@ public class MyGitCommandHandler {
                         "files should be located in the mygit repository's directory, but an argument is " + path);
             }
             path = myGitDirectory.relativize(path);
-            if (!pathContainsMyGitAsSubpath(path)) {
+            if (!InternalStateAccessor.pathContainsMyGitAsSubpath(path)) {
                 paths.add(path);
             }
         }
@@ -615,13 +499,5 @@ public class MyGitCommandHandler {
             mergedTree.addChild(otherIterator.next());
         }
         return internalStateAccessor.map(mergedTree);
-    }
-
-    private boolean isAbsolutePathRepresentsInternal(@Nullable Path path) {
-        return pathContainsMyGitAsSubpath(myGitDirectory.relativize(path));
-    }
-
-    private static boolean pathContainsMyGitAsSubpath(@Nullable Path path) {
-        return path != null && (path.endsWith(".mygit") || pathContainsMyGitAsSubpath(path.getParent()));
     }
 }
