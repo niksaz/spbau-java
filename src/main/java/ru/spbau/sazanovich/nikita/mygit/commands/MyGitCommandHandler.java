@@ -1,7 +1,8 @@
-package ru.spbau.sazanovich.nikita.mygit;
+package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.spbau.sazanovich.nikita.mygit.*;
 import ru.spbau.sazanovich.nikita.mygit.objects.*;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
 import ru.spbau.sazanovich.nikita.mygit.utils.SHA1Hasher;
@@ -23,7 +24,7 @@ import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceType.*;
  * Class which should be instantiated by a user to interact with the library. Handles command and delegating internal
  * representation changes to {@link InternalStateAccessor}.
  */
-public class MyGitHandler {
+public class MyGitCommandHandler {
 
     @NotNull
     private final Path myGitDirectory;
@@ -41,13 +42,9 @@ public class MyGitHandler {
      * @throws MyGitStateException              if an internal error occurs during operations
      * @throws IOException                      if an error occurs during working with a filesystem
      */
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void init(@NotNull Path directory)
             throws MyGitIllegalArgumentException, MyGitAlreadyInitializedException, MyGitStateException, IOException {
-        if (!directory.isAbsolute()) {
-            throw new MyGitIllegalArgumentException("path parameter should be an absolute");
-        }
-        InternalStateAccessor.init(directory);
+        new InitCommand(directory).perform();
     }
 
     /**
@@ -57,7 +54,7 @@ public class MyGitHandler {
      * @throws MyGitIllegalArgumentException if the directory path is not absolute
      * @throws MyGitStateException           if the directory (or any of the parent directories) is not a MyGit repository
      */
-    public MyGitHandler(@NotNull Path currentDirectory) throws MyGitIllegalArgumentException, MyGitStateException {
+    public MyGitCommandHandler(@NotNull Path currentDirectory) throws MyGitIllegalArgumentException, MyGitStateException {
         if (!currentDirectory.isAbsolute()) {
             throw new MyGitIllegalArgumentException("parameter should be an absolute path");
         }

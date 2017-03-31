@@ -1,7 +1,7 @@
 package ru.spbau.sazanovich.nikita.console;
 
 import org.jetbrains.annotations.NotNull;
-import ru.spbau.sazanovich.nikita.mygit.MyGitHandler;
+import ru.spbau.sazanovich.nikita.mygit.commands.MyGitCommandHandler;
 import ru.spbau.sazanovich.nikita.mygit.MyGitException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.objects.*;
@@ -64,11 +64,11 @@ class CommandLineArgsHandler {
             return;
         }
         if (args[0].equals(INIT_CMD)) {
-            MyGitHandler.init(currentDirectory);
+            MyGitCommandHandler.init(currentDirectory);
             printStream.println("Successfully initialized mygit repository.");
             return;
         }
-        final MyGitHandler handler = new MyGitHandler(currentDirectory);
+        final MyGitCommandHandler handler = new MyGitCommandHandler(currentDirectory);
         switch (args[0]) {
             case ADD_CMD:
                 if (args.length > 1) {
@@ -128,7 +128,7 @@ class CommandLineArgsHandler {
         }
     }
 
-    private void printAllBranches(@NotNull MyGitHandler handler) throws MyGitStateException, IOException {
+    private void printAllBranches(@NotNull MyGitCommandHandler handler) throws MyGitStateException, IOException {
         final List<Branch> branches = handler.listBranches();
         final HeadStatus headStatus = handler.getHeadStatus();
         String currentBranchName;
@@ -145,7 +145,7 @@ class CommandLineArgsHandler {
         }
     }
 
-    private void performLogCommand(@NotNull MyGitHandler handler) throws MyGitStateException, IOException {
+    private void performLogCommand(@NotNull MyGitCommandHandler handler) throws MyGitStateException, IOException {
         printStatusInfo(handler);
         printStream.println();
         final List<CommitLog> logsHistory = handler.getCommitsLogsHistory();
@@ -160,7 +160,7 @@ class CommandLineArgsHandler {
         }
     }
 
-    private void performStatusCommand(@NotNull MyGitHandler handler) throws MyGitStateException, IOException {
+    private void performStatusCommand(@NotNull MyGitCommandHandler handler) throws MyGitStateException, IOException {
         printStatusInfo(handler);
 
         final List<FileDifference> fileDifferences = handler.getHeadDifferences();
@@ -201,7 +201,7 @@ class CommandLineArgsHandler {
         printStream.println();
     }
 
-    private void printStatusInfo(@NotNull MyGitHandler handler) throws MyGitStateException, IOException {
+    private void printStatusInfo(@NotNull MyGitCommandHandler handler) throws MyGitStateException, IOException {
         final HeadStatus headStatus = handler.getHeadStatus();
         if (headStatus.getType().equals(Branch.TYPE)) {
             printStream.println("On branch " + headStatus.getName());

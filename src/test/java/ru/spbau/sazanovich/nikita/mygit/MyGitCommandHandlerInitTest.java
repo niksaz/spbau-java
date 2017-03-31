@@ -1,6 +1,7 @@
 package ru.spbau.sazanovich.nikita.mygit;
 
 import org.junit.Test;
+import ru.spbau.sazanovich.nikita.mygit.commands.MyGitCommandHandler;
 import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
 
 import java.nio.file.Files;
@@ -12,11 +13,11 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class MyGitHandlerInitTest extends FolderInitialized {
+public class MyGitCommandHandlerInitTest extends FolderInitialized {
 
     @Test
     public void init() throws Exception {
-        MyGitHandler.init(folderPath);
+        MyGitCommandHandler.init(folderPath);
         final Path myGitDirectory = Paths.get(folderPath.toString(), ".mygit");
         assertTrue(Files.exists(myGitDirectory));
         assertTrue(Files.isDirectory(myGitDirectory));
@@ -43,12 +44,12 @@ public class MyGitHandlerInitTest extends FolderInitialized {
 
     @Test(expected = MyGitIllegalArgumentException.class)
     public void initNotInAbsolute() throws Exception {
-        MyGitHandler.init(Paths.get(""));
+        MyGitCommandHandler.init(Paths.get(""));
     }
 
     @Test(expected = MyGitAlreadyInitializedException.class)
     public void initInAlreadyInitialized() throws Exception {
         Files.createDirectory(Paths.get(folderPath.toString(), ".mygit"));
-        MyGitHandler.init(folderPath);
+        MyGitCommandHandler.init(folderPath);
     }
 }

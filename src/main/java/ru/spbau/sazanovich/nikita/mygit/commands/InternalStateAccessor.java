@@ -1,6 +1,9 @@
-package ru.spbau.sazanovich.nikita.mygit;
+package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.mygit.MyGitAlreadyInitializedException;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
+import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.objects.HeadStatus;
 import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
 import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
@@ -321,6 +324,7 @@ class InternalStateAccessor {
         return headFile;
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private static void deleteDirectoryWithFiles(@NotNull Path directoryPath) throws IOException {
         Files
         .walk(directoryPath)

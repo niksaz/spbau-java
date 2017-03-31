@@ -1,4 +1,4 @@
-package ru.spbau.sazanovich.nikita.mygit;
+package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.junit.Test;
 import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher;

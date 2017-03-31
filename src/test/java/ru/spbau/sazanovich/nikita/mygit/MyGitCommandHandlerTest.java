@@ -1,6 +1,7 @@
 package ru.spbau.sazanovich.nikita.mygit;
 
 import org.junit.Test;
+import ru.spbau.sazanovich.nikita.mygit.commands.MyGitCommandHandler;
 import ru.spbau.sazanovich.nikita.mygit.objects.FileDifference;
 import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
 
@@ -16,15 +17,15 @@ import static org.junit.Assert.assertTrue;
 import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceStageStatus.*;
 import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceType.*;
 
-public class MyGitHandlerTest extends FolderInitialized {
+public class MyGitCommandHandlerTest extends FolderInitialized {
 
-    private MyGitHandler handler;
+    private MyGitCommandHandler handler;
 
     @Override
     public void initialize() throws Exception {
         super.initialize();
-        MyGitHandler.init(folderPath);
-        handler = new MyGitHandler(folderPath);
+        MyGitCommandHandler.init(folderPath);
+        handler = new MyGitCommandHandler(folderPath);
     }
 
     @Test
