@@ -14,13 +14,10 @@ import java.util.TreeSet;
 /**
  * Command class which gets the logs from commit's which are reachable from the HEAD's commit.
  */
-class LogCommand {
-
-    @NotNull
-    private final InternalStateAccessor internalStateAccessor;
+class LogCommand extends Command {
 
     LogCommand(@NotNull InternalStateAccessor internalStateAccessor) {
-        this.internalStateAccessor = internalStateAccessor;
+        super(internalStateAccessor);
     }
 
     @NotNull

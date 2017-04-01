@@ -17,7 +17,7 @@ import java.util.function.Function;
 class StageCommand extends Command {
 
     @NotNull
-    private List<String> arguments;
+    private final List<String> arguments;
 
     StageCommand(@NotNull List<String> arguments, @NotNull InternalStateAccessor internalStateAccessor) {
         super(internalStateAccessor);

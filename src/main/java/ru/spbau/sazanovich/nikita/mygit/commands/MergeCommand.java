@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitMissingPrerequisitesException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
-import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.HeadStatus;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
@@ -15,7 +14,7 @@ import java.util.List;
 import java.util.ListIterator;
 
 /**
- * Command class which performs a merge operation of HEAD and given branch.
+ * Command class which performs a merge operation of HEAD and given branchName.
  *
  * Chooses files based on their last modification's date -- older have a priority. Index should be empty before
  * merging and HEAD should not be in detached state.
@@ -23,11 +22,11 @@ import java.util.ListIterator;
 class MergeCommand extends Command {
 
     @NotNull
-    private String branch;
+    private final String branchName;
 
-    MergeCommand(@NotNull String branch, @NotNull InternalStateAccessor internalStateAccessor) {
+    MergeCommand(@NotNull String branchName, @NotNull InternalStateAccessor internalStateAccessor) {
         super(internalStateAccessor);
-        this.branch = branch;
+        this.branchName = branchName;
     }
 
     void perform()
@@ -36,24 +35,24 @@ class MergeCommand extends Command {
         if (headStatus.getName().equals(Commit.TYPE)) {
             throw new MyGitMissingPrerequisitesException("could not merge while you are in detached HEAD state");
         }
-        final List<Branch> branchList = new ListBranchesCommand(internalStateAccessor).perform();
-        if (!branchList.contains(new Branch(branch))) {
-            throw new MyGitIllegalArgumentException("there is no such branch -- " + branch);
+        final BranchExistsCommand branchExistsCommand = new BranchExistsCommand(branchName, internalStateAccessor);
+        if (!branchExistsCommand.perform()) {
+            throw new MyGitIllegalArgumentException("there is no such branchName -- " + branchName);
         }
-        if (headStatus.getName().equals(branch)) {
-            throw new MyGitIllegalArgumentException("can not merge branch with itself");
+        if (headStatus.getName().equals(branchName)) {
+            throw new MyGitIllegalArgumentException("can not merge branchName with itself");
         }
         if (!internalStateAccessor.readIndexPaths().isEmpty()) {
             throw new MyGitMissingPrerequisitesException("staging area should be empty before a merge operation");
         }
         final String baseBranch = headStatus.getName();
         final Tree baseTree = internalStateAccessor.getBranchTree(baseBranch);
-        final Tree otherTree = internalStateAccessor.getBranchTree(branch);
+        final Tree otherTree = internalStateAccessor.getBranchTree(branchName);
 
         final String mergeTreeHash = mergeTwoTrees(baseTree, otherTree);
         final List<String> parentsHashes = new ArrayList<>();
         parentsHashes.add(internalStateAccessor.getBranchCommitHash(baseBranch));
-        parentsHashes.add(internalStateAccessor.getBranchCommitHash(branch));
+        parentsHashes.add(internalStateAccessor.getBranchCommitHash(branchName));
         final Commit mergeCommit = new Commit(mergeTreeHash, "merge commit", parentsHashes);
         final String mergeCommitHash = internalStateAccessor.map(mergeCommit);
         internalStateAccessor.writeBranch(baseBranch, mergeCommitHash);

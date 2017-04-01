@@ -27,13 +27,10 @@ import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceType.REMOVA
 /**
  * Command class which gets differences between current MyGit repository's HEAD state and the filesystem state.
  */
-class StatusCommand {
-
-    @NotNull
-    private final InternalStateAccessor internalStateAccessor;
+class StatusCommand extends Command {
 
     StatusCommand(@NotNull InternalStateAccessor internalStateAccessor) {
-        this.internalStateAccessor = internalStateAccessor;
+        super(internalStateAccessor);
     }
 
     @NotNull

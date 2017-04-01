@@ -19,7 +19,7 @@ import java.util.List;
 class CheckoutCommand extends Command {
 
     @NotNull
-    private String revisionName;
+    private final String revisionName;
 
     CheckoutCommand(@NotNull String revisionName, @NotNull InternalStateAccessor internalStateAccessor) {
         super(internalStateAccessor);

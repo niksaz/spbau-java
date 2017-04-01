@@ -9,13 +9,10 @@ import java.io.IOException;
 /**
  * Command class which gets the current HEAD state.
  */
-class HeadStatusCommand {
-
-    @NotNull
-    private final InternalStateAccessor internalStateAccessor;
+class HeadStatusCommand extends Command {
 
     HeadStatusCommand(@NotNull InternalStateAccessor internalStateAccessor) {
-        this.internalStateAccessor = internalStateAccessor;
+        super(internalStateAccessor);
     }
 
     HeadStatus perform() throws MyGitStateException, IOException {

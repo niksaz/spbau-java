@@ -46,7 +46,7 @@ public class InternalStateAccessorTest extends FolderInitialized {
         when(mockHasher.splitHash(any())).thenReturn(mockedParts);
 
         final InternalStateAccessor internalStateAccessor =
-                new InternalStateAccessor(folderPath, folderPath, mockHasher);
+                new InternalStateAccessor(folderPath, mockHasher);
         final String mappedHash = internalStateAccessor.map(objectToMap);
         assertEquals(mockedHash, mappedHash);
 
@@ -79,7 +79,7 @@ public class InternalStateAccessorTest extends FolderInitialized {
         }
 
         final InternalStateAccessor internalStateAccessor =
-                new InternalStateAccessor(folderPath, folderPath, mock(MyGitHasher.class));
+                new InternalStateAccessor(folderPath, mock(MyGitHasher.class));
         final Set<Path> readPath = internalStateAccessor.readIndexPaths();
         assertEquals(paths, readPath);
     }
@@ -94,7 +94,7 @@ public class InternalStateAccessorTest extends FolderInitialized {
         relativePaths.add(folderPath.relativize(path2));
         relativePaths.add(folderPath.relativize(path3));
         final InternalStateAccessor internalStateAccessor =
-                new InternalStateAccessor(folderPath, folderPath, mock(MyGitHasher.class));
+                new InternalStateAccessor(folderPath, mock(MyGitHasher.class));
         internalStateAccessor.writeIndexPaths(relativePaths);
 
         final Path indexPath = Paths.get(folderPath.toString(), ".mygit", "index");

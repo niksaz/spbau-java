@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 abstract class Command {
 
     @NotNull
-    InternalStateAccessor internalStateAccessor;
+    final InternalStateAccessor internalStateAccessor;
 
     Command(@NotNull InternalStateAccessor internalStateAccessor) {
         this.internalStateAccessor = internalStateAccessor;

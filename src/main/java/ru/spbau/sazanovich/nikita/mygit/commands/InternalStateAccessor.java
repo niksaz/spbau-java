@@ -34,9 +34,23 @@ class InternalStateAccessor {
     @NotNull
     private final MyGitHasher hasher;
 
-    InternalStateAccessor(@NotNull Path myGitDirectory, @NotNull Path currentDirectory, @NotNull MyGitHasher hasher)
-            throws MyGitIllegalArgumentException {
-        this.myGitDirectory = myGitDirectory;
+    /**
+     * Constructs an accessor in a given directory.
+     *
+     * @param currentDirectory a path to the current directory for a handler
+     * @throws MyGitIllegalArgumentException if the directory path is not absolute
+     * @throws MyGitStateException           if the directory (or any of the parent directories) is not a MyGit repository
+     */
+    InternalStateAccessor(@NotNull Path currentDirectory, @NotNull MyGitHasher hasher)
+            throws MyGitIllegalArgumentException, MyGitStateException {
+        if (!currentDirectory.isAbsolute()) {
+            throw new MyGitIllegalArgumentException("parameter should be an absolute path");
+        }
+        final Path path = findMyGitDirectoryPath(currentDirectory);
+        if (path == null) {
+            throw new MyGitStateException("Not a mygit repository (or any of the parent directories)");
+        }
+        this.myGitDirectory = path;
         this.currentDirectory = currentDirectory;
         this.hasher = hasher;
     }
@@ -384,7 +398,7 @@ class InternalStateAccessor {
     }
 
     @Nullable
-    static Path findMyGitDirectoryPath(@Nullable Path currentDirectory) {
+    private static Path findMyGitDirectoryPath(@Nullable Path currentDirectory) {
         if (currentDirectory == null) {
             return null;
         }
@@ -405,7 +419,7 @@ class InternalStateAccessor {
         Files.createDirectory(myGitPath);
         InternalStateAccessor internalStateAccessor;
         try {
-            internalStateAccessor = new InternalStateAccessor(directory, directory, new SHA1Hasher());
+            internalStateAccessor = new InternalStateAccessor(directory, new SHA1Hasher());
         } catch (MyGitIllegalArgumentException ignored) {
             throw new IllegalStateException();
         }

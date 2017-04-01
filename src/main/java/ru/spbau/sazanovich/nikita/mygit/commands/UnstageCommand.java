@@ -17,7 +17,7 @@ import java.util.function.Function;
 class UnstageCommand extends Command {
 
     @NotNull
-    private List<String> arguments;
+    private final List<String> arguments;
 
     UnstageCommand(@NotNull List<String> arguments, @NotNull InternalStateAccessor internalStateAccessor) {
         super(internalStateAccessor);

@@ -21,9 +21,9 @@ import java.util.function.Function;
 class IndexUpdateCommand extends Command {
 
     @NotNull
-    private List<String> arguments;
+    private final List<String> arguments;
     @NotNull
-    private Function<Set<Path>, Consumer<Path>> action;
+    private final Function<Set<Path>, Consumer<Path>> action;
 
     IndexUpdateCommand(@NotNull List<String> arguments, @NotNull Function<Set<Path>, Consumer<Path>> action,
                        @NotNull InternalStateAccessor internalStateAccessor) {

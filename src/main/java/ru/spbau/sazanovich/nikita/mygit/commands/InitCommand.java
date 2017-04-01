@@ -14,7 +14,7 @@ import java.nio.file.Path;
 class InitCommand {
 
     @NotNull
-    private Path directory;
+    private final Path directory;
 
     InitCommand(@NotNull Path directory) {
         this.directory = directory;
