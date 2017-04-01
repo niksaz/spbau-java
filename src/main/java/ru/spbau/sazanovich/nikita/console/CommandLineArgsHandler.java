@@ -21,6 +21,7 @@ class CommandLineArgsHandler {
     private static final String UNSTAGE_CMD = "unstage";
     private static final String UNSTAGE_ALL_CMD = "unstage-all";
     private static final String RESET_CMD = "reset";
+    private static final String RM_CMD = "rm";
     private static final String CLEAN_CMD = "clean";
     private static final String LOG_CMD = "log";
     private static final String STATUS_CMD = "status";
@@ -97,6 +98,14 @@ class CommandLineArgsHandler {
                     return;
                 }
                 throw new CommandNotSupportedException(RESET_CMD + " requires some files to have an effect");
+            case RM_CMD:
+                if (args.length > 1) {
+                    for (int i = 1; i < args.length; i++) {
+                        handler.removePath(args[i]);
+                    }
+                    return;
+                }
+                throw new CommandNotSupportedException(RM_CMD + " requires some files to have an effect");
             case CLEAN_CMD:
                 handler.clean();
                 return;
@@ -233,10 +242,12 @@ class CommandLineArgsHandler {
                         "  " + INIT_CMD + "\n" +
                         "\n" +
                         "work on the current change:\n" +
-                        "  " + STAGE_CMD + " [<files>]\n" +
-                        "  " + UNSTAGE_CMD + " [<files>]\n" +
+                        "  " + STAGE_CMD + " <files>\n" +
+                        "  " + UNSTAGE_CMD + " <files>\n" +
                         "  " + UNSTAGE_ALL_CMD + "\n" +
-                        "  " + RESET_CMD + " [<files>]\n" +
+                        "  " + RESET_CMD + " <files>\n" +
+                        "  " + RM_CMD + " <files>\n" +
+                        "  " + CLEAN_CMD + "\n" +
                         "\n" +
                         "examine the history and state:\n" +
                         "  " + LOG_CMD + "\n" +

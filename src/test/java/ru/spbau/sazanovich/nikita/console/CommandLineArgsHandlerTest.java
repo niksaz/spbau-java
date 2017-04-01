@@ -5,6 +5,9 @@ import ru.spbau.sazanovich.nikita.mygit.commands.MyGitCommandHandler;
 import ru.spbau.sazanovich.nikita.testing.FolderInitializedTest;
 
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.mockito.Mockito.mock;
 
@@ -62,6 +65,22 @@ public class CommandLineArgsHandlerTest extends FolderInitializedTest {
     public void handleReset() throws Exception {
         MyGitCommandHandler.init(folderPath);
         final String[] args = {"reset", "."};
+        handler.handle(args);
+    }
+
+    @Test
+    public void handleRm() throws Exception {
+        MyGitCommandHandler.init(folderPath);
+        final Path file = Paths.get(folderPath.toString(), "greeting.txt");
+        Files.createFile(file);
+        final String[] args = {"rm", "greeting.txt"};
+        handler.handle(args);
+    }
+
+    @Test
+    public void handleClean() throws Exception {
+        MyGitCommandHandler.init(folderPath);
+        final String[] args = {"clean"};
         handler.handle(args);
     }
 

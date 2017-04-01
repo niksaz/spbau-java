@@ -110,6 +110,18 @@ public class MyGitCommandHandler {
     }
 
     /**
+     * Removes a file from the filesystem and adds the removal to the index.
+     *
+     * @param path a file's path to remove
+     * @throws MyGitIllegalArgumentException if the file is not present either in the filesystem or MyGit's HEAD
+     * @throws MyGitStateException           if an internal error occurs during operations
+     * @throws IOException                   if an error occurs during working with a filesystem
+     */
+    public void removePath(@NotNull String path) throws MyGitIllegalArgumentException, IOException, MyGitStateException {
+        new RemoveCommand(path, internalStateAccessor).perform();
+    }
+
+    /**
      * Removes all files which are untracked by MyGit.
      *
      * @throws MyGitStateException if an internal error occurs during operations
