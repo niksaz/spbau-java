@@ -15,25 +15,24 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * Base class for commands working with index. Allows to perform required operations with indexed files.
+ * Base class for commands working with index.
+ * Allows to combine current index files and given ones with the provided action.
  */
-abstract class WithIndexCommand {
+class IndexUpdateCommand extends Command {
 
     @NotNull
-    private final InternalStateAccessor internalStateAccessor;
-
-    WithIndexCommand(@NotNull InternalStateAccessor internalStateAccessor) {
-        this.internalStateAccessor = internalStateAccessor;
-    }
-
+    private List<String> arguments;
     @NotNull
-    InternalStateAccessor getInternalStateAccessor() {
-        return internalStateAccessor;
+    private Function<Set<Path>, Consumer<Path>> action;
+
+    IndexUpdateCommand(@NotNull List<String> arguments, @NotNull Function<Set<Path>, Consumer<Path>> action,
+                       @NotNull InternalStateAccessor internalStateAccessor) {
+        super(internalStateAccessor);
+        this.arguments = arguments;
+        this.action = action;
     }
 
-    void performUpdateToIndex(@NotNull List<String> arguments,
-                              @NotNull Function<Set<Path>, Consumer<Path>> action)
-            throws MyGitStateException, MyGitIllegalArgumentException, IOException {
+    void perform() throws MyGitStateException, MyGitIllegalArgumentException, IOException {
         final List<Path> argsPaths = convertStringsToPaths(arguments);
         final Set<Path> indexedPaths = internalStateAccessor.readIndexPaths();
         final Consumer<Path> indexUpdater = action.apply(indexedPaths);

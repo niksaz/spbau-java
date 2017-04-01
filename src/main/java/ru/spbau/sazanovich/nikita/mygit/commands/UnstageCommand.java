@@ -14,7 +14,7 @@ import java.util.function.Function;
 /**
  * Command class which removes paths from the current index.
  */
-class UnstageCommand extends WithIndexCommand {
+class UnstageCommand extends Command {
 
     @NotNull
     private List<String> arguments;
@@ -24,13 +24,13 @@ class UnstageCommand extends WithIndexCommand {
         this.arguments = arguments;
     }
 
-    void perorm() throws MyGitIllegalArgumentException, IOException, MyGitStateException {
+    void perform() throws MyGitIllegalArgumentException, IOException, MyGitStateException {
         final Function<Set<Path>, Consumer<Path>> action =
                 paths -> (Consumer<Path>) path -> {
                     if (paths.contains(path)) {
                         paths.remove(path);
                     }
                 };
-        performUpdateToIndex(arguments, action);
+        new IndexUpdateCommand(arguments, action, internalStateAccessor).perform();
     }
 }

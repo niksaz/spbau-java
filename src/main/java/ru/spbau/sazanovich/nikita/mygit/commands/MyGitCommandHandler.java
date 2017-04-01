@@ -96,7 +96,7 @@ public class MyGitCommandHandler {
      */
     public void unstagePaths(@NotNull List<String> arguments)
             throws MyGitStateException, MyGitIllegalArgumentException, IOException {
-        new UnstageCommand(arguments, internalStateAccessor).perorm();
+        new UnstageCommand(arguments, internalStateAccessor).perform();
     }
 
     /**
@@ -118,7 +118,7 @@ public class MyGitCommandHandler {
      */
     @NotNull
     public HeadStatus getHeadStatus() throws MyGitStateException, IOException {
-        return internalStateAccessor.getHeadStatus();
+        return new HeadStatusCommand(internalStateAccessor).perform();
     }
 
     /**
@@ -130,23 +130,12 @@ public class MyGitCommandHandler {
      */
     @NotNull
     public List<CommitLog> getCommitsLogsHistory() throws MyGitStateException, IOException {
-        final Commit headCommit = internalStateAccessor.getHeadCommit();
-        final TreeSet<Commit> commitTree = new TreeSet<>();
-        traverseCommitsTree(headCommit, commitTree);
-        final List<CommitLog> logsHistory = new ArrayList<>();
-        for (Commit commit : commitTree) {
-            final CommitLog log =
-                    new CommitLog(internalStateAccessor.getObjectHash(commit), commit.getMessage(),
-                            commit.getAuthor(), commit.getDateCreated());
-            logsHistory.add(log);
-        }
-        Collections.reverse(logsHistory);
-        return logsHistory;
+        return new LogCommand(internalStateAccessor).perform();
     }
 
     /**
      * Checkouts a revision and moves HEAD there.
-     * <p>
+     *
      * Replaces all files which differs from the HEAD's ones if such exist. Index should be empty before checking out.
      *
      * @param revisionName a name of revision
@@ -157,32 +146,12 @@ public class MyGitCommandHandler {
      */
     public void checkout(@NotNull String revisionName)
             throws MyGitStateException, MyGitMissingPrerequisitesException, MyGitIllegalArgumentException, IOException {
-        if (!internalStateAccessor.readIndexPaths().isEmpty()) {
-            throw new MyGitMissingPrerequisitesException("staging area should be empty before a checkout operation");
-        }
-        final Commit fromCommit = internalStateAccessor.getHeadCommit();
-        String toCommitHash;
-        String toHeadType;
-        if (listBranches().contains(new Branch(revisionName))) {
-            toCommitHash = internalStateAccessor.getBranchCommitHash(revisionName);
-            toHeadType = Branch.TYPE;
-        } else {
-            if (listCommitHashes().contains(revisionName)) {
-                toCommitHash = revisionName;
-                toHeadType = Commit.TYPE;
-            } else {
-                throw new MyGitIllegalArgumentException("there is no such revision -- " + revisionName);
-            }
-        }
-        final Commit toCommit = internalStateAccessor.readCommit(toCommitHash);
-        internalStateAccessor.moveFromCommitToCommit(fromCommit, toCommit);
-        final HeadStatus toHeadStatus = new HeadStatus(toHeadType, revisionName);
-        internalStateAccessor.setHeadStatus(toHeadStatus);
+        new CheckoutCommand(revisionName, internalStateAccessor).perform();
     }
 
     /**
      * Perform a merge operation of HEAD and given branch.
-     * <p>
+     *
      * Chooses files based on their last modification's date -- older have a priority. Index should be empty before
      * merging and HEAD should not be in detached state.
      *
@@ -194,32 +163,7 @@ public class MyGitCommandHandler {
      */
     public void mergeHeadWithBranch(@NotNull String branch)
             throws MyGitMissingPrerequisitesException, MyGitStateException, IOException, MyGitIllegalArgumentException {
-        final HeadStatus headStatus = internalStateAccessor.getHeadStatus();
-        if (headStatus.getName().equals(Commit.TYPE)) {
-            throw new MyGitMissingPrerequisitesException("could not merge while you are in detached HEAD state");
-        }
-        if (!listBranches().contains(new Branch(branch))) {
-            throw new MyGitIllegalArgumentException("there is no such branch -- " + branch);
-        }
-        if (headStatus.getName().equals(branch)) {
-            throw new MyGitIllegalArgumentException("can not merge branch with itself");
-        }
-        if (!internalStateAccessor.readIndexPaths().isEmpty()) {
-            throw new MyGitMissingPrerequisitesException("staging area should be empty before a merge operation");
-        }
-        final String baseBranch = headStatus.getName();
-        final Tree baseTree = internalStateAccessor.getBranchTree(baseBranch);
-        final Tree otherTree = internalStateAccessor.getBranchTree(branch);
-
-        final String mergeTreeHash = mergeTwoTrees(baseTree, otherTree);
-        final List<String> parentsHashes = new ArrayList<>();
-        parentsHashes.add(internalStateAccessor.getBranchCommitHash(baseBranch));
-        parentsHashes.add(internalStateAccessor.getBranchCommitHash(branch));
-        final Commit mergeCommit = new Commit(mergeTreeHash, "merge commit", parentsHashes);
-        final String mergeCommitHash = internalStateAccessor.map(mergeCommit);
-        internalStateAccessor.writeBranch(baseBranch, mergeCommitHash);
-
-        checkout(baseBranch);
+        new MergeCommand(branch, internalStateAccessor).perform();
     }
 
     /**
@@ -231,7 +175,7 @@ public class MyGitCommandHandler {
      */
     @NotNull
     public List<Branch> listBranches() throws MyGitStateException, IOException {
-        return internalStateAccessor.listBranches();
+        return new ListBranchesCommand(internalStateAccessor).perform();
     }
 
     /**
@@ -388,63 +332,5 @@ public class MyGitCommandHandler {
     private boolean doesBranchExists(@NotNull String branchName) throws MyGitStateException, IOException {
         final List<Branch> branches = listBranches();
         return branches.contains(new Branch(branchName));
-    }
-
-    private void traverseCommitsTree(@NotNull Commit commit, @NotNull TreeSet<Commit> commitTree)
-            throws MyGitStateException, IOException {
-        if (!commitTree.contains(commit)) {
-            commitTree.add(commit);
-            for (String parentHash : commit.getParentsHashes()) {
-                final Commit parentCommit = internalStateAccessor.readCommit(parentHash);
-                traverseCommitsTree(parentCommit, commitTree);
-            }
-        }
-    }
-
-    @NotNull
-    private List<String> listCommitHashes() throws IOException, MyGitStateException {
-        return internalStateAccessor.listCommitHashes();
-    }
-
-    @NotNull
-    private String mergeTwoTrees(@NotNull Tree baseTree, @NotNull Tree otherTree)
-            throws MyGitStateException, IOException {
-        final Tree mergedTree = new Tree();
-        final ListIterator<TreeEdge> baseIterator = baseTree.getChildren().listIterator();
-        final ListIterator<TreeEdge> otherIterator = otherTree.getChildren().listIterator();
-        while (baseIterator.hasNext() && otherIterator.hasNext()) {
-            final TreeEdge baseTreeEdge = baseIterator.next();
-            final TreeEdge otherTreeEdge = otherIterator.next();
-            int comparison = baseTreeEdge.getName().compareTo(otherTreeEdge.getName());
-            if (comparison == 0) {
-                if (baseTreeEdge.isDirectory() && otherTreeEdge.isDirectory()) {
-                    final Tree baseChildTree = internalStateAccessor.readTree(baseTreeEdge.getName());
-                    final Tree otherChildTree = internalStateAccessor.readTree(otherTreeEdge.getName());
-                    final String mergedTreeHash = mergeTwoTrees(baseChildTree, otherChildTree);
-                    final TreeEdge mergedTreeEdge =
-                            new TreeEdge(mergedTreeHash, baseTreeEdge.getName(), baseTreeEdge.getType());
-                    mergedTree.addChild(mergedTreeEdge);
-                } else {
-                    mergedTree.addChild(
-                            baseTreeEdge.getDateCreated().compareTo(otherTreeEdge.getDateCreated()) > 0
-                                    ? baseTreeEdge
-                                    : otherTreeEdge
-                    );
-                }
-            } else if (comparison < 0) {
-                mergedTree.addChild(baseTreeEdge);
-                otherIterator.previous();
-            } else {
-                mergedTree.addChild(otherTreeEdge);
-                baseIterator.previous();
-            }
-        }
-        while (baseIterator.hasNext()) {
-            mergedTree.addChild(baseIterator.next());
-        }
-        while (otherIterator.hasNext()) {
-            mergedTree.addChild(otherIterator.next());
-        }
-        return internalStateAccessor.map(mergedTree);
     }
 }

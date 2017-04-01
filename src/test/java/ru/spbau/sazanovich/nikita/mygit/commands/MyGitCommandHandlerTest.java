@@ -1,7 +1,6 @@
-package ru.spbau.sazanovich.nikita.mygit;
+package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.junit.Test;
-import ru.spbau.sazanovich.nikita.mygit.commands.MyGitCommandHandler;
 import ru.spbau.sazanovich.nikita.mygit.objects.FileDifference;
 import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
 
@@ -63,60 +62,5 @@ public class MyGitCommandHandlerTest extends FolderInitialized {
         assertEquals(1, fileDifferences.size());
         assertTrue(fileDifferences.get(0).getStageStatus().equals(NOT_STAGED_FOR_COMMIT));
         assertTrue(fileDifferences.get(0).getType().equals(MODIFICATION));
-    }
-
-    @Test
-    public void addPathsToIndex() throws Exception {
-
-    }
-
-    @Test
-    public void resetIndexPaths() throws Exception {
-
-    }
-
-    @Test
-    public void resetAllIndexPaths() throws Exception {
-
-    }
-
-    @Test
-    public void getHeadStatus() throws Exception {
-
-    }
-
-    @Test
-    public void getCommitsLogsHistory() throws Exception {
-
-    }
-
-    @Test
-    public void checkout() throws Exception {
-
-    }
-
-    @Test
-    public void mergeHeadWithBranch() throws Exception {
-
-    }
-
-    @Test
-    public void listBranches() throws Exception {
-
-    }
-
-    @Test
-    public void createBranch() throws Exception {
-
-    }
-
-    @Test
-    public void deleteBranch() throws Exception {
-
-    }
-
-    @Test
-    public void commitWithMessage() throws Exception {
-
     }
 }

@@ -14,7 +14,7 @@ import java.util.function.Function;
 /**
  * Command class which adds paths to the current index.
  */
-class StageCommand extends WithIndexCommand {
+class StageCommand extends Command {
 
     @NotNull
     private List<String> arguments;
@@ -31,6 +31,6 @@ class StageCommand extends WithIndexCommand {
                         paths.add(path);
                     }
                 };
-        performUpdateToIndex(arguments, action);
+        new IndexUpdateCommand(arguments, action, internalStateAccessor).perform();
     }
 }

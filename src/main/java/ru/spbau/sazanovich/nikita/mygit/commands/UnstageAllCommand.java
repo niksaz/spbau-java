@@ -9,14 +9,13 @@ import java.util.HashSet;
 /**
  * Command class which removes all paths from the current index.
  */
-class UnstageAllCommand extends WithIndexCommand {
+class UnstageAllCommand extends Command {
 
     UnstageAllCommand(@NotNull InternalStateAccessor internalStateAccessor) {
         super(internalStateAccessor);
     }
 
     void perform() throws IOException, MyGitStateException {
-        getInternalStateAccessor().writeIndexPaths(new HashSet<>());
+        internalStateAccessor.writeIndexPaths(new HashSet<>());
     }
-
 }
