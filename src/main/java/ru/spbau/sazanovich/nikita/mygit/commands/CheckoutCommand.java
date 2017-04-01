@@ -4,11 +4,14 @@ import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitMissingPrerequisitesException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
-import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
-import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
-import ru.spbau.sazanovich.nikita.mygit.objects.HeadStatus;
+import ru.spbau.sazanovich.nikita.mygit.objects.*;
+import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
+import ru.spbau.sazanovich.nikita.mygit.utils.FileSystem;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -47,8 +50,45 @@ class CheckoutCommand extends Command {
             }
         }
         final Commit toCommit = internalStateAccessor.readCommit(toCommitHash);
-        internalStateAccessor.moveFromCommitToCommit(fromCommit, toCommit);
+        moveFromCommitToCommit(fromCommit, toCommit);
         final HeadStatus toHeadStatus = new HeadStatus(toHeadType, revisionName);
         internalStateAccessor.setHeadStatus(toHeadStatus);
+    }
+
+    private void moveFromCommitToCommit(@NotNull Commit fromCommit, Commit toCommit)
+            throws MyGitStateException, IOException {
+        final Tree fromTree = internalStateAccessor.readTree(fromCommit.getTreeHash());
+        final Tree toTree = internalStateAccessor.readTree(toCommit.getTreeHash());
+        deleteFilesFromTree(fromTree, internalStateAccessor.getMyGitDirectory());
+        loadFilesFromTree(toTree, internalStateAccessor.getMyGitDirectory());
+    }
+
+    private void loadFilesFromTree(@NotNull Tree tree, @NotNull Path path) throws MyGitStateException, IOException {
+        for (TreeEdge edge : tree.getChildren()) {
+            final Path childPath = Paths.get(path.toString(), edge.getName());
+            new LoadTreeEdgeCommand(edge, childPath, internalStateAccessor).perform();
+            if (edge.isDirectory()) {
+                final Tree childTree = internalStateAccessor.readTree(edge.getHash());
+                loadFilesFromTree(childTree, childPath);
+            }
+        }
+    }
+
+    private void deleteFilesFromTree(@NotNull Tree tree, @NotNull Path path) throws MyGitStateException, IOException {
+        for (TreeEdge edge : tree.getChildren()) {
+            final Path edgeFile = Paths.get(path.toString(), edge.getName());
+            if (!Files.exists(edgeFile)) {
+                continue;
+            }
+            if (edge.isDirectory() && Files.isDirectory(edgeFile)) {
+                deleteFilesFromTree(internalStateAccessor.readTree(edge.getHash()), edgeFile);
+                if (Files.list(edgeFile).count() == 0) {
+                    FileSystem.deleteFile(edgeFile);
+                }
+            }
+            else {
+                FileSystem.deleteFile(edgeFile);
+            }
+        }
     }
 }

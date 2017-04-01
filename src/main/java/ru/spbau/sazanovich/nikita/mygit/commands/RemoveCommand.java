@@ -3,6 +3,7 @@ package ru.spbau.sazanovich.nikita.mygit.commands;
 import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
+import ru.spbau.sazanovich.nikita.mygit.utils.FileSystem;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -26,7 +27,7 @@ class RemoveCommand extends Command {
             return;
         }
         final Path completePath = internalStateAccessor.getMyGitDirectory().resolve(path);
-        InternalStateAccessor.deleteFile(completePath);
+        FileSystem.deleteFile(completePath);
         new StageCommand(stringPath, internalStateAccessor).perform();
     }
 

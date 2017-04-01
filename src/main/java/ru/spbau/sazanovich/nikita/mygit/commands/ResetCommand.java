@@ -36,6 +36,6 @@ class ResetCommand extends Command {
         if (edge == null) {
             throw new MyGitIllegalArgumentException(stringPath + " should be present in the HEAD's version");
         }
-        internalStateAccessor.loadTreeEdge(edge, completePath);
+        new LoadTreeEdgeCommand(edge, completePath, internalStateAccessor).perform();
     }
 }

@@ -7,9 +7,8 @@ import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.objects.*;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
-import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher;
+import ru.spbau.sazanovich.nikita.mygit.utils.*;
 import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher.HashParts;
-import ru.spbau.sazanovich.nikita.mygit.utils.SHA1Hasher;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -18,6 +17,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static ru.spbau.sazanovich.nikita.mygit.utils.FileSystem.pathContainsNameAsSubpath;
 
 /**
  * Class which is used to make updates to internal representation in a filesystem.
@@ -43,7 +44,7 @@ class InternalStateAccessor {
         if (!currentDirectory.isAbsolute()) {
             throw new MyGitIllegalArgumentException("parameter should be an absolute path");
         }
-        final Path path = findMyGitDirectoryPath(currentDirectory);
+        final Path path = FileSystem.findFirstDirectoryAbove(".mygit", currentDirectory);
         if (path == null) {
             throw new MyGitStateException("Not a mygit repository (or any of the parent directories)");
         }
@@ -215,10 +216,9 @@ class InternalStateAccessor {
     }
 
     @NotNull
-    String createBlobFromPath(@NotNull Path path) throws MyGitStateException, IOException {
-        final byte[] data = Files.readAllBytes(path);
-        final Blob blob = new Blob(data);
-        return map(blob);
+    private <T> T readObjectAndCast(@NotNull String objectHash, @NotNull Class<T> objectClass)
+            throws MyGitStateException, IOException {
+        return objectClass.cast(readObject(objectHash));
     }
 
     @NotNull
@@ -244,83 +244,15 @@ class InternalStateAccessor {
         }
     }
 
-    void moveFromCommitToCommit(@NotNull Commit fromCommit, Commit toCommit)
-            throws MyGitStateException, IOException {
-        final Tree fromTree = readTree(fromCommit.getTreeHash());
-        final Tree toTree = readTree(toCommit.getTreeHash());
-        deleteFilesFromTree(fromTree, myGitDirectory);
-        loadFilesFromTree(toTree, myGitDirectory);
+    @NotNull
+    String createBlobFromPath(@NotNull Path path) throws MyGitStateException, IOException {
+        final byte[] data = Files.readAllBytes(path);
+        final Blob blob = new Blob(data);
+        return map(blob);
     }
 
-    /**
-     * Computes the object's hash using current hasher.
-     *
-     * @param object an object to hash
-     * @return hash of the object
-     * @throws IOException if an exception occurs in a hasher
-     */
     String getObjectHash(@NotNull Object object) throws IOException {
         return hasher.getHashFromObject(object);
-    }
-
-    @NotNull
-    private <T> T readObjectAndCast(@NotNull String objectHash, @NotNull Class<T> objectClass)
-            throws MyGitStateException, IOException {
-        return objectClass.cast(readObject(objectHash));
-    }
-
-    private void loadFilesFromTree(@NotNull Tree tree, @NotNull Path path) throws MyGitStateException, IOException {
-        for (TreeEdge child : tree.getChildren()) {
-            final Path childPath = Paths.get(path.toString(), child.getName());
-            loadTreeEdge(child, childPath);
-            if (child.isDirectory()) {
-                final Tree childTree = readTree(child.getHash());
-                loadFilesFromTree(childTree, childPath);
-            }
-        }
-    }
-
-    void loadTreeEdge(@NotNull TreeEdge edge, @NotNull Path path) throws IOException, MyGitStateException {
-        if (edge.isDirectory()) {
-            if (Files.exists(path) && !Files.isDirectory(path)) {
-                deleteFile(path);
-            }
-            if (!Files.exists(path)) {
-                Files.createDirectory(path);
-            }
-        } else {
-            if (Files.exists(path) && Files.isDirectory(path)) {
-                deleteFile(path);
-            }
-            if (!Files.exists(path)) {
-                Files.createFile(path);
-            }
-            final Blob childBlob = readBlob(edge.getHash());
-            Files.write(path, childBlob.getContent());
-        }
-    }
-
-    private void deleteFilesFromTree(@NotNull Tree tree, @NotNull Path path) throws MyGitStateException, IOException {
-        for (TreeEdge child : tree.getChildren()) {
-            final Path childPath = Paths.get(path.toString(), child.getName());
-            final File childFile = childPath.toFile();
-            if (!childFile.exists()) {
-                continue;
-            }
-            if (childFile.isDirectory()) {
-                if (child.isDirectory()) {
-                    deleteFilesFromTree(readTree(child.getHash()), childPath);
-                    //noinspection ConstantConditions
-                    if (childFile.list().length == 0) {
-                        deleteFile(childPath);
-                    }
-                } else {
-                    deleteFile(childPath);
-                }
-            } else {
-                deleteFile(childPath);
-            }
-        }
     }
 
     @NotNull
@@ -339,22 +271,6 @@ class InternalStateAccessor {
             throw new MyGitStateException("could not find " + headFile);
         }
         return headFile;
-    }
-
-    static void deleteFile(@NotNull Path path) throws IOException {
-        if (!Files.exists(path)) {
-            return;
-        }
-        if (Files.isDirectory(path)) {
-            //noinspection ResultOfMethodCallIgnored
-            Files
-                    .walk(path)
-                    .sorted(Comparator.reverseOrder())
-                    .map(Path::toFile)
-                    .forEach(File::delete);
-        } else {
-            Files.delete(path);
-        }
     }
 
     @NotNull
@@ -389,19 +305,6 @@ class InternalStateAccessor {
             }
         }
         return commitHashes;
-    }
-
-    @Nullable
-    private static Path findMyGitDirectoryPath(@Nullable Path currentDirectory) {
-        if (currentDirectory == null) {
-            return null;
-        }
-        final Path possibleMyGitDirectory = Paths.get(currentDirectory.toString(), ".mygit");
-        if (Files.exists(possibleMyGitDirectory)) {
-            return currentDirectory;
-        } else {
-            return findMyGitDirectoryPath(currentDirectory.getParent());
-        }
     }
 
     static void init(@NotNull Path directory)
@@ -459,11 +362,8 @@ class InternalStateAccessor {
     }
 
     boolean isAbsolutePathRepresentsInternal(@NotNull Path path) {
-        return myGitDirectory.equals(path) || pathContainsMyGitAsSubpath(relativizeWithMyGitDirectory(path));
-    }
-
-    private static boolean pathContainsMyGitAsSubpath(@Nullable Path path) {
-        return path != null && (path.endsWith(".mygit") || pathContainsMyGitAsSubpath(path.getParent()));
+        return myGitDirectory.equals(path)
+                || pathContainsNameAsSubpath(relativizeWithMyGitDirectory(path), ".mygit");
     }
 
     @Nullable

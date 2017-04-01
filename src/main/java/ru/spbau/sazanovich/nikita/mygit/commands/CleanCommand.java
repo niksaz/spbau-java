@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.objects.FileDifference;
 import ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceStageStatus;
+import ru.spbau.sazanovich.nikita.mygit.utils.FileSystem;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -24,7 +25,7 @@ class CleanCommand extends Command {
                 FileDifferenceStageStatus.filterBy(differences, FileDifferenceStageStatus.UNTRACKED);
         for (FileDifference diff : untrackedDiffs) {
             final Path file = internalStateAccessor.getMyGitDirectory().resolve(diff.getPath());
-            InternalStateAccessor.deleteFile(file);
+            FileSystem.deleteFile(file);
         }
     }
 }
