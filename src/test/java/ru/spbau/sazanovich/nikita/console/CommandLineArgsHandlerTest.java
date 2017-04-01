@@ -2,15 +2,13 @@ package ru.spbau.sazanovich.nikita.console;
 
 import org.junit.Test;
 import ru.spbau.sazanovich.nikita.mygit.commands.MyGitCommandHandler;
-import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
+import ru.spbau.sazanovich.nikita.testing.FolderInitializedTest;
 
 import java.io.PrintStream;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
-public class CommandLineArgsHandlerTest extends FolderInitialized {
+public class CommandLineArgsHandlerTest extends FolderInitializedTest {
 
     private static final PrintStream FAKE_STREAM = mock(PrintStream.class);
 

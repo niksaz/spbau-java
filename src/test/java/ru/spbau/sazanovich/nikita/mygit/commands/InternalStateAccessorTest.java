@@ -3,7 +3,7 @@ package ru.spbau.sazanovich.nikita.mygit.commands;
 import org.junit.Test;
 import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher;
 import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher.HashParts;
-import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
+import ru.spbau.sazanovich.nikita.testing.FolderInitializedTest;
 
 import java.io.FileInputStream;
 import java.io.FileWriter;
@@ -21,7 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class InternalStateAccessorTest extends FolderInitialized {
+public class InternalStateAccessorTest extends FolderInitializedTest {
 
     @Override
     public void initialize() throws Exception {

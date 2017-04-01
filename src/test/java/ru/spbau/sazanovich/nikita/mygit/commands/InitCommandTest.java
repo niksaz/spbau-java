@@ -3,7 +3,7 @@ package ru.spbau.sazanovich.nikita.mygit.commands;
 import org.junit.Test;
 import ru.spbau.sazanovich.nikita.mygit.MyGitAlreadyInitializedException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
-import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
+import ru.spbau.sazanovich.nikita.testing.FolderInitializedTest;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class InitCommandTest extends FolderInitialized {
+public class InitCommandTest extends FolderInitializedTest {
 
     @Test
     public void init() throws Exception {

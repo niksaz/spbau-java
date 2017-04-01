@@ -102,7 +102,7 @@ public class MyGitCommandHandler {
      *
      * @param path a file's path to reset
      */
-    public void resetPath(@NotNull String path) {
+    public void resetPath(@NotNull String path) throws MyGitIllegalArgumentException, MyGitStateException, IOException {
         new ResetCommand(path, internalStateAccessor).perform();
     }
 

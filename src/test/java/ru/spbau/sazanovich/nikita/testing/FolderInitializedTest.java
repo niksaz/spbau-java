@@ -9,7 +9,7 @@ import java.nio.file.Path;
 /**
  * Represents common routines for tests -- creating a folder, initializing the path.
  */
-public class FolderInitialized {
+public class FolderInitializedTest {
 
     @Rule
     public final TemporaryFolder folder = new TemporaryFolder();

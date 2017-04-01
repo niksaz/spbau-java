@@ -2,7 +2,7 @@ package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.junit.Test;
 import ru.spbau.sazanovich.nikita.mygit.objects.FileDifference;
-import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
+import ru.spbau.sazanovich.nikita.testing.FolderInitializedTest;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,7 +14,7 @@ import static org.junit.Assert.assertTrue;
 import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceStageStatus.*;
 import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceType.*;
 
-public class MyGitCommandHandlerTest extends FolderInitialized {
+public class MyGitCommandHandlerTest extends FolderInitializedTest {
 
     private MyGitCommandHandler handler;
 

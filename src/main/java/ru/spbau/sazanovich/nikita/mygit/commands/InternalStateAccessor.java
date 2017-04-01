@@ -5,11 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import ru.spbau.sazanovich.nikita.mygit.MyGitAlreadyInitializedException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
-import ru.spbau.sazanovich.nikita.mygit.objects.HeadStatus;
-import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
-import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
-import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
-import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
+import ru.spbau.sazanovich.nikita.mygit.objects.*;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
 import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher;
 import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher.HashParts;
@@ -73,14 +69,14 @@ class InternalStateAccessor {
         final Path directoryPath =
                 Paths.get(myGitDirectory.toString(), ".mygit", "objects", shaHashParts.getFirst());
         final Path filePath = Paths.get(directoryPath.toString(), shaHashParts.getLast());
-        if (!directoryPath.toFile().exists()) {
+        if (!Files.exists(directoryPath)) {
             Files.createDirectory(directoryPath);
         }
-        if (!filePath.toFile().exists()) {
+        if (!Files.exists(filePath)) {
             Files.createFile(filePath);
         }
-        try (FileOutputStream fileOutputStream = new FileOutputStream(filePath.toFile());
-             ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)
+        try (OutputStream outputStream = Files.newOutputStream(filePath);
+             ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream)
         ) {
             objectOutputStream.writeObject(object);
         }
@@ -89,17 +85,16 @@ class InternalStateAccessor {
 
     @NotNull
     Set<Path> readIndexPaths() throws MyGitStateException, IOException {
-        final File indexFile = getIndexFile();
+        final Path indexFile = getIndexFile();
         return Files
-                .lines(indexFile.toPath())
+                .lines(indexFile)
                 .map(Paths::get)
                 .collect(Collectors.toCollection(HashSet::new));
     }
 
     void writeIndexPaths(@NotNull Set<Path> paths) throws MyGitStateException, IOException {
-        final File indexFile = getIndexFile();
-        try (FileWriter fileWriter = new FileWriter(indexFile);
-             BufferedWriter writer = new BufferedWriter(fileWriter)
+        final Path indexFile = getIndexFile();
+        try (BufferedWriter writer = Files.newBufferedWriter(indexFile)
         ) {
             for (Path path : paths) {
                 writer.write(path + "\n");
@@ -109,7 +104,7 @@ class InternalStateAccessor {
 
     void writeBranch(@NotNull String branchName, @NotNull String commitHash) throws IOException {
         final Path branchPath = Paths.get(myGitDirectory.toString(), ".mygit", "branches", branchName);
-        if (!branchPath.toFile().exists()) {
+        if (!Files.exists(branchPath)) {
             Files.createFile(branchPath);
         }
         try (FileWriter writer = new FileWriter(branchPath.toFile())
@@ -119,8 +114,8 @@ class InternalStateAccessor {
     }
 
     void deleteBranch(@NotNull String branchName) throws IOException {
-        final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + branchName);
-        Files.delete(branchFile.toPath());
+        final Path branchFile = Paths.get(myGitDirectory.toString(), ".mygit", "branches", branchName);
+        Files.delete(branchFile);
     }
 
     void moveHeadToCommitHash(@NotNull String commitHash) throws MyGitStateException, IOException {
@@ -137,18 +132,18 @@ class InternalStateAccessor {
     }
 
     void setHeadStatus(@NotNull HeadStatus headStatus) throws MyGitStateException, IOException {
-        final File headFile = getHeadFile();
-        try (FileWriter fileWriter = new FileWriter(headFile)
+        final Path headFile = getHeadFile();
+        try (BufferedWriter writer = Files.newBufferedWriter(headFile)
         ) {
-            fileWriter.write(headStatus.getType() + "\n");
-            fileWriter.write(headStatus.getName());
+            writer.write(headStatus.getType() + "\n");
+            writer.write(headStatus.getName());
         }
     }
 
     @NotNull
     HeadStatus getHeadStatus() throws MyGitStateException, IOException {
-        final File headFile = getHeadFile();
-        final List<String> headLines = Files.lines(headFile.toPath()).collect(Collectors.toList());
+        final Path headFile = getHeadFile();
+        final List<String> headLines = Files.lines(headFile).collect(Collectors.toList());
         if (headLines.size() != 2) {
             throw new MyGitStateException("corrupted HEAD file -- odd number of lines");
         }
@@ -192,12 +187,12 @@ class InternalStateAccessor {
 
     @NotNull
     String getBranchCommitHash(@NotNull String branchName) throws MyGitStateException, IOException {
-        final File branchFile = new File(myGitDirectory + "/.mygit/branches/" + branchName);
-        if (!branchFile.exists()) {
+        final Path branchFile = Paths.get(myGitDirectory.toString(), ".mygit", "branches", branchName);
+        if (!Files.exists(branchFile)) {
             throw new MyGitStateException("could not find branch '" + branchName + "'");
         }
         final List<String> branchLines =
-                Files.lines(branchFile.toPath()).collect(Collectors.toCollection(ArrayList::new));
+                Files.lines(branchFile).collect(Collectors.toCollection(ArrayList::new));
         if (branchLines.size() != 1) {
             throw new MyGitStateException("not a single line in branch '" + branchName + "'");
         }
@@ -234,14 +229,14 @@ class InternalStateAccessor {
         } catch (MyGitIllegalArgumentException ignored) {
             throw new MyGitStateException("met an illegal hash value " + objectHash);
         }
-        final String objectPath =
-                myGitDirectory + "/.mygit/objects/" + shaHashParts.getFirst() + "/" + shaHashParts.getLast();
-        final File objectFile = new File(objectPath);
-        if (!objectFile.exists()) {
-            throw new MyGitStateException("could not find object's file -- " + objectFile.getAbsolutePath());
+        final Path objectPath = Paths.get(
+                myGitDirectory.toString(), ".mygit", "objects", shaHashParts.getFirst(), shaHashParts.getLast());
+
+        if (!Files.exists(objectPath)) {
+            throw new MyGitStateException("could not find object's file -- " + objectPath);
         }
-        try (FileInputStream fileInputStream = new FileInputStream(objectFile);
-             ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)
+        try (InputStream inputStream = Files.newInputStream(objectPath);
+             ObjectInputStream objectInputStream = new ObjectInputStream(inputStream)
         ) {
             return objectInputStream.readObject();
         } catch (ClassNotFoundException e) {
@@ -277,26 +272,31 @@ class InternalStateAccessor {
     private void loadFilesFromTree(@NotNull Tree tree, @NotNull Path path) throws MyGitStateException, IOException {
         for (TreeEdge child : tree.getChildren()) {
             final Path childPath = Paths.get(path.toString(), child.getName());
-
-            if (child.getType().equals(Blob.TYPE)) {
-                if (Files.exists(childPath) && !getTypeForPath(childPath).equals(Blob.TYPE)) {
-                    deleteDirectoryWithFiles(childPath);
-                }
-                if (!Files.exists(childPath)) {
-                    Files.createFile(childPath);
-                }
-                final Blob childBlob = readBlob(child.getHash());
-                Files.write(childPath, childBlob.getContent());
-            } else {
-                if (Files.exists(childPath) && !getTypeForPath(childPath).equals(Tree.TYPE)) {
-                    Files.delete(childPath);
-                }
-                if (!Files.exists(childPath)) {
-                    Files.createDirectory(childPath);
-                }
+            loadTreeEdge(child, childPath);
+            if (child.isDirectory()) {
                 final Tree childTree = readTree(child.getHash());
                 loadFilesFromTree(childTree, childPath);
             }
+        }
+    }
+
+    void loadTreeEdge(@NotNull TreeEdge edge, @NotNull Path path) throws IOException, MyGitStateException {
+        if (edge.isDirectory()) {
+            if (Files.exists(path) && !Files.isDirectory(path)) {
+                deleteFile(path);
+            }
+            if (!Files.exists(path)) {
+                Files.createDirectory(path);
+            }
+        } else {
+            if (Files.exists(path) && Files.isDirectory(path)) {
+                deleteFile(path);
+            }
+            if (!Files.exists(path)) {
+                Files.createFile(path);
+            }
+            final Blob childBlob = readBlob(edge.getHash());
+            Files.write(path, childBlob.getContent());
         }
     }
 
@@ -312,62 +312,57 @@ class InternalStateAccessor {
                     deleteFilesFromTree(readTree(child.getHash()), childPath);
                     //noinspection ConstantConditions
                     if (childFile.list().length == 0) {
-                        Files.delete(childPath);
+                        deleteFile(childPath);
                     }
                 } else {
-                    deleteDirectoryWithFiles(childPath);
+                    deleteFile(childPath);
                 }
             } else {
-                Files.delete(childPath);
+                deleteFile(childPath);
             }
         }
     }
 
     @NotNull
-    private String getTypeForPath(@NotNull Path path) {
-        return path.toFile().isDirectory() ? Tree.TYPE : Blob.TYPE;
-    }
-
-    @NotNull
-    private File getIndexFile() throws MyGitStateException {
-        final File indexFile = new File(myGitDirectory + "/.mygit/index");
-        if (!indexFile.exists()) {
-            throw new MyGitStateException("could not find " + indexFile.getAbsolutePath());
+    private Path getIndexFile() throws MyGitStateException {
+        final Path indexFile = Paths.get(myGitDirectory.toString(), ".mygit", "index");
+        if (!Files.exists(indexFile)) {
+            throw new MyGitStateException("could not find " + indexFile);
         }
         return indexFile;
     }
 
     @NotNull
-    private File getHeadFile() throws MyGitStateException {
-        final File headFile = new File(myGitDirectory + "/.mygit/HEAD");
-        if (!headFile.exists()) {
-            throw new MyGitStateException("could not find " + headFile.getAbsolutePath());
+    private Path getHeadFile() throws MyGitStateException {
+        final Path headFile = Paths.get(myGitDirectory.toString(), ".mygit", "HEAD");
+        if (!Files.exists(headFile)) {
+            throw new MyGitStateException("could not find " + headFile);
         }
         return headFile;
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    private static void deleteDirectoryWithFiles(@NotNull Path directoryPath) throws IOException {
-        Files
-                .walk(directoryPath)
-                .sorted(Comparator.reverseOrder())
-                .map(Path::toFile)
-                .forEach(File::delete);
+    private static void deleteFile(@NotNull Path path) throws IOException {
+        if (Files.isDirectory(path)) {
+            //noinspection ResultOfMethodCallIgnored
+            Files
+                    .walk(path)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+        } else {
+            Files.delete(path);
+        }
     }
 
     @NotNull
     List<Branch> listBranches() throws MyGitStateException, IOException {
-        final File branchesDirectory = new File(myGitDirectory + "/.mygit/branches/");
-        if (!branchesDirectory.exists()) {
+        final Path branchesDirectory = Paths.get(myGitDirectory.toString(), ".mygit", "branches");
+        if (!Files.exists(branchesDirectory)) {
             throw new MyGitStateException("could not find " + branchesDirectory);
         }
-        final File[] branches = branchesDirectory.listFiles();
-        if (branches == null) {
-            throw new IOException("could not read " + branchesDirectory);
-        }
-        return Arrays
-                .stream(branches)
-                .map(file -> new Branch(file.getName()))
+        return Files
+                .list(branchesDirectory)
+                .map(path -> new Branch(path.getFileName().toString()))
                 .collect(Collectors.toList());
     }
 
@@ -457,15 +452,34 @@ class InternalStateAccessor {
             throw new MyGitIllegalArgumentException(
                     "paths should be located in the mygit repository's directory, but " + path + " does not");
         }
-        path = relativizeWithMyGitDirectory(path);
-        return pathContainsMyGitAsSubpath(path) ? null : path;
+        return isAbsolutePathRepresentsInternal(path) ? null : relativizeWithMyGitDirectory(path);
     }
 
-    boolean isAbsolutePathRepresentsInternal(@Nullable Path path) {
-        return pathContainsMyGitAsSubpath(myGitDirectory.relativize(path));
+    boolean isAbsolutePathRepresentsInternal(@NotNull Path path) {
+        return myGitDirectory.equals(path) || pathContainsMyGitAsSubpath(relativizeWithMyGitDirectory(path));
     }
 
     private static boolean pathContainsMyGitAsSubpath(@Nullable Path path) {
         return path != null && (path.endsWith(".mygit") || pathContainsMyGitAsSubpath(path.getParent()));
+    }
+
+    @Nullable
+    TreeEdge findElementInHeadTree(@NotNull Path path) throws MyGitStateException, IOException {
+        final Tree tree;
+        if (path.getParent() == null) {
+            tree = getHeadTree();
+        } else {
+            final TreeEdge edge = findElementInHeadTree(path.getParent());
+            if (edge == null || !edge.isDirectory()) {
+                return null;
+            }
+            tree = readTree(edge.getHash());
+        }
+        for (TreeEdge edge : tree.getChildren()) {
+            if (edge.getName().equals(path.toString())) {
+                return edge;
+            }
+        }
+        return null;
     }
 }

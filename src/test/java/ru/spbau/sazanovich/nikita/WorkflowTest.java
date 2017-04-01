@@ -4,7 +4,7 @@ import org.junit.Test;
 import ru.spbau.sazanovich.nikita.mygit.commands.MyGitCommandHandler;
 import ru.spbau.sazanovich.nikita.mygit.objects.CommitLog;
 import ru.spbau.sazanovich.nikita.mygit.objects.FileDifference;
-import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
+import ru.spbau.sazanovich.nikita.testing.FolderInitializedTest;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,7 +17,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceStageStatus.UNTRACKED;
 
-public class WorkflowTest extends FolderInitialized {
+public class WorkflowTest extends FolderInitializedTest {
 
     private MyGitCommandHandler handler;
 
