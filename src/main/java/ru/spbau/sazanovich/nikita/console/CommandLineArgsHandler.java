@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Parses and executes command line arguments.
@@ -22,6 +21,7 @@ class CommandLineArgsHandler {
     private static final String UNSTAGE_CMD = "unstage";
     private static final String UNSTAGE_ALL_CMD = "unstage-all";
     private static final String RESET_CMD = "reset";
+    private static final String CLEAN_CMD = "clean";
     private static final String LOG_CMD = "log";
     private static final String STATUS_CMD = "status";
     private static final String BRANCH_CMD = "branch";
@@ -57,7 +57,7 @@ class CommandLineArgsHandler {
      */
     void handle(@NotNull String[] args) throws CommandNotSupportedException, MyGitException, IOException {
         if (args.length == 0) {
-            throw new CommandNotSupportedException("Enter some arguments");
+            throw new CommandNotSupportedException("Add at least one argument.");
         }
         if (args[0].equals(HELP_CMD)) {
             showHelp();
@@ -97,6 +97,9 @@ class CommandLineArgsHandler {
                     return;
                 }
                 throw new CommandNotSupportedException(RESET_CMD + " requires some files to have an effect");
+            case CLEAN_CMD:
+                handler.clean();
+                return;
             case LOG_CMD:
                 performLogCommand(handler);
                 return;
@@ -177,21 +180,21 @@ class CommandLineArgsHandler {
 
         final List<FileDifference> fileDifferences = handler.getHeadDifferences();
         final List<FileDifference> changesToBeCommitted =
-                filterDifferencesByStatus(fileDifferences, FileDifferenceStageStatus.TO_BE_COMMITTED);
+                FileDifferenceStageStatus.filterBy(fileDifferences, FileDifferenceStageStatus.TO_BE_COMMITTED);
         if (changesToBeCommitted.size() != 0) {
             printStream.println("Changes to be committed:\n");
             printDifferencesWithoutStatus(changesToBeCommitted);
         }
 
         final List<FileDifference> changesNotStagedForCommit =
-                filterDifferencesByStatus(fileDifferences, FileDifferenceStageStatus.NOT_STAGED_FOR_COMMIT);
+                FileDifferenceStageStatus.filterBy(fileDifferences, FileDifferenceStageStatus.NOT_STAGED_FOR_COMMIT);
         if (changesNotStagedForCommit.size() != 0) {
             printStream.println("Changes not staged for commit:\n");
             printDifferencesWithoutStatus(changesNotStagedForCommit);
         }
 
         final List<FileDifference> untrackedFiles =
-                filterDifferencesByStatus(fileDifferences, FileDifferenceStageStatus.UNTRACKED);
+                FileDifferenceStageStatus.filterBy(fileDifferences, FileDifferenceStageStatus.UNTRACKED);
         if (untrackedFiles.size() != 0) {
             printStream.println("Untracked files:\n");
             for (FileDifference change : untrackedFiles) {
@@ -257,14 +260,5 @@ class CommandLineArgsHandler {
             default:
                 return "";
         }
-    }
-
-    @NotNull
-    private static List<FileDifference> filterDifferencesByStatus(
-            @NotNull List<FileDifference> list, @NotNull FileDifferenceStageStatus status) {
-        return list
-                .stream()
-                .filter(diff -> diff.getStageStatus().equals(status))
-                .collect(Collectors.toList());
     }
 }

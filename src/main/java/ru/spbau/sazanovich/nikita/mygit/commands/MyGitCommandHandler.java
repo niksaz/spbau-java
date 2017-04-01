@@ -101,9 +101,22 @@ public class MyGitCommandHandler {
      * Resets file's state to the corresponding HEAD's one. Given file should be present in the filesystem.
      *
      * @param path a file's path to reset
+     * @throws MyGitIllegalArgumentException if the file is not present either in the filesystem or MyGit's HEAD
+     * @throws MyGitStateException           if an internal error occurs during operations
+     * @throws IOException                   if an error occurs during working with a filesystem
      */
     public void resetPath(@NotNull String path) throws MyGitIllegalArgumentException, MyGitStateException, IOException {
         new ResetCommand(path, internalStateAccessor).perform();
+    }
+
+    /**
+     * Removes all files which are untracked by MyGit.
+     *
+     * @throws MyGitStateException if an internal error occurs during operations
+     * @throws IOException         if an error occurs during working with a filesystem
+     */
+    public void clean() throws MyGitStateException, IOException {
+        new CleanCommand(internalStateAccessor).perform();
     }
 
     /**

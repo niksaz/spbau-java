@@ -341,7 +341,10 @@ class InternalStateAccessor {
         return headFile;
     }
 
-    private static void deleteFile(@NotNull Path path) throws IOException {
+    static void deleteFile(@NotNull Path path) throws IOException {
+        if (!Files.exists(path)) {
+            return;
+        }
         if (Files.isDirectory(path)) {
             //noinspection ResultOfMethodCallIgnored
             Files

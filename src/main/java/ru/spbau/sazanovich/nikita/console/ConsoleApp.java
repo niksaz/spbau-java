@@ -21,7 +21,7 @@ public class ConsoleApp {
         try {
             handler.handle(args);
         } catch (CommandNotSupportedException e) {
-            System.out.println("Entered command is not supported: " + e.getMessage());
+            System.out.println("Entered command is not supported. " + e.getMessage());
         } catch (Exception e) {
             System.out.println("Unsuccessful operation: " + e.getMessage());
         }

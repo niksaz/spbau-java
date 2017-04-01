@@ -7,9 +7,9 @@ import org.junit.rules.TemporaryFolder;
 import java.nio.file.Path;
 
 /**
- * Represents common routines for tests -- creating a folder, initializing the path.
+ * Base class for tests which require folder to be initialized.
  */
-public class FolderInitializedTest {
+public abstract class FolderInitializedTest {
 
     @Rule
     public final TemporaryFolder folder = new TemporaryFolder();

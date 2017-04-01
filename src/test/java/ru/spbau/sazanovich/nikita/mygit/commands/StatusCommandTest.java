@@ -2,31 +2,25 @@ package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.junit.Test;
 import ru.spbau.sazanovich.nikita.mygit.objects.FileDifference;
-import ru.spbau.sazanovich.nikita.testing.FolderInitializedTest;
+import ru.spbau.sazanovich.nikita.testing.HandlerInitializedTest;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceStageStatus.*;
-import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceType.*;
+import static org.junit.Assert.*;
+import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceStageStatus.NOT_STAGED_FOR_COMMIT;
+import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceStageStatus.TO_BE_COMMITTED;
+import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceStageStatus.UNTRACKED;
+import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceType.ADDITION;
+import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceType.MODIFICATION;
+import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceType.REMOVAL;
 
-public class MyGitCommandHandlerTest extends FolderInitializedTest {
-
-    private MyGitCommandHandler handler;
-
-    @Override
-    public void initialize() throws Exception {
-        super.initialize();
-        MyGitCommandHandler.init(folderPath);
-        handler = new MyGitCommandHandler(folderPath);
-    }
+public class StatusCommandTest extends HandlerInitializedTest {
 
     @Test
-    public void getHeadChanges() throws Exception {
+    public void perform() throws Exception {
         final Path inputsPath = Paths.get(folderPath.toString(), "inputs");
         Files.createDirectory(inputsPath);
         handler.stagePath(inputsPath.toString());
