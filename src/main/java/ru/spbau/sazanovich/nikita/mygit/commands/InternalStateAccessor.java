@@ -30,19 +30,25 @@ class InternalStateAccessor {
     @NotNull
     private final Path myGitDirectory;
     @NotNull
+    private final Path currentDirectory;
+    @NotNull
     private final MyGitHasher hasher;
 
-    InternalStateAccessor(@NotNull Path path, @NotNull MyGitHasher hasher) throws MyGitIllegalArgumentException {
-        if (!path.isAbsolute()) {
-            throw new MyGitIllegalArgumentException("path parameter should be an absolute");
-        }
-        this.myGitDirectory = path;
+    InternalStateAccessor(@NotNull Path myGitDirectory, @NotNull Path currentDirectory, @NotNull MyGitHasher hasher)
+            throws MyGitIllegalArgumentException {
+        this.myGitDirectory = myGitDirectory;
+        this.currentDirectory = currentDirectory;
         this.hasher = hasher;
     }
 
     @NotNull
     Path getMyGitDirectory() {
         return myGitDirectory;
+    }
+
+    @NotNull
+    Path getCurrentDirectory() {
+        return currentDirectory;
     }
 
     @NotNull
@@ -399,7 +405,7 @@ class InternalStateAccessor {
         Files.createDirectory(myGitPath);
         InternalStateAccessor internalStateAccessor;
         try {
-            internalStateAccessor = new InternalStateAccessor(directory, new SHA1Hasher());
+            internalStateAccessor = new InternalStateAccessor(directory, directory, new SHA1Hasher());
         } catch (MyGitIllegalArgumentException ignored) {
             throw new IllegalStateException();
         }

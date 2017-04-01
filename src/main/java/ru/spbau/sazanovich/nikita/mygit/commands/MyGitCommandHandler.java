@@ -12,12 +12,9 @@ import ru.spbau.sazanovich.nikita.mygit.utils.SHA1Hasher;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -28,8 +25,6 @@ public class MyGitCommandHandler {
 
     @NotNull
     private final Path myGitDirectory;
-    @NotNull
-    private final Path currentDirectory;
     @NotNull
     private final InternalStateAccessor internalStateAccessor;
 
@@ -58,13 +53,12 @@ public class MyGitCommandHandler {
         if (!currentDirectory.isAbsolute()) {
             throw new MyGitIllegalArgumentException("parameter should be an absolute path");
         }
-        this.currentDirectory = currentDirectory;
         final Path path = InternalStateAccessor.findMyGitDirectoryPath(currentDirectory);
         if (path == null) {
             throw new MyGitStateException("Not a mygit repository (or any of the parent directories)");
         }
         myGitDirectory = path;
-        internalStateAccessor = new InternalStateAccessor(myGitDirectory, new SHA1Hasher());
+        internalStateAccessor = new InternalStateAccessor(myGitDirectory, currentDirectory, new SHA1Hasher());
     }
 
     /**
@@ -87,15 +81,9 @@ public class MyGitCommandHandler {
      * @throws MyGitStateException           if an internal error occurs during operations
      * @throws IOException                   if an error occurs during working with a filesystem
      */
-    public void addPathsToIndex(@NotNull List<String> arguments)
+    public void stagePaths(@NotNull List<String> arguments)
             throws MyGitIllegalArgumentException, MyGitStateException, IOException {
-        final Function<Set<Path>, Consumer<Path>> action =
-                paths -> (Consumer<Path>) path -> {
-                    if (!paths.contains(path)) {
-                        paths.add(path);
-                    }
-                };
-        performUpdateToIndex(arguments, action);
+        new StageCommand(arguments, internalStateAccessor).perform();
     }
 
     /**
@@ -106,25 +94,9 @@ public class MyGitCommandHandler {
      * @throws MyGitStateException           if an internal error occurs during operations
      * @throws IOException                   if an error occurs during working with a filesystem
      */
-    public void resetIndexPaths(@NotNull List<String> arguments)
+    public void unstagePaths(@NotNull List<String> arguments)
             throws MyGitStateException, MyGitIllegalArgumentException, IOException {
-        final Function<Set<Path>, Consumer<Path>> action =
-                paths -> (Consumer<Path>) path -> {
-                    if (paths.contains(path)) {
-                        paths.remove(path);
-                    }
-                };
-        performUpdateToIndex(arguments, action);
-    }
-
-    private void performUpdateToIndex(@NotNull List<String> arguments,
-                                      @NotNull Function<Set<Path>, Consumer<Path>> action)
-            throws MyGitStateException, MyGitIllegalArgumentException, IOException {
-        final List<Path> argsPaths = convertStringsToPaths(arguments);
-        final Set<Path> indexedPaths = internalStateAccessor.readIndexPaths();
-        final Consumer<Path> indexUpdater = action.apply(indexedPaths);
-        argsPaths.forEach(indexUpdater);
-        internalStateAccessor.writeIndexPaths(indexedPaths);
+        new UnstageCommand(arguments, internalStateAccessor).perorm();
     }
 
     /**
@@ -133,8 +105,8 @@ public class MyGitCommandHandler {
      * @throws MyGitStateException if an internal error occurs during operations
      * @throws IOException         if an error occurs during working with a filesystem
      */
-    public void resetAllIndexPaths() throws MyGitStateException, IOException {
-        internalStateAccessor.writeIndexPaths(new HashSet<>());
+    public void unstageAllPaths() throws MyGitStateException, IOException {
+        new UnstageAllCommand(internalStateAccessor).perform();
     }
 
     /**
@@ -317,7 +289,7 @@ public class MyGitCommandHandler {
         final Commit commit = new Commit(rebuiltTreeHash, message, parentsHashes);
         final String commitHash = internalStateAccessor.map(commit);
         internalStateAccessor.moveHeadToCommitHash(commitHash);
-        resetAllIndexPaths();
+        unstageAllPaths();
     }
 
     private String rebuildTree(@Nullable Tree tree, @NotNull Path prefixPath, @NotNull Set<Path> indexedPaths)
@@ -432,31 +404,6 @@ public class MyGitCommandHandler {
     @NotNull
     private List<String> listCommitHashes() throws IOException, MyGitStateException {
         return internalStateAccessor.listCommitHashes();
-    }
-
-    @NotNull
-    private List<Path> convertStringsToPaths(@NotNull List<String> args) throws MyGitIllegalArgumentException {
-        final List<Path> paths = new ArrayList<>();
-        for (String stringPath : args) {
-            Path path;
-            try {
-                path = Paths.get(stringPath);
-            } catch (InvalidPathException e) {
-                throw new MyGitIllegalArgumentException("invalid path -- " + e.getMessage());
-            }
-            if (!path.isAbsolute()) {
-                path = currentDirectory.resolve(path).normalize();
-            }
-            if (!path.startsWith(myGitDirectory)) {
-                throw new MyGitIllegalArgumentException(
-                        "files should be located in the mygit repository's directory, but an argument is " + path);
-            }
-            path = myGitDirectory.relativize(path);
-            if (!InternalStateAccessor.pathContainsMyGitAsSubpath(path)) {
-                paths.add(path);
-            }
-        }
-        return paths;
     }
 
     @NotNull

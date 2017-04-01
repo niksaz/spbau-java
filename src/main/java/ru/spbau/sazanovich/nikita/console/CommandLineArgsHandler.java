@@ -19,9 +19,9 @@ import java.util.stream.Collectors;
 class CommandLineArgsHandler {
 
     private static final String INIT_CMD = "init";
-    private static final String ADD_CMD = "add";
-    private static final String RESET_CMD = "reset";
-    private static final String RESET_ALL_CMD = "resetall";
+    private static final String STAGE_CMD = "stage";
+    private static final String UNSTAGE_CMD = "unstage";
+    private static final String UNSTAGE_ALL_CMD = "unstage-all";
     private static final String LOG_CMD = "log";
     private static final String STATUS_CMD = "status";
     private static final String BRANCH_CMD = "branch";
@@ -70,20 +70,20 @@ class CommandLineArgsHandler {
         }
         final MyGitCommandHandler handler = new MyGitCommandHandler(currentDirectory);
         switch (args[0]) {
-            case ADD_CMD:
+            case STAGE_CMD:
                 if (args.length > 1) {
-                    handler.addPathsToIndex(suffixArgsToList(args));
+                    handler.stagePaths(suffixArgsToList(args));
                     return;
                 }
-                throw new CommandNotSupportedException(ADD_CMD + " requires some files to have an effect");
-            case RESET_CMD:
+                throw new CommandNotSupportedException(STAGE_CMD + " requires some files to have an effect");
+            case UNSTAGE_CMD:
                 if (args.length > 1) {
-                    handler.resetIndexPaths(suffixArgsToList(args));
+                    handler.unstagePaths(suffixArgsToList(args));
                     return;
                 }
-                throw new CommandNotSupportedException(RESET_CMD + " requires some files to have an effect");
-            case RESET_ALL_CMD:
-                handler.resetAllIndexPaths();
+                throw new CommandNotSupportedException(UNSTAGE_CMD + " requires some files to have an effect");
+            case UNSTAGE_ALL_CMD:
+                handler.unstageAllPaths();
                 return;
             case LOG_CMD:
                 performLogCommand(handler);
@@ -124,7 +124,7 @@ class CommandLineArgsHandler {
                 }
                 throw new CommandNotSupportedException(MERGE_CMD + " requires another branch");
             default:
-                break;
+                throw new CommandNotSupportedException(String.join(" ", args));
         }
     }
 
@@ -218,9 +218,9 @@ class CommandLineArgsHandler {
                         "  " + INIT_CMD + "\n" +
                         "\n" +
                         "work on the current change:\n" +
-                        "  " + ADD_CMD + " [<files>]\n" +
-                        "  " + RESET_CMD + " [<files>]\n" +
-                        "  " + RESET_ALL_CMD + "\n" +
+                        "  " + STAGE_CMD + " [<files>]\n" +
+                        "  " + UNSTAGE_CMD + " [<files>]\n" +
+                        "  " + UNSTAGE_ALL_CMD + "\n" +
                         "\n" +
                         "examine the history and state:\n" +
                         "  " + LOG_CMD + "\n" +

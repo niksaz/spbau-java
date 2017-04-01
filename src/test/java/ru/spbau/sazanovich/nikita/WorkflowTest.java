@@ -37,12 +37,12 @@ public class WorkflowTest extends FolderInitialized {
         assertEquals(1, fileDifferenceList.size());
         assertTrue(fileDifferenceList.get(0).getStageStatus().equals(UNTRACKED));
 
-        handler.addPathsToIndex(Collections.singletonList(filePath.toString()));
+        handler.stagePaths(Collections.singletonList(filePath.toString()));
         handler.commitWithMessage("first file");
 
         handler.createBranch("test");
         Files.write(filePath, Collections.singletonList("will be replaced"));
-        handler.addPathsToIndex(Collections.singletonList(filePath.toString()));
+        handler.stagePaths(Collections.singletonList(filePath.toString()));
         handler.commitWithMessage("file change 1");
 
         sleep(100);
@@ -50,7 +50,7 @@ public class WorkflowTest extends FolderInitialized {
         handler.checkout("test");
         final String ultimateString = "ultimate content";
         Files.write(filePath, Collections.singletonList(ultimateString));
-        handler.addPathsToIndex(Collections.singletonList(filePath.toString()));
+        handler.stagePaths(Collections.singletonList(filePath.toString()));
         handler.commitWithMessage("file change 2");
 
         handler.checkout("master");
@@ -73,7 +73,7 @@ public class WorkflowTest extends FolderInitialized {
         Files.createDirectory(inputsPath);
         final Path someInputPath = Paths.get(inputsPath.toString(), "input1.txt");
         Files.createFile(someInputPath);
-        handler.addPathsToIndex(
+        handler.stagePaths(
                 Arrays.asList(readmePath.toString(), inputsPath.toString(), someInputPath.toString()));
         handler.commitWithMessage("inputs directory added");
 
@@ -81,7 +81,7 @@ public class WorkflowTest extends FolderInitialized {
         final Path howToFile = Paths.get(folderPath.toString(), "HOWTO.md");
         Files.createFile(howToFile);
         Files.createFile(inputsPath);
-        handler.addPathsToIndex(Arrays.asList(howToFile.toString(), inputsPath.toString()));
+        handler.stagePaths(Arrays.asList(howToFile.toString(), inputsPath.toString()));
         handler.commitWithMessage("inputs files created");
         handler.createBranch("test");
 

@@ -42,21 +42,21 @@ public class CommandLineArgsHandlerTest extends FolderInitialized {
     @Test
     public void handleAdd() throws Exception {
         MyGitCommandHandler.init(folderPath);
-        final String[] args = {"add", "."};
+        final String[] args = {"stage", "."};
         handler.handle(args);
     }
 
     @Test
     public void handleReset() throws Exception {
         MyGitCommandHandler.init(folderPath);
-        final String[] args = {"reset", "."};
+        final String[] args = {"unstage", "."};
         handler.handle(args);
     }
 
     @Test
     public void handleResetAll() throws Exception {
         MyGitCommandHandler.init(folderPath);
-        final String[] args = {"resetall"};
+        final String[] args = {"unstage-all"};
         handler.handle(args);
     }
 
