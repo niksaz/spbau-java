@@ -1,15 +1,14 @@
 package ru.spbau.sazanovich.nikita.console;
 
 import org.jetbrains.annotations.NotNull;
-import ru.spbau.sazanovich.nikita.mygit.commands.MyGitCommandHandler;
 import ru.spbau.sazanovich.nikita.mygit.MyGitException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
+import ru.spbau.sazanovich.nikita.mygit.commands.MyGitCommandHandler;
 import ru.spbau.sazanovich.nikita.mygit.objects.*;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +21,7 @@ class CommandLineArgsHandler {
     private static final String STAGE_CMD = "stage";
     private static final String UNSTAGE_CMD = "unstage";
     private static final String UNSTAGE_ALL_CMD = "unstage-all";
+    private static final String RESET_CMD = "reset";
     private static final String LOG_CMD = "log";
     private static final String STATUS_CMD = "status";
     private static final String BRANCH_CMD = "branch";
@@ -72,19 +72,31 @@ class CommandLineArgsHandler {
         switch (args[0]) {
             case STAGE_CMD:
                 if (args.length > 1) {
-                    handler.stagePaths(suffixArgsToList(args));
+                    for (int i = 1; i < args.length; i++) {
+                        handler.stagePath(args[i]);
+                    }
                     return;
                 }
                 throw new CommandNotSupportedException(STAGE_CMD + " requires some files to have an effect");
             case UNSTAGE_CMD:
                 if (args.length > 1) {
-                    handler.unstagePaths(suffixArgsToList(args));
+                    for (int i = 1; i < args.length; i++) {
+                        handler.unstagePath(args[i]);
+                    }
                     return;
                 }
                 throw new CommandNotSupportedException(UNSTAGE_CMD + " requires some files to have an effect");
             case UNSTAGE_ALL_CMD:
                 handler.unstageAllPaths();
                 return;
+            case RESET_CMD:
+                if (args.length > 1) {
+                    for (int i = 1; i < args.length; i++) {
+                        handler.resetPath(args[i]);
+                    }
+                    return;
+                }
+                throw new CommandNotSupportedException(RESET_CMD + " requires some files to have an effect");
             case LOG_CMD:
                 performLogCommand(handler);
                 return;
@@ -221,6 +233,7 @@ class CommandLineArgsHandler {
                         "  " + STAGE_CMD + " [<files>]\n" +
                         "  " + UNSTAGE_CMD + " [<files>]\n" +
                         "  " + UNSTAGE_ALL_CMD + "\n" +
+                        "  " + RESET_CMD + " [<files>]\n" +
                         "\n" +
                         "examine the history and state:\n" +
                         "  " + LOG_CMD + "\n" +
@@ -247,13 +260,8 @@ class CommandLineArgsHandler {
     }
 
     @NotNull
-    private static List<String> suffixArgsToList(@NotNull String[] args) {
-        return Arrays.asList(args).subList(1, args.length);
-    }
-
-    @NotNull
-    private static List<FileDifference> filterDifferencesByStatus(@NotNull List<FileDifference> list,
-                                                                  @NotNull FileDifferenceStageStatus status) {
+    private static List<FileDifference> filterDifferencesByStatus(
+            @NotNull List<FileDifference> list, @NotNull FileDifferenceStageStatus status) {
         return list
                 .stream()
                 .filter(diff -> diff.getStageStatus().equals(status))

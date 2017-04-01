@@ -17,6 +17,7 @@ import ru.spbau.sazanovich.nikita.mygit.utils.SHA1Hasher;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -61,11 +62,6 @@ class InternalStateAccessor {
     }
 
     @NotNull
-    Path getCurrentDirectory() {
-        return currentDirectory;
-    }
-
-    @NotNull
     String map(@NotNull Object object) throws MyGitStateException, IOException {
         final String hash = hasher.getHashFromObject(object);
         HashParts shaHashParts;
@@ -75,7 +71,7 @@ class InternalStateAccessor {
             throw new MyGitStateException("met an illegal hash value " + hash);
         }
         final Path directoryPath =
-                Paths.get(myGitDirectory.toString(),".mygit", "objects", shaHashParts.getFirst());
+                Paths.get(myGitDirectory.toString(), ".mygit", "objects", shaHashParts.getFirst());
         final Path filePath = Paths.get(directoryPath.toString(), shaHashParts.getLast());
         if (!directoryPath.toFile().exists()) {
             Files.createDirectory(directoryPath);
@@ -353,10 +349,10 @@ class InternalStateAccessor {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private static void deleteDirectoryWithFiles(@NotNull Path directoryPath) throws IOException {
         Files
-        .walk(directoryPath)
-        .sorted(Comparator.reverseOrder())
-        .map(Path::toFile)
-        .forEach(File::delete);
+                .walk(directoryPath)
+                .sorted(Comparator.reverseOrder())
+                .map(Path::toFile)
+                .forEach(File::delete);
     }
 
     @NotNull
@@ -440,16 +436,36 @@ class InternalStateAccessor {
         return internalStateAccessor.map(primaryCommit);
     }
 
+    @NotNull
+    Path relativizeWithMyGitDirectory(@NotNull Path path) {
+        return myGitDirectory.relativize(path);
+    }
+
+    @Nullable
+    Path convertStringToPathRelativeToMyGitDirectory(@NotNull String stringPath)
+            throws MyGitIllegalArgumentException {
+        Path path;
+        try {
+            path = Paths.get(stringPath);
+        } catch (InvalidPathException e) {
+            throw new MyGitIllegalArgumentException(stringPath + " is invalid path");
+        }
+        if (!path.isAbsolute()) {
+            path = currentDirectory.resolve(path).normalize();
+        }
+        if (!path.startsWith(myGitDirectory)) {
+            throw new MyGitIllegalArgumentException(
+                    "paths should be located in the mygit repository's directory, but " + path + " does not");
+        }
+        path = relativizeWithMyGitDirectory(path);
+        return pathContainsMyGitAsSubpath(path) ? null : path;
+    }
+
     boolean isAbsolutePathRepresentsInternal(@Nullable Path path) {
         return pathContainsMyGitAsSubpath(myGitDirectory.relativize(path));
     }
 
-    static boolean pathContainsMyGitAsSubpath(@Nullable Path path) {
+    private static boolean pathContainsMyGitAsSubpath(@Nullable Path path) {
         return path != null && (path.endsWith(".mygit") || pathContainsMyGitAsSubpath(path.getParent()));
-    }
-
-    @NotNull
-    Path relativizeWithMyGitDirectory(@NotNull Path path) {
-        return myGitDirectory.relativize(path);
     }
 }

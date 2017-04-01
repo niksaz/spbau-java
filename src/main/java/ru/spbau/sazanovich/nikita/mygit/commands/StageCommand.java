@@ -6,10 +6,7 @@ import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * Command class which adds paths to the current index.
@@ -17,20 +14,22 @@ import java.util.function.Function;
 class StageCommand extends Command {
 
     @NotNull
-    private final List<String> arguments;
+    private final String stringPath;
 
-    StageCommand(@NotNull List<String> arguments, @NotNull InternalStateAccessor internalStateAccessor) {
+    StageCommand(@NotNull String stringPath, @NotNull InternalStateAccessor internalStateAccessor) {
         super(internalStateAccessor);
-        this.arguments = arguments;
+        this.stringPath = stringPath;
     }
 
     void perform() throws MyGitIllegalArgumentException, IOException, MyGitStateException {
-        final Function<Set<Path>, Consumer<Path>> action =
-                paths -> (Consumer<Path>) path -> {
-                    if (!paths.contains(path)) {
-                        paths.add(path);
-                    }
-                };
-        new IndexUpdateCommand(arguments, action, internalStateAccessor).perform();
+        final Path path = internalStateAccessor.convertStringToPathRelativeToMyGitDirectory(stringPath);
+        if (path == null) {
+            return;
+        }
+        final Set<Path> indexedPaths = internalStateAccessor.readIndexPaths();
+        if (!indexedPaths.contains(path)) {
+            indexedPaths.add(path);
+        }
+        internalStateAccessor.writeIndexPaths(indexedPaths);
     }
 }

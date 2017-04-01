@@ -62,29 +62,29 @@ public class MyGitCommandHandler {
     }
 
     /**
-     * Adds paths to the current index.
+     * Adds a path to the current index.
      *
-     * @param arguments list of paths to add to the index
-     * @throws MyGitIllegalArgumentException if the list contains incorrect/located outside MyGit repository paths
+     * @param path a path to add to the index
+     * @throws MyGitIllegalArgumentException if the path is incorrect or located outside MyGit repository
      * @throws MyGitStateException           if an internal error occurs during operations
      * @throws IOException                   if an error occurs during working with a filesystem
      */
-    public void stagePaths(@NotNull List<String> arguments)
+    public void stagePath(@NotNull String path)
             throws MyGitIllegalArgumentException, MyGitStateException, IOException {
-        new StageCommand(arguments, internalStateAccessor).perform();
+        new StageCommand(path, internalStateAccessor).perform();
     }
 
     /**
-     * Removes paths from the current index.
+     * Remove a path from the current index.
      *
-     * @param arguments list of paths to remove from the index
-     * @throws MyGitIllegalArgumentException if the list contains incorrect/located outside MyGit repository paths
+     * @param path a path to remove from the index
+     * @throws MyGitIllegalArgumentException if the path is incorrect or located outside MyGit repository
      * @throws MyGitStateException           if an internal error occurs during operations
      * @throws IOException                   if an error occurs during working with a filesystem
      */
-    public void unstagePaths(@NotNull List<String> arguments)
+    public void unstagePath(@NotNull String path)
             throws MyGitStateException, MyGitIllegalArgumentException, IOException {
-        new UnstageCommand(arguments, internalStateAccessor).perform();
+        new UnstageCommand(path, internalStateAccessor).perform();
     }
 
     /**
@@ -95,6 +95,15 @@ public class MyGitCommandHandler {
      */
     public void unstageAllPaths() throws MyGitStateException, IOException {
         new UnstageAllCommand(internalStateAccessor).perform();
+    }
+
+    /**
+     * Resets file's state to the corresponding HEAD's one. Given file should be present in the filesystem.
+     *
+     * @param path a file's path to reset
+     */
+    public void resetPath(@NotNull String path) {
+        new ResetCommand(path, internalStateAccessor).perform();
     }
 
     /**

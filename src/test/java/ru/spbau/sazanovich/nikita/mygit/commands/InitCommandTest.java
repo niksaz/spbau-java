@@ -3,8 +3,6 @@ package ru.spbau.sazanovich.nikita.mygit.commands;
 import org.junit.Test;
 import ru.spbau.sazanovich.nikita.mygit.MyGitAlreadyInitializedException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
-import ru.spbau.sazanovich.nikita.mygit.commands.InitCommand;
-import ru.spbau.sazanovich.nikita.mygit.commands.MyGitCommandHandler;
 import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
 
 import java.nio.file.Files;

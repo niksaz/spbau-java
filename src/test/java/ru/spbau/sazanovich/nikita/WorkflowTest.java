@@ -9,7 +9,6 @@ import ru.spbau.sazanovich.nikita.testing.FolderInitialized;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -37,12 +36,12 @@ public class WorkflowTest extends FolderInitialized {
         assertEquals(1, fileDifferenceList.size());
         assertTrue(fileDifferenceList.get(0).getStageStatus().equals(UNTRACKED));
 
-        handler.stagePaths(Collections.singletonList(filePath.toString()));
+        handler.stagePath(filePath.toString());
         handler.commitWithMessage("first file");
 
         handler.createBranch("test");
         Files.write(filePath, Collections.singletonList("will be replaced"));
-        handler.stagePaths(Collections.singletonList(filePath.toString()));
+        handler.stagePath(filePath.toString());
         handler.commitWithMessage("file change 1");
 
         sleep(100);
@@ -50,7 +49,7 @@ public class WorkflowTest extends FolderInitialized {
         handler.checkout("test");
         final String ultimateString = "ultimate content";
         Files.write(filePath, Collections.singletonList(ultimateString));
-        handler.stagePaths(Collections.singletonList(filePath.toString()));
+        handler.stagePath(filePath.toString());
         handler.commitWithMessage("file change 2");
 
         handler.checkout("master");
@@ -73,15 +72,17 @@ public class WorkflowTest extends FolderInitialized {
         Files.createDirectory(inputsPath);
         final Path someInputPath = Paths.get(inputsPath.toString(), "input1.txt");
         Files.createFile(someInputPath);
-        handler.stagePaths(
-                Arrays.asList(readmePath.toString(), inputsPath.toString(), someInputPath.toString()));
+        handler.stagePath(readmePath.toString());
+        handler.stagePath(inputsPath.toString());
+        handler.stagePath(someInputPath.toString());
         handler.commitWithMessage("inputs directory added");
 
         handler.checkout(initialRevisionHash);
         final Path howToFile = Paths.get(folderPath.toString(), "HOWTO.md");
         Files.createFile(howToFile);
         Files.createFile(inputsPath);
-        handler.stagePaths(Arrays.asList(howToFile.toString(), inputsPath.toString()));
+        handler.stagePath(howToFile.toString());
+        handler.stagePath(inputsPath.toString());
         handler.commitWithMessage("inputs files created");
         handler.createBranch("test");
 

@@ -6,10 +6,7 @@ import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * Command class which removes paths from the current index.
@@ -17,20 +14,22 @@ import java.util.function.Function;
 class UnstageCommand extends Command {
 
     @NotNull
-    private final List<String> arguments;
+    private final String stringPath;
 
-    UnstageCommand(@NotNull List<String> arguments, @NotNull InternalStateAccessor internalStateAccessor) {
+    UnstageCommand(@NotNull String stringPath, @NotNull InternalStateAccessor internalStateAccessor) {
         super(internalStateAccessor);
-        this.arguments = arguments;
+        this.stringPath = stringPath;
     }
 
     void perform() throws MyGitIllegalArgumentException, IOException, MyGitStateException {
-        final Function<Set<Path>, Consumer<Path>> action =
-                paths -> (Consumer<Path>) path -> {
-                    if (paths.contains(path)) {
-                        paths.remove(path);
-                    }
-                };
-        new IndexUpdateCommand(arguments, action, internalStateAccessor).perform();
+        final Path path = internalStateAccessor.convertStringToPathRelativeToMyGitDirectory(stringPath);
+        if (path == null) {
+            return;
+        }
+        final Set<Path> indexedPaths = internalStateAccessor.readIndexPaths();
+        if (indexedPaths.contains(path)) {
+            indexedPaths.remove(path);
+        }
+        internalStateAccessor.writeIndexPaths(indexedPaths);
     }
 }
