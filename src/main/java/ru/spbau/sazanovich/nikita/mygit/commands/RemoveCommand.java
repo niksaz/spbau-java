@@ -22,6 +22,7 @@ class RemoveCommand extends Command {
     }
 
     void perform() throws MyGitIllegalArgumentException, IOException, MyGitStateException {
+        internalStateAccessor.getLogger().trace("RemoveCommand -- started");
         final Path path = internalStateAccessor.convertStringToPathRelativeToMyGitDirectory(stringPath);
         if (path == null) {
             return;
@@ -29,6 +30,7 @@ class RemoveCommand extends Command {
         final Path completePath = internalStateAccessor.getMyGitDirectory().resolve(path);
         FileSystem.deleteFile(completePath);
         new StageCommand(stringPath, internalStateAccessor).perform();
+        internalStateAccessor.getLogger().trace("RemoveCommand -- completed");
     }
 
 }

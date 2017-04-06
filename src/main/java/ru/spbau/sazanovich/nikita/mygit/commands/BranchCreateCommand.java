@@ -20,10 +20,12 @@ class BranchCreateCommand extends Command {
     }
 
     void perform() throws MyGitStateException, IOException, MyGitIllegalArgumentException {
+        internalStateAccessor.getLogger().trace("BranchCreateCommand -- started");
         boolean branchExists = new BranchExistsCommand(branchName, internalStateAccessor).perform();
         if (branchExists) {
             throw new MyGitIllegalArgumentException("'" + branchName + "' branch already exists");
         }
         internalStateAccessor.writeBranch(branchName, internalStateAccessor.getHeadCommitHash());
+        internalStateAccessor.getLogger().trace("BranchCreateCommand -- completed");
     }
 }

@@ -18,14 +18,13 @@ public class Log4j2ContextBuilder {
     /**
      * Creates a context with one logger and a RollingFile appender.
      *
-     * @param name name of the context's configuration
      * @param directory directory where to store logs
      * @return a context
      */
     @NotNull
-    public static LoggerContext createContext(@NotNull String name, @NotNull Path directory) {
+    public static LoggerContext createContext(@NotNull Path directory) {
         final ConfigurationBuilder<BuiltConfiguration> builder = ConfigurationBuilderFactory.newConfigurationBuilder();
-        builder.setConfigurationName(name);
+        builder.setConfigurationName("MyGitLogger");
         builder.setStatusLevel(Level.OFF);
         final LayoutComponentBuilder layoutBuilder =
                 builder

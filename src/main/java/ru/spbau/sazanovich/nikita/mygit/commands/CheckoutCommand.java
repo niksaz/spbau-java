@@ -31,6 +31,7 @@ class CheckoutCommand extends Command {
 
     void perform()
             throws MyGitStateException, MyGitMissingPrerequisitesException, MyGitIllegalArgumentException, IOException {
+        internalStateAccessor.getLogger().trace("CheckoutCommand -- started");
         if (!internalStateAccessor.readIndexPaths().isEmpty()) {
             throw new MyGitMissingPrerequisitesException("staging area should be empty before a checkout operation");
         }
@@ -53,6 +54,7 @@ class CheckoutCommand extends Command {
         moveFromCommitToCommit(fromCommit, toCommit);
         final HeadStatus toHeadStatus = new HeadStatus(toHeadType, revisionName);
         internalStateAccessor.setHeadStatus(toHeadStatus);
+        internalStateAccessor.getLogger().trace("CheckoutCommand -- completed");
     }
 
     private void moveFromCommitToCommit(@NotNull Commit fromCommit, Commit toCommit)

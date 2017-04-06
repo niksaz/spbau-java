@@ -32,6 +32,7 @@ class CommitCommand extends Command {
     }
 
     void perform() throws MyGitStateException, IOException {
+        internalStateAccessor.getLogger().trace("CommitCommand -- started");
         final Tree tree = internalStateAccessor.getHeadTree();
         final Set<Path> indexedPaths = internalStateAccessor.readIndexPaths();
         final String rebuiltTreeHash = rebuildTree(tree, internalStateAccessor.getMyGitDirectory(), indexedPaths);
@@ -41,6 +42,7 @@ class CommitCommand extends Command {
         final String commitHash = internalStateAccessor.map(commit);
         internalStateAccessor.moveHeadToCommitHash(commitHash);
         new UnstageAllCommand(internalStateAccessor).perform();
+        internalStateAccessor.getLogger().trace("CommitCommand -- completed");
     }
 
     private String rebuildTree(@Nullable Tree tree, @NotNull Path prefixPath, @NotNull Set<Path> indexedPaths)

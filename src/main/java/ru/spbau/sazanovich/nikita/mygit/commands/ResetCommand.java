@@ -24,6 +24,7 @@ class ResetCommand extends Command {
     }
 
     void perform() throws MyGitIllegalArgumentException, MyGitStateException, IOException {
+        internalStateAccessor.getLogger().trace("ResetCommand -- started");
         final Path path = internalStateAccessor.convertStringToPathRelativeToMyGitDirectory(stringPath);
         if (path == null) {
             return;
@@ -37,5 +38,6 @@ class ResetCommand extends Command {
             throw new MyGitIllegalArgumentException(stringPath + " should be present in the HEAD's version");
         }
         new LoadTreeEdgeCommand(edge, completePath, internalStateAccessor).perform();
+        internalStateAccessor.getLogger().trace("ResetCommand -- completed");
     }
 }

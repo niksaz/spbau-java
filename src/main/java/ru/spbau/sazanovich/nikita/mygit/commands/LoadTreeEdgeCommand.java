@@ -29,6 +29,7 @@ class LoadTreeEdgeCommand extends Command {
     }
 
     void perform() throws IOException, MyGitStateException {
+        internalStateAccessor.getLogger().trace("LoadTreeEdgeCommand -- started");
         if (edge.isDirectory()) {
             if (Files.exists(path) && !Files.isDirectory(path)) {
                 FileSystem.deleteFile(path);
@@ -46,5 +47,6 @@ class LoadTreeEdgeCommand extends Command {
             final Blob childBlob = internalStateAccessor.readBlob(edge.getHash());
             Files.write(path, childBlob.getContent());
         }
+        internalStateAccessor.getLogger().trace("LoadTreeEdgeCommand -- completed");
     }
 }

@@ -18,6 +18,9 @@ class ListBranchesCommand extends Command {
 
     @NotNull
     List<Branch> perform() throws MyGitStateException, IOException {
-        return internalStateAccessor.listBranches();
+        internalStateAccessor.getLogger().trace("ListBranchesCommand -- started");
+        final List<Branch> branches = internalStateAccessor.listBranches();
+        internalStateAccessor.getLogger().trace("ListBranchesCommand -- completed");
+        return branches;
     }
 }

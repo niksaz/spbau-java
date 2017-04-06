@@ -7,6 +7,7 @@ import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
 import ru.spbau.sazanovich.nikita.mygit.objects.FileDifference;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,9 +36,13 @@ class StatusCommand extends Command {
 
     @NotNull
     List<FileDifference> perform() throws MyGitStateException, IOException {
+        internalStateAccessor.getLogger().trace("StatusCommand -- started");
         final Tree tree = internalStateAccessor.getHeadTree();
         final Set<Path> indexedPaths = internalStateAccessor.readIndexPaths();
-        return getTreeDifferenceList(tree, internalStateAccessor.getMyGitDirectory(), indexedPaths);
+        final List<FileDifference> differences =
+                getTreeDifferenceList(tree, internalStateAccessor.getMyGitDirectory(), indexedPaths);
+        internalStateAccessor.getLogger().trace("StatusCommand -- completed");
+        return differences;
     }
 
     /**

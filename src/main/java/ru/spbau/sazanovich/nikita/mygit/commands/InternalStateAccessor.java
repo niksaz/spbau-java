@@ -1,10 +1,13 @@
 package ru.spbau.sazanovich.nikita.mygit.commands;
 
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.spbau.sazanovich.nikita.mygit.MyGitAlreadyInitializedException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
+import ru.spbau.sazanovich.nikita.mygit.logger.Log4j2ContextBuilder;
 import ru.spbau.sazanovich.nikita.mygit.objects.*;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
 import ru.spbau.sazanovich.nikita.mygit.utils.*;
@@ -31,6 +34,8 @@ class InternalStateAccessor {
     private final Path currentDirectory;
     @NotNull
     private final MyGitHasher hasher;
+    @NotNull
+    private final Logger logger;
 
     /**
      * Constructs an accessor in a given directory.
@@ -51,11 +56,21 @@ class InternalStateAccessor {
         this.myGitDirectory = path;
         this.currentDirectory = currentDirectory;
         this.hasher = hasher;
+        final Path myGitInternalsDirectory = myGitDirectory.resolve(Paths.get(".mygit"));
+        final LoggerContext loggerContext =
+                Log4j2ContextBuilder.createContext(myGitInternalsDirectory);
+        this.logger = loggerContext.getRootLogger();
+        logger.trace("Initialized logger");
     }
 
     @NotNull
     Path getMyGitDirectory() {
         return myGitDirectory;
+    }
+
+    @NotNull
+    Logger getLogger() {
+        return logger;
     }
 
     @NotNull
@@ -307,7 +322,7 @@ class InternalStateAccessor {
         return commitHashes;
     }
 
-    static void init(@NotNull Path directory)
+    static InternalStateAccessor init(@NotNull Path directory)
             throws MyGitAlreadyInitializedException, MyGitStateException, IOException {
         final Path myGitPath = Paths.get(directory.toString(), ".mygit");
         if (Files.exists(myGitPath)) {
@@ -327,6 +342,7 @@ class InternalStateAccessor {
         Files.createDirectory(Paths.get(myGitPath.toString(), "branches"));
         final String commitHash = createInitialCommit(internalStateAccessor);
         internalStateAccessor.writeBranch("master", commitHash);
+        return internalStateAccessor;
     }
 
     @NotNull

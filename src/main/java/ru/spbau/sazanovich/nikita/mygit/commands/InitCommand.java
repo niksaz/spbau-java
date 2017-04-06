@@ -25,6 +25,7 @@ class InitCommand {
         if (!directory.isAbsolute()) {
             throw new MyGitIllegalArgumentException("path parameter should be an absolute");
         }
-        InternalStateAccessor.init(directory);
+        final InternalStateAccessor accessor = InternalStateAccessor.init(directory);
+        accessor.getLogger().trace("InitCommand -- completed");
     }
 }

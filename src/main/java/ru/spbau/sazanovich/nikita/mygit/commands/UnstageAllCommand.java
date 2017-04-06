@@ -16,6 +16,8 @@ class UnstageAllCommand extends Command {
     }
 
     void perform() throws IOException, MyGitStateException {
+        internalStateAccessor.getLogger().trace("UnstageAllCommand -- started");
         internalStateAccessor.writeIndexPaths(new HashSet<>());
+        internalStateAccessor.getLogger().trace("UnstageAllCommand -- completed");
     }
 }

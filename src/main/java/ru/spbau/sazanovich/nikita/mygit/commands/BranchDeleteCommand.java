@@ -22,6 +22,7 @@ class BranchDeleteCommand extends Command {
     }
 
     void perform() throws MyGitStateException, IOException, MyGitIllegalArgumentException {
+        internalStateAccessor.getLogger().trace("BranchDeleteCommand -- started");
         final HeadStatus headStatus = new HeadStatusCommand(internalStateAccessor).perform();
         if (headStatus.getType().equals(Branch.TYPE) && headStatus.getName().equals(branchName)) {
             throw new MyGitIllegalArgumentException(
@@ -33,5 +34,6 @@ class BranchDeleteCommand extends Command {
             throw new MyGitIllegalArgumentException("'" + branchName + "' branch is missing");
         }
         internalStateAccessor.deleteBranch(branchName);
+        internalStateAccessor.getLogger().trace("BranchDeleteCommand -- completed");
     }
 }

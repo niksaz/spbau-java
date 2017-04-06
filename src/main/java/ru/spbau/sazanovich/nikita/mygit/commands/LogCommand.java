@@ -22,6 +22,7 @@ class LogCommand extends Command {
 
     @NotNull
     List<CommitLog> perform() throws MyGitStateException, IOException {
+        internalStateAccessor.getLogger().trace("LogCommand -- started");
         final Commit headCommit = internalStateAccessor.getHeadCommit();
         final TreeSet<Commit> commitTree = new TreeSet<>();
         traverseCommitsTree(headCommit, commitTree);
@@ -33,6 +34,7 @@ class LogCommand extends Command {
             logsHistory.add(log);
         }
         Collections.reverse(logsHistory);
+        internalStateAccessor.getLogger().trace("LogCommand -- completed");
         return logsHistory;
     }
 

@@ -31,6 +31,7 @@ class MergeCommand extends Command {
 
     void perform()
             throws MyGitStateException, IOException, MyGitMissingPrerequisitesException, MyGitIllegalArgumentException {
+        internalStateAccessor.getLogger().trace("MergeCommand -- started");
         final HeadStatus headStatus = internalStateAccessor.getHeadStatus();
         if (headStatus.getName().equals(Commit.TYPE)) {
             throw new MyGitMissingPrerequisitesException("could not merge while you are in detached HEAD state");
@@ -58,6 +59,7 @@ class MergeCommand extends Command {
         internalStateAccessor.writeBranch(baseBranch, mergeCommitHash);
 
         new CheckoutCommand(baseBranch, internalStateAccessor).perform();
+        internalStateAccessor.getLogger().trace("MergeCommand -- completed");
     }
 
     @NotNull

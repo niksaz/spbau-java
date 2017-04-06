@@ -20,6 +20,7 @@ class CleanCommand extends Command {
     }
 
     void perform() throws MyGitStateException, IOException {
+        internalStateAccessor.getLogger().trace("CleanCommand -- started");
         final List<FileDifference> differences = new StatusCommand(internalStateAccessor).perform();
         final List<FileDifference> untrackedDiffs =
                 FileDifferenceStageStatus.filterBy(differences, FileDifferenceStageStatus.UNTRACKED);
@@ -27,5 +28,6 @@ class CleanCommand extends Command {
             final Path file = internalStateAccessor.getMyGitDirectory().resolve(diff.getPath());
             FileSystem.deleteFile(file);
         }
+        internalStateAccessor.getLogger().trace("CleanCommand -- completed");
     }
 }

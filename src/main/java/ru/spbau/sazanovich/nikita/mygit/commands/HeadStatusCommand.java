@@ -16,6 +16,9 @@ class HeadStatusCommand extends Command {
     }
 
     HeadStatus perform() throws MyGitStateException, IOException {
-        return internalStateAccessor.getHeadStatus();
+        internalStateAccessor.getLogger().trace("HeadStatusCommand -- started");
+        final HeadStatus status = internalStateAccessor.getHeadStatus();
+        internalStateAccessor.getLogger().trace("HeadStatusCommand -- completed");
+        return status;
     }
 }

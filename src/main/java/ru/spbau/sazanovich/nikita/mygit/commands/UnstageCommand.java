@@ -22,6 +22,7 @@ class UnstageCommand extends Command {
     }
 
     void perform() throws MyGitIllegalArgumentException, IOException, MyGitStateException {
+        internalStateAccessor.getLogger().trace("UnstageCommand -- started");
         final Path path = internalStateAccessor.convertStringToPathRelativeToMyGitDirectory(stringPath);
         if (path == null) {
             return;
@@ -31,5 +32,6 @@ class UnstageCommand extends Command {
             indexedPaths.remove(path);
         }
         internalStateAccessor.writeIndexPaths(indexedPaths);
+        internalStateAccessor.getLogger().trace("UnstageCommand -- completed");
     }
 }
