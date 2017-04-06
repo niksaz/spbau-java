@@ -31,7 +31,7 @@ class CheckoutCommand extends Command {
 
     void perform()
             throws MyGitStateException, MyGitMissingPrerequisitesException, MyGitIllegalArgumentException, IOException {
-        internalStateAccessor.getLogger().trace("CheckoutCommand -- started");
+        internalStateAccessor.getLogger().trace("CheckoutCommand -- started with revision=" + revisionName);
         if (!internalStateAccessor.readIndexPaths().isEmpty()) {
             throw new MyGitMissingPrerequisitesException("staging area should be empty before a checkout operation");
         }

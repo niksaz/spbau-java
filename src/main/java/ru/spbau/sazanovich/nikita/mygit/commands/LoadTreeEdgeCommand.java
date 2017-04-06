@@ -29,7 +29,8 @@ class LoadTreeEdgeCommand extends Command {
     }
 
     void perform() throws IOException, MyGitStateException {
-        internalStateAccessor.getLogger().trace("LoadTreeEdgeCommand -- started");
+        internalStateAccessor.getLogger()
+                .trace("LoadTreeEdgeCommand -- started with edge=" + edge + " and path=" + path);
         if (edge.isDirectory()) {
             if (Files.exists(path) && !Files.isDirectory(path)) {
                 FileSystem.deleteFile(path);

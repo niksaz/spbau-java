@@ -22,7 +22,7 @@ class StageCommand extends Command {
     }
 
     void perform() throws MyGitIllegalArgumentException, IOException, MyGitStateException {
-        internalStateAccessor.getLogger().trace("StageCommand -- started");
+        internalStateAccessor.getLogger().trace("StageCommand -- started with path=" + stringPath);
         final Path path = internalStateAccessor.convertStringToPathRelativeToMyGitDirectory(stringPath);
         if (path == null) {
             return;

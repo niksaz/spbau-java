@@ -24,7 +24,7 @@ class ResetCommand extends Command {
     }
 
     void perform() throws MyGitIllegalArgumentException, MyGitStateException, IOException {
-        internalStateAccessor.getLogger().trace("ResetCommand -- started");
+        internalStateAccessor.getLogger().trace("ResetCommand -- started with path=" + stringPath);
         final Path path = internalStateAccessor.convertStringToPathRelativeToMyGitDirectory(stringPath);
         if (path == null) {
             return;

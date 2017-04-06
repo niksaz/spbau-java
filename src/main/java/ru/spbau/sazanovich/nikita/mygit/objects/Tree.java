@@ -70,6 +70,21 @@ public class Tree implements Serializable {
         }
 
         /**
+         * Converts to string. Includes all fields.
+         *
+         * @return string representation of the edge
+         */
+        @Override
+        public String toString() {
+            return "TreeEdge{" +
+                    "hash='" + hash + '\'' +
+                    ", name='" + name + '\'' +
+                    ", type='" + type + '\'' +
+                    ", dateCreated=" + dateCreated +
+                    '}';
+        }
+
+        /**
          * Checks whether the file is directory.
          *
          * @return {@code true} if it is directory; {@code false} otherwise

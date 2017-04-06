@@ -21,7 +21,7 @@ class BranchExistsCommand extends Command {
     }
 
     boolean perform() throws MyGitStateException, IOException {
-        internalStateAccessor.getLogger().trace("BranchExistsCommand -- started");
+        internalStateAccessor.getLogger().trace("BranchExistsCommand -- started with name=" + branchName);
         final List<Branch> branches = new ListBranchesCommand(internalStateAccessor).perform();
         final boolean exists = branches.contains(new Branch(branchName));
         internalStateAccessor.getLogger().trace("BranchExistsCommand -- completed");

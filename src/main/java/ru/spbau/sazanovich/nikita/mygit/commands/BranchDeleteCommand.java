@@ -22,7 +22,7 @@ class BranchDeleteCommand extends Command {
     }
 
     void perform() throws MyGitStateException, IOException, MyGitIllegalArgumentException {
-        internalStateAccessor.getLogger().trace("BranchDeleteCommand -- started");
+        internalStateAccessor.getLogger().trace("BranchDeleteCommand -- started with name=" + branchName);
         final HeadStatus headStatus = new HeadStatusCommand(internalStateAccessor).perform();
         if (headStatus.getType().equals(Branch.TYPE) && headStatus.getName().equals(branchName)) {
             throw new MyGitIllegalArgumentException(

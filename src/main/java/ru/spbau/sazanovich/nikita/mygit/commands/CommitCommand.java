@@ -32,7 +32,7 @@ class CommitCommand extends Command {
     }
 
     void perform() throws MyGitStateException, IOException {
-        internalStateAccessor.getLogger().trace("CommitCommand -- started");
+        internalStateAccessor.getLogger().trace("CommitCommand -- started with message=" + message);
         final Tree tree = internalStateAccessor.getHeadTree();
         final Set<Path> indexedPaths = internalStateAccessor.readIndexPaths();
         final String rebuiltTreeHash = rebuildTree(tree, internalStateAccessor.getMyGitDirectory(), indexedPaths);
