@@ -1,12 +1,12 @@
 package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.objects.FileDifference;
 import ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceStageStatus;
 import ru.spbau.sazanovich.nikita.mygit.utils.FileSystem;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -19,7 +19,7 @@ class CleanCommand extends Command {
         super(internalStateAccessor);
     }
 
-    void perform() throws MyGitStateException, IOException {
+    void perform() throws MyGitStateException, MyGitIOException {
         internalStateAccessor.getLogger().trace("CleanCommand -- started");
         final List<FileDifference> differences = new StatusCommand(internalStateAccessor).perform();
         final List<FileDifference> untrackedDiffs =

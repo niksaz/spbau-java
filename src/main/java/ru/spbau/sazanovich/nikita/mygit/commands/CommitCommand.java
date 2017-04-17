@@ -2,12 +2,13 @@ package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
 import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
+import ru.spbau.sazanovich.nikita.mygit.utils.FileSystem;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -31,7 +32,7 @@ class CommitCommand extends Command {
         this.message = message;
     }
 
-    void perform() throws MyGitStateException, IOException {
+    void perform() throws MyGitStateException, MyGitIOException {
         internalStateAccessor.getLogger().trace("CommitCommand -- started with message=" + message);
         final Tree tree = internalStateAccessor.getHeadTree();
         final Set<Path> indexedPaths = internalStateAccessor.readIndexPaths();
@@ -46,9 +47,9 @@ class CommitCommand extends Command {
     }
 
     private String rebuildTree(@Nullable Tree tree, @NotNull Path prefixPath, @NotNull Set<Path> indexedPaths)
-            throws MyGitStateException, IOException {
+            throws MyGitStateException, MyGitIOException {
         final List<Path> filePaths =
-                Files
+                FileSystem
                         .list(prefixPath)
                         .filter(path -> !internalStateAccessor.isAbsolutePathRepresentsInternal(path))
                         .collect(Collectors.toList());
@@ -81,7 +82,7 @@ class CommitCommand extends Command {
     @Nullable
     private Tree.TreeEdge rebuildTreeEdge(@NotNull Tree.TreeEdge child, @NotNull Path path,
                                           @NotNull Set<Path> indexedPaths)
-            throws MyGitStateException, IOException {
+            throws MyGitStateException, MyGitIOException {
         final boolean isPresentInFilesystem = Files.exists(path);
         switch (child.getType()) {
             case Tree.TYPE:
@@ -109,7 +110,7 @@ class CommitCommand extends Command {
                         }
                     } else {
                         final byte[] committedContent = childBlob.getContent();
-                        final byte[] currentContent = Files.readAllBytes(path);
+                        final byte[] currentContent = FileSystem.readAllBytes(path);
                         if (Arrays.equals(committedContent, currentContent)) {
                             return child;
                         } else {
@@ -129,7 +130,7 @@ class CommitCommand extends Command {
     @NotNull
     private Tree.TreeEdge updateBlobIfIndexed(@NotNull Tree.TreeEdge object, @NotNull Path path,
                                               @NotNull Set<Path> indexedPaths)
-            throws MyGitStateException, IOException {
+            throws MyGitStateException, MyGitIOException {
         if (indexedPaths.contains(internalStateAccessor.relativizeWithMyGitDirectory(path))) {
             final String blobHash = internalStateAccessor.createBlobFromPath(path);
             return new Tree.TreeEdge(blobHash, object.getName(), Blob.TYPE);

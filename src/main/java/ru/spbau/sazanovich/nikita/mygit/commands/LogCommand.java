@@ -1,11 +1,11 @@
 package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.CommitLog;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,7 +21,7 @@ class LogCommand extends Command {
     }
 
     @NotNull
-    List<CommitLog> perform() throws MyGitStateException, IOException {
+    List<CommitLog> perform() throws MyGitStateException, MyGitIOException {
         internalStateAccessor.getLogger().trace("LogCommand -- started");
         final Commit headCommit = internalStateAccessor.getHeadCommit();
         final TreeSet<Commit> commitTree = new TreeSet<>();
@@ -39,7 +39,7 @@ class LogCommand extends Command {
     }
 
     private void traverseCommitsTree(@NotNull Commit commit, @NotNull TreeSet<Commit> commitTree)
-            throws MyGitStateException, IOException {
+            throws MyGitStateException, MyGitIOException {
         if (!commitTree.contains(commit)) {
             commitTree.add(commit);
             for (String parentHash : commit.getParentsHashes()) {

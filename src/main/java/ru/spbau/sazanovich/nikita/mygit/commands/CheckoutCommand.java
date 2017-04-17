@@ -1,14 +1,17 @@
 package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitMissingPrerequisitesException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
-import ru.spbau.sazanovich.nikita.mygit.objects.*;
+import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
+import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
+import ru.spbau.sazanovich.nikita.mygit.objects.HeadStatus;
+import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
 import ru.spbau.sazanovich.nikita.mygit.utils.FileSystem;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,8 +32,8 @@ class CheckoutCommand extends Command {
         this.revisionName = revisionName;
     }
 
-    void perform()
-            throws MyGitStateException, MyGitMissingPrerequisitesException, MyGitIllegalArgumentException, IOException {
+    void perform() throws MyGitStateException, MyGitMissingPrerequisitesException,
+                          MyGitIllegalArgumentException, MyGitIOException {
         internalStateAccessor.getLogger().trace("CheckoutCommand -- started with revision=" + revisionName);
         if (!internalStateAccessor.readIndexPaths().isEmpty()) {
             throw new MyGitMissingPrerequisitesException("staging area should be empty before a checkout operation");
@@ -58,14 +61,15 @@ class CheckoutCommand extends Command {
     }
 
     private void moveFromCommitToCommit(@NotNull Commit fromCommit, Commit toCommit)
-            throws MyGitStateException, IOException {
+            throws MyGitStateException, MyGitIOException {
         final Tree fromTree = internalStateAccessor.readTree(fromCommit.getTreeHash());
         final Tree toTree = internalStateAccessor.readTree(toCommit.getTreeHash());
         deleteFilesFromTree(fromTree, internalStateAccessor.getMyGitDirectory());
         loadFilesFromTree(toTree, internalStateAccessor.getMyGitDirectory());
     }
 
-    private void loadFilesFromTree(@NotNull Tree tree, @NotNull Path path) throws MyGitStateException, IOException {
+    private void loadFilesFromTree(@NotNull Tree tree, @NotNull Path path)
+            throws MyGitStateException, MyGitIOException {
         for (TreeEdge edge : tree.getChildren()) {
             final Path childPath = Paths.get(path.toString(), edge.getName());
             new LoadTreeEdgeCommand(edge, childPath, internalStateAccessor).perform();
@@ -76,7 +80,8 @@ class CheckoutCommand extends Command {
         }
     }
 
-    private void deleteFilesFromTree(@NotNull Tree tree, @NotNull Path path) throws MyGitStateException, IOException {
+    private void deleteFilesFromTree(@NotNull Tree tree, @NotNull Path path)
+            throws MyGitStateException, MyGitIOException {
         for (TreeEdge edge : tree.getChildren()) {
             final Path edgeFile = Paths.get(path.toString(), edge.getName());
             if (!Files.exists(edgeFile)) {
@@ -84,7 +89,7 @@ class CheckoutCommand extends Command {
             }
             if (edge.isDirectory() && Files.isDirectory(edgeFile)) {
                 deleteFilesFromTree(internalStateAccessor.readTree(edge.getHash()), edgeFile);
-                if (Files.list(edgeFile).count() == 0) {
+                if (FileSystem.list(edgeFile).count() == 0) {
                     FileSystem.deleteFile(edgeFile);
                 }
             }

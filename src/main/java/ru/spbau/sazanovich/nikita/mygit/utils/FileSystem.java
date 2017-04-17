@@ -2,6 +2,7 @@ package ru.spbau.sazanovich.nikita.mygit.utils;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
+import java.util.stream.Stream;
 
 /**
  * Class which contains utility functions to interact with the filesystem.
@@ -20,21 +22,25 @@ public final class FileSystem {
      * If it's a directory it will delete all internal files.
      *
      * @param path a file's path to remove
-     * @throws IOException if an I/O error occurs
+     * @throws MyGitIOException if an I/O error occurs
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static void deleteFile(@NotNull Path path) throws IOException {
+    public static void deleteFile(@NotNull Path path) throws MyGitIOException {
         if (!Files.exists(path)) {
             return;
         }
-        if (Files.isDirectory(path)) {
-            Files
-                    .walk(path)
-                    .sorted(Comparator.reverseOrder())
-                    .map(Path::toFile)
-                    .forEach(File::delete);
-        } else {
-            Files.delete(path);
+        try {
+            if (Files.isDirectory(path)) {
+                FileSystem
+                        .walk(path)
+                        .sorted(Comparator.reverseOrder())
+                        .map(Path::toFile)
+                        .forEach(File::delete);
+            } else {
+                Files.delete(path);
+            }
+        } catch (IOException e) {
+            throw new MyGitIOException("Could not delete file " + path, e);
         }
     }
 
@@ -66,7 +72,112 @@ public final class FileSystem {
      * @return {@code true} if the path contains name; {@code false} otherwise
      */
     public static boolean pathContainsNameAsSubpath(@Nullable Path path, @NotNull String name) {
-        return path != null && (path.endsWith(".mygit") || pathContainsNameAsSubpath(path.getParent(), name));
+        return path != null && (path.endsWith(name) || pathContainsNameAsSubpath(path.getParent(), name));
+    }
+
+    /**
+     * Creates a specified directory.
+     *
+     * @param directory directory's path to create
+     * @throws MyGitIOException if an I/O error occurs while creating the directory
+     */
+    public static void createDirectory(@NotNull Path directory) throws MyGitIOException {
+        try {
+            Files.createDirectory(directory);
+        } catch (IOException e) {
+            throw new MyGitIOException("Could not create directory " + directory, e);
+        }
+    }
+
+    /**
+     * Creates a specified file.
+     *
+     * @param file file's path to create
+     * @throws MyGitIOException if an I/O error occurs while creating the file
+     */
+    public static void createFile(@NotNull Path file) throws MyGitIOException {
+        try {
+            Files.createFile(file);
+        } catch (IOException e) {
+            throw new MyGitIOException("Could not create file " + file, e);
+        }
+    }
+
+    /**
+     * Reads all file's bytes.
+     *
+     * @param file file's path to read
+     * @return content of the file
+     * @throws MyGitIOException if an I/O error occurs while reading the file
+     */
+    @NotNull
+    public static byte[] readAllBytes(@NotNull Path file) throws MyGitIOException {
+        try {
+            return Files.readAllBytes(file);
+        } catch (IOException e) {
+            throw new MyGitIOException("Could not read file " + file, e);
+        }
+    }
+
+    /**
+     * Reads all file's lines.
+     *
+     * @param file file's path to read
+     * @return content of the file
+     * @throws MyGitIOException if an I/O error occurs while reading the file
+     */
+    @NotNull
+    public static Stream<String> lines(@NotNull Path file) throws MyGitIOException {
+        try {
+            return Files.lines(file);
+        } catch (IOException e) {
+            throw new MyGitIOException("Could not get file's lines " + file, e);
+        }
+    }
+
+    /**
+     * Traverses directory.
+     *
+     * @param directory directory's path to traverse
+     * @return inner paths
+     * @throws MyGitIOException if an I/O error occurs while traversing the directory
+     */
+    @NotNull
+    public static Stream<Path> walk(@NotNull Path directory) throws MyGitIOException {
+        try {
+            return Files.walk(directory);
+        } catch (IOException e) {
+            throw new MyGitIOException("Could not traverse directory " + directory, e);
+        }
+    }
+
+    /**
+     * Lists directory's content.
+     *
+     * @param directory directory's path to list
+     * @return content
+     * @throws MyGitIOException if an I/O error occurs while listing the directory
+     */
+    @NotNull
+    public static Stream<Path> list(@NotNull Path directory) throws MyGitIOException {
+        try {
+            return Files.list(directory);
+        } catch (IOException e) {
+            throw new MyGitIOException("Could not list directory " + directory, e);
+        }
+    }
+
+    /**
+     * @param path path to write to
+     * @param content byte to write to path
+     * @throws MyGitIOException if an I/O error occurs while writing to the file
+     */
+    public static void write(@NotNull Path path, @NotNull byte[] content) throws MyGitIOException {
+        try {
+            Files.write(path, content);
+        } catch (IOException e) {
+            throw new MyGitIOException("Could not list write to " + path, e);
+        }
     }
 
     private FileSystem() {}

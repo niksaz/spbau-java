@@ -3,7 +3,6 @@ package ru.spbau.sazanovich.nikita.console;
 import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.MyGitException;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -53,9 +52,8 @@ class CommandLineArgsHandler {
      * @param args command line arguments
      * @throws CommandNotSupportedException if the command does not exist in MyGit library
      * @throws MyGitException               if an exception occurred in MyGit system
-     * @throws IOException                  if an error occurs during working with a filesystem
      */
-    void handle(@NotNull String[] args) throws CommandNotSupportedException, MyGitException, IOException {
+    void handle(@NotNull String[] args) throws CommandNotSupportedException, MyGitException {
         final CommandExecutor commandExecutor = createCommandExecutor();
         if (args.length == 0) {
             throw new CommandNotSupportedException("Add at least one argument.");

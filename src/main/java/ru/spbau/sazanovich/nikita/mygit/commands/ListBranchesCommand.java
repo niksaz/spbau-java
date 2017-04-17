@@ -1,10 +1,10 @@
 package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -17,7 +17,7 @@ class ListBranchesCommand extends Command {
     }
 
     @NotNull
-    List<Branch> perform() throws MyGitStateException, IOException {
+    List<Branch> perform() throws MyGitStateException, MyGitIOException {
         internalStateAccessor.getLogger().trace("ListBranchesCommand -- started");
         final List<Branch> branches = internalStateAccessor.listBranches();
         internalStateAccessor.getLogger().trace("ListBranchesCommand -- completed");

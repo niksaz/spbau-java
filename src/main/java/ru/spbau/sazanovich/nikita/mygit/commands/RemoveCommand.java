@@ -1,11 +1,11 @@
 package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.utils.FileSystem;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -21,7 +21,7 @@ class RemoveCommand extends Command {
         this.stringPath = stringPath;
     }
 
-    void perform() throws MyGitIllegalArgumentException, IOException, MyGitStateException {
+    void perform() throws MyGitIllegalArgumentException, MyGitIOException, MyGitStateException {
         internalStateAccessor.getLogger().trace("RemoveCommand -- started with path=" + stringPath);
         final Path path = internalStateAccessor.convertStringToPathRelativeToMyGitDirectory(stringPath);
         if (path == null) {

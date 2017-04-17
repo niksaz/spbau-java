@@ -2,13 +2,13 @@ package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
 import ru.spbau.sazanovich.nikita.mygit.objects.FileDifference;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
+import ru.spbau.sazanovich.nikita.mygit.utils.FileSystem;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,12 +18,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceStageStatus.NOT_STAGED_FOR_COMMIT;
-import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceStageStatus.TO_BE_COMMITTED;
-import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceStageStatus.UNTRACKED;
-import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceType.ADDITION;
-import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceType.MODIFICATION;
-import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceType.REMOVAL;
+import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceStageStatus.*;
+import static ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceType.*;
 
 /**
  * Command class which gets differences between current MyGit repository's HEAD state and the filesystem state.
@@ -35,7 +31,7 @@ class StatusCommand extends Command {
     }
 
     @NotNull
-    List<FileDifference> perform() throws MyGitStateException, IOException {
+    List<FileDifference> perform() throws MyGitStateException, MyGitIOException {
         internalStateAccessor.getLogger().trace("StatusCommand -- started");
         final Tree tree = internalStateAccessor.getHeadTree();
         final Set<Path> indexedPaths = internalStateAccessor.readIndexPaths();
@@ -50,10 +46,11 @@ class StatusCommand extends Command {
      * The list contains relative paths.
      */
     @NotNull
-    private List<FileDifference> getTreeDifferenceList(@Nullable Tree tree, @NotNull Path prefixPath, @NotNull Set<Path> indexedPaths)
-            throws MyGitStateException, IOException {
+    private List<FileDifference> getTreeDifferenceList(@Nullable Tree tree, @NotNull Path prefixPath,
+                                                       @NotNull Set<Path> indexedPaths)
+            throws MyGitStateException, MyGitIOException {
         final List<Path> filePaths =
-                Files
+                FileSystem
                         .list(prefixPath)
                         .filter(path -> !internalStateAccessor.isAbsolutePathRepresentsInternal(path))
                         .collect(Collectors.toList());
@@ -83,7 +80,7 @@ class StatusCommand extends Command {
     private void addChildDifferenceToList(@NotNull Tree.TreeEdge child, @NotNull Path path,
                                           @NotNull Set<Path> indexedPaths,
                                           @NotNull List<FileDifference> differences)
-            throws MyGitStateException, IOException {
+            throws MyGitStateException, MyGitIOException {
         final Path relativePath = internalStateAccessor.relativizeWithMyGitDirectory(path);
         final boolean isPresentInFilesystem = Files.exists(path);
         if (child.getType().equals(Tree.TYPE)) {
@@ -127,7 +124,7 @@ class StatusCommand extends Command {
                     }
                 } else {
                     final byte[] committedContent = childBlob.getContent();
-                    final byte[] currentContent = Files.readAllBytes(path);
+                    final byte[] currentContent = FileSystem.readAllBytes(path);
                     if (!Arrays.equals(committedContent, currentContent)) {
                         if (indexedPaths.contains(relativePath)) {
                             differences.add(new FileDifference(relativePath, MODIFICATION, TO_BE_COMMITTED));

@@ -1,11 +1,11 @@
 package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -23,7 +23,7 @@ class ResetCommand extends Command {
         this.stringPath = stringPath;
     }
 
-    void perform() throws MyGitIllegalArgumentException, MyGitStateException, IOException {
+    void perform() throws MyGitIllegalArgumentException, MyGitStateException, MyGitIOException {
         internalStateAccessor.getLogger().trace("ResetCommand -- started with path=" + stringPath);
         final Path path = internalStateAccessor.convertStringToPathRelativeToMyGitDirectory(stringPath);
         if (path == null) {

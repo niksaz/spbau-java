@@ -1,10 +1,9 @@
 package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
-
-import java.io.IOException;
 
 /**
  * Command class which creates a new branch with the given name.
@@ -19,7 +18,7 @@ class BranchCreateCommand extends Command {
         this.branchName = branchName;
     }
 
-    void perform() throws MyGitStateException, IOException, MyGitIllegalArgumentException {
+    void perform() throws MyGitStateException, MyGitIOException, MyGitIllegalArgumentException {
         internalStateAccessor.getLogger().trace("BranchCreateCommand -- started with name=" + branchName);
         boolean branchExists = new BranchExistsCommand(branchName, internalStateAccessor).perform();
         if (branchExists) {

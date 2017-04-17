@@ -2,10 +2,10 @@ package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.MyGitAlreadyInitializedException;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 
-import java.io.IOException;
 import java.nio.file.Path;
 
 /**
@@ -20,8 +20,8 @@ class InitCommand {
         this.directory = directory;
     }
 
-    void perform()
-            throws MyGitIllegalArgumentException, MyGitAlreadyInitializedException, MyGitStateException, IOException {
+    void perform() throws MyGitIllegalArgumentException, MyGitAlreadyInitializedException,
+                          MyGitStateException, MyGitIOException {
         if (!directory.isAbsolute()) {
             throw new MyGitIllegalArgumentException("path parameter should be an absolute");
         }

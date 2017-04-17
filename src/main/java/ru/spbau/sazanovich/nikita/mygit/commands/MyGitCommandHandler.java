@@ -1,17 +1,13 @@
 package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
-import ru.spbau.sazanovich.nikita.mygit.MyGitAlreadyInitializedException;
-import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
-import ru.spbau.sazanovich.nikita.mygit.MyGitMissingPrerequisitesException;
-import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
+import ru.spbau.sazanovich.nikita.mygit.*;
 import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 import ru.spbau.sazanovich.nikita.mygit.objects.CommitLog;
 import ru.spbau.sazanovich.nikita.mygit.objects.FileDifference;
 import ru.spbau.sazanovich.nikita.mygit.objects.HeadStatus;
 import ru.spbau.sazanovich.nikita.mygit.utils.SHA1Hasher;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -31,10 +27,10 @@ public class MyGitCommandHandler {
      * @throws MyGitIllegalArgumentException    if the directory path is not absolute
      * @throws MyGitAlreadyInitializedException if the directory already contains .mygit file
      * @throws MyGitStateException              if an internal error occurs during operations
-     * @throws IOException                      if an error occurs during working with a filesystem
+     * @throws MyGitIOException                 if an error occurs while working with a filesystem
      */
-    public static void init(@NotNull Path directory)
-            throws MyGitIllegalArgumentException, MyGitAlreadyInitializedException, MyGitStateException, IOException {
+    public static void init(@NotNull Path directory) throws
+            MyGitIllegalArgumentException, MyGitAlreadyInitializedException, MyGitStateException, MyGitIOException {
         new InitCommand(directory).perform();
     }
 
@@ -54,10 +50,10 @@ public class MyGitCommandHandler {
      *
      * @return list of differences between MyGit repository's HEAD state and the filesystem state
      * @throws MyGitStateException if an internal error occurs during operations
-     * @throws IOException         if an error occurs during working with a filesystem
+     * @throws MyGitIOException    if an error occurs while working with a filesystem
      */
     @NotNull
-    public List<FileDifference> getHeadDifferences() throws MyGitStateException, IOException {
+    public List<FileDifference> getHeadDifferences() throws MyGitStateException, MyGitIOException {
         return new StatusCommand(internalStateAccessor).perform();
     }
 
@@ -67,10 +63,10 @@ public class MyGitCommandHandler {
      * @param path a path to add to the index
      * @throws MyGitIllegalArgumentException if the path is incorrect or located outside MyGit repository
      * @throws MyGitStateException           if an internal error occurs during operations
-     * @throws IOException                   if an error occurs during working with a filesystem
+     * @throws MyGitIOException              if an error occurs while working with a filesystem
      */
     public void stagePath(@NotNull String path)
-            throws MyGitIllegalArgumentException, MyGitStateException, IOException {
+            throws MyGitIllegalArgumentException, MyGitStateException, MyGitIOException {
         new StageCommand(path, internalStateAccessor).perform();
     }
 
@@ -80,10 +76,10 @@ public class MyGitCommandHandler {
      * @param path a path to remove from the index
      * @throws MyGitIllegalArgumentException if the path is incorrect or located outside MyGit repository
      * @throws MyGitStateException           if an internal error occurs during operations
-     * @throws IOException                   if an error occurs during working with a filesystem
+     * @throws MyGitIOException              if an error occurs while working with a filesystem
      */
     public void unstagePath(@NotNull String path)
-            throws MyGitStateException, MyGitIllegalArgumentException, IOException {
+            throws MyGitStateException, MyGitIllegalArgumentException, MyGitIOException {
         new UnstageCommand(path, internalStateAccessor).perform();
     }
 
@@ -91,9 +87,9 @@ public class MyGitCommandHandler {
      * Removes all paths from the current index.
      *
      * @throws MyGitStateException if an internal error occurs during operations
-     * @throws IOException         if an error occurs during working with a filesystem
+     * @throws MyGitIOException    if an error occurs while working with a filesystem
      */
-    public void unstageAllPaths() throws MyGitStateException, IOException {
+    public void unstageAllPaths() throws MyGitStateException, MyGitIOException {
         new UnstageAllCommand(internalStateAccessor).perform();
     }
 
@@ -103,9 +99,10 @@ public class MyGitCommandHandler {
      * @param path a file's path to reset
      * @throws MyGitIllegalArgumentException if the file is not present either in the filesystem or MyGit's HEAD
      * @throws MyGitStateException           if an internal error occurs during operations
-     * @throws IOException                   if an error occurs during working with a filesystem
+     * @throws MyGitIOException              if an error occurs while working with a filesystem
      */
-    public void resetPath(@NotNull String path) throws MyGitIllegalArgumentException, MyGitStateException, IOException {
+    public void resetPath(@NotNull String path)
+            throws MyGitIllegalArgumentException, MyGitStateException, MyGitIOException {
         new ResetCommand(path, internalStateAccessor).perform();
     }
 
@@ -115,9 +112,10 @@ public class MyGitCommandHandler {
      * @param path a file's path to remove
      * @throws MyGitIllegalArgumentException if the file is not present either in the filesystem or MyGit's HEAD
      * @throws MyGitStateException           if an internal error occurs during operations
-     * @throws IOException                   if an error occurs during working with a filesystem
+     * @throws MyGitIOException              if an error occurs while working with a filesystem
      */
-    public void removePath(@NotNull String path) throws MyGitIllegalArgumentException, IOException, MyGitStateException {
+    public void removePath(@NotNull String path)
+            throws MyGitIllegalArgumentException, MyGitIOException, MyGitStateException {
         new RemoveCommand(path, internalStateAccessor).perform();
     }
 
@@ -125,9 +123,9 @@ public class MyGitCommandHandler {
      * Removes all files which are untracked by MyGit.
      *
      * @throws MyGitStateException if an internal error occurs during operations
-     * @throws IOException         if an error occurs during working with a filesystem
+     * @throws MyGitIOException    if an error occurs while working with a filesystem
      */
-    public void clean() throws MyGitStateException, IOException {
+    public void clean() throws MyGitStateException, MyGitIOException {
         new CleanCommand(internalStateAccessor).perform();
     }
 
@@ -136,10 +134,10 @@ public class MyGitCommandHandler {
      *
      * @return a head state
      * @throws MyGitStateException if an internal error occurs during operations
-     * @throws IOException         if an error occurs during working with a filesystem
+     * @throws MyGitIOException    if an error occurs while working with a filesystem
      */
     @NotNull
-    public HeadStatus getHeadStatus() throws MyGitStateException, IOException {
+    public HeadStatus getHeadStatus() throws MyGitStateException, MyGitIOException {
         return new HeadStatusCommand(internalStateAccessor).perform();
     }
 
@@ -148,10 +146,10 @@ public class MyGitCommandHandler {
      *
      * @return list of commit's logs
      * @throws MyGitStateException if an internal error occurs during operations
-     * @throws IOException         if an error occurs during working with a filesystem
+     * @throws MyGitIOException    if an error occurs while working with a filesystem
      */
     @NotNull
-    public List<CommitLog> getCommitsLogsHistory() throws MyGitStateException, IOException {
+    public List<CommitLog> getCommitsLogsHistory() throws MyGitStateException, MyGitIOException {
         return new LogCommand(internalStateAccessor).perform();
     }
 
@@ -164,10 +162,10 @@ public class MyGitCommandHandler {
      * @throws MyGitMissingPrerequisitesException if the index is not empty
      * @throws MyGitIllegalArgumentException      if the revision does not exist
      * @throws MyGitStateException                if an internal error occurs during operations
-     * @throws IOException                        if an error occurs during working with a filesystem
+     * @throws MyGitIOException                   if an error occurs while working with a filesystem
      */
-    public void checkout(@NotNull String revisionName)
-            throws MyGitStateException, MyGitMissingPrerequisitesException, MyGitIllegalArgumentException, IOException {
+    public void checkout(@NotNull String revisionName) throws
+            MyGitStateException, MyGitMissingPrerequisitesException, MyGitIllegalArgumentException, MyGitIOException {
         new CheckoutCommand(revisionName, internalStateAccessor).perform();
     }
 
@@ -181,10 +179,10 @@ public class MyGitCommandHandler {
      * @throws MyGitMissingPrerequisitesException if the index is not empty or currently in a detached HEAD state
      * @throws MyGitIllegalArgumentException      if there is no such branch or a user tries to merge branch with itself
      * @throws MyGitStateException                if an internal error occurs during operations
-     * @throws IOException                        if an error occurs during working with a filesystem
+     * @throws MyGitIOException                   if an error occurs while working with a filesystem
      */
-    public void mergeHeadWithBranch(@NotNull String branch)
-            throws MyGitMissingPrerequisitesException, MyGitStateException, IOException, MyGitIllegalArgumentException {
+    public void mergeHeadWithBranch(@NotNull String branch) throws
+            MyGitMissingPrerequisitesException, MyGitStateException, MyGitIOException, MyGitIllegalArgumentException {
         new MergeCommand(branch, internalStateAccessor).perform();
     }
 
@@ -193,10 +191,10 @@ public class MyGitCommandHandler {
      *
      * @return list of branches
      * @throws MyGitStateException if an internal error occurs during operations
-     * @throws IOException         if an error occurs during working with a filesystem
+     * @throws MyGitIOException    if an error occurs while working with a filesystem
      */
     @NotNull
-    public List<Branch> listBranches() throws MyGitStateException, IOException {
+    public List<Branch> listBranches() throws MyGitStateException, MyGitIOException {
         return new ListBranchesCommand(internalStateAccessor).perform();
     }
 
@@ -206,10 +204,10 @@ public class MyGitCommandHandler {
      * @param branchName branch name for a new branch
      * @throws MyGitIllegalArgumentException if the branch with the name already exists
      * @throws MyGitStateException           if an internal error occurs during operations
-     * @throws IOException                   if an error occurs during working with a filesystem
+     * @throws MyGitIOException              if an error occurs while working with a filesystem
      */
     public void createBranch(@NotNull String branchName)
-            throws MyGitStateException, IOException, MyGitIllegalArgumentException {
+            throws MyGitStateException, MyGitIOException, MyGitIllegalArgumentException {
         new BranchCreateCommand(branchName, internalStateAccessor).perform();
     }
 
@@ -220,10 +218,10 @@ public class MyGitCommandHandler {
      * @throws MyGitIllegalArgumentException if there is no a branch with this name or
      *                                       this branch is currently checked out
      * @throws MyGitStateException           if an internal error occurs during operations
-     * @throws IOException                   if an error occurs during working with a filesystem
+     * @throws MyGitIOException              if an error occurs while working with a filesystem
      */
     public void deleteBranch(@NotNull String branchName)
-            throws MyGitIllegalArgumentException, IOException, MyGitStateException {
+            throws MyGitIllegalArgumentException, MyGitIOException, MyGitStateException {
         new BranchDeleteCommand(branchName, internalStateAccessor).perform();
     }
 
@@ -232,9 +230,9 @@ public class MyGitCommandHandler {
      *
      * @param message commit's message
      * @throws MyGitStateException if an internal error occurs during operations
-     * @throws IOException         if an error occurs during working with a filesystem
+     * @throws MyGitIOException    if an error occurs while working with a filesystem
      */
-    public void commitWithMessage(@NotNull String message) throws MyGitStateException, IOException {
+    public void commitWithMessage(@NotNull String message) throws MyGitStateException, MyGitIOException {
         new CommitCommand(message, internalStateAccessor).perform();
     }
 }

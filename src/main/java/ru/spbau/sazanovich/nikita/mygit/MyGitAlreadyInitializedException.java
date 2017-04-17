@@ -1,7 +1,7 @@
 package ru.spbau.sazanovich.nikita.mygit;
 
 /**
- * Exception which is occurred during mygit work with OS filesystem.
+ * Exception which occurs when trying to initialize MyGit in a directory which already contains MyGit repository.
  */
 public class MyGitAlreadyInitializedException extends MyGitException {
 

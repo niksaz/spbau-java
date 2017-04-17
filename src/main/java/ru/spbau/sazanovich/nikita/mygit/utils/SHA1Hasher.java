@@ -2,6 +2,7 @@ package ru.spbau.sazanovich.nikita.mygit.utils;
 
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
 
 import javax.xml.bind.DatatypeConverter;

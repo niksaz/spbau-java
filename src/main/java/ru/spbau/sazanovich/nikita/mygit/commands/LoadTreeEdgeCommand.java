@@ -1,12 +1,12 @@
 package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree.TreeEdge;
 import ru.spbau.sazanovich.nikita.mygit.utils.FileSystem;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -28,7 +28,7 @@ class LoadTreeEdgeCommand extends Command {
         this.path = path;
     }
 
-    void perform() throws IOException, MyGitStateException {
+    void perform() throws MyGitIOException, MyGitStateException {
         internalStateAccessor.getLogger()
                 .trace("LoadTreeEdgeCommand -- started with edge=" + edge + " and path=" + path);
         if (edge.isDirectory()) {
@@ -36,17 +36,17 @@ class LoadTreeEdgeCommand extends Command {
                 FileSystem.deleteFile(path);
             }
             if (!Files.exists(path)) {
-                Files.createDirectory(path);
+                FileSystem.createDirectory(path);
             }
         } else {
             if (Files.exists(path) && Files.isDirectory(path)) {
                 FileSystem.deleteFile(path);
             }
             if (!Files.exists(path)) {
-                Files.createFile(path);
+                FileSystem.createFile(path);
             }
             final Blob childBlob = internalStateAccessor.readBlob(edge.getHash());
-            Files.write(path, childBlob.getContent());
+            FileSystem.write(path, childBlob.getContent());
         }
         internalStateAccessor.getLogger().trace("LoadTreeEdgeCommand -- completed");
     }

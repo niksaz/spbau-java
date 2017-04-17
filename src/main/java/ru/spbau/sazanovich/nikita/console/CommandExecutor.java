@@ -1,14 +1,10 @@
 package ru.spbau.sazanovich.nikita.console;
 
 import org.jetbrains.annotations.NotNull;
-import ru.spbau.sazanovich.nikita.mygit.MyGitAlreadyInitializedException;
-import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
-import ru.spbau.sazanovich.nikita.mygit.MyGitMissingPrerequisitesException;
-import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
+import ru.spbau.sazanovich.nikita.mygit.*;
 import ru.spbau.sazanovich.nikita.mygit.commands.MyGitCommandHandler;
 import ru.spbau.sazanovich.nikita.mygit.objects.*;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.List;
@@ -28,14 +24,14 @@ class CommandExecutor {
         this.printStream = printStream;
     }
 
-    void performInit()
-            throws MyGitIllegalArgumentException, MyGitAlreadyInitializedException, MyGitStateException, IOException {
+    void performInit() throws
+            MyGitIllegalArgumentException, MyGitAlreadyInitializedException, MyGitStateException, MyGitIOException {
         MyGitCommandHandler.init(currentDirectory);
         printStream.println("Successfully initialized mygit repository.");
     }
 
     void performStage(@NotNull List<String> paths)
-            throws MyGitStateException, MyGitIllegalArgumentException, IOException {
+            throws MyGitStateException, MyGitIllegalArgumentException, MyGitIOException {
         final MyGitCommandHandler handler = new MyGitCommandHandler(currentDirectory);
         for (String path : paths) {
             handler.stagePath(path);
@@ -43,7 +39,7 @@ class CommandExecutor {
     }
 
     void performUnstage(@NotNull List<String> paths)
-            throws MyGitStateException, MyGitIllegalArgumentException, IOException {
+            throws MyGitStateException, MyGitIllegalArgumentException, MyGitIOException {
         final MyGitCommandHandler handler = new MyGitCommandHandler(currentDirectory);
         for (String path : paths) {
             handler.unstagePath(path);
@@ -51,13 +47,13 @@ class CommandExecutor {
     }
 
     void performUnstageAll()
-            throws MyGitStateException, MyGitIllegalArgumentException, IOException {
+            throws MyGitStateException, MyGitIllegalArgumentException, MyGitIOException {
         final MyGitCommandHandler handler = new MyGitCommandHandler(currentDirectory);
         handler.unstageAllPaths();
     }
 
     void performReset(@NotNull List<String> paths)
-            throws MyGitStateException, MyGitIllegalArgumentException, IOException {
+            throws MyGitStateException, MyGitIllegalArgumentException, MyGitIOException {
         final MyGitCommandHandler handler = new MyGitCommandHandler(currentDirectory);
         for (String path : paths) {
             handler.resetPath(path);
@@ -65,20 +61,20 @@ class CommandExecutor {
     }
 
     void performRemove(@NotNull List<String> paths)
-            throws MyGitStateException, MyGitIllegalArgumentException, IOException {
+            throws MyGitStateException, MyGitIllegalArgumentException, MyGitIOException {
         final MyGitCommandHandler handler = new MyGitCommandHandler(currentDirectory);
         for (String path : paths) {
             handler.removePath(path);
         }
     }
 
-    void performClean() throws MyGitStateException, MyGitIllegalArgumentException, IOException {
+    void performClean() throws MyGitStateException, MyGitIllegalArgumentException, MyGitIOException {
         final MyGitCommandHandler handler = new MyGitCommandHandler(currentDirectory);
         handler.clean();
     }
 
 
-    void performLog() throws MyGitStateException, MyGitIllegalArgumentException, IOException {
+    void performLog() throws MyGitStateException, MyGitIllegalArgumentException, MyGitIOException {
         final MyGitCommandHandler handler = new MyGitCommandHandler(currentDirectory);
         printStatusInfo(handler);
         printStream.println();
@@ -94,7 +90,7 @@ class CommandExecutor {
         }
     }
 
-    void performPrintBranches() throws MyGitStateException, IOException, MyGitIllegalArgumentException {
+    void performPrintBranches() throws MyGitStateException, MyGitIOException, MyGitIllegalArgumentException {
         final MyGitCommandHandler handler = new MyGitCommandHandler(currentDirectory);
         final List<Branch> branches = handler.listBranches();
         final HeadStatus headStatus = handler.getHeadStatus();
@@ -113,36 +109,36 @@ class CommandExecutor {
     }
 
     void performBranchCreate(@NotNull String branchName)
-            throws MyGitStateException, MyGitIllegalArgumentException, IOException {
+            throws MyGitStateException, MyGitIllegalArgumentException, MyGitIOException {
         final MyGitCommandHandler handler = new MyGitCommandHandler(currentDirectory);
         handler.createBranch(branchName);
     }
 
     void performBranchDelete(@NotNull String branchName)
-            throws MyGitStateException, MyGitIllegalArgumentException, IOException {
+            throws MyGitStateException, MyGitIllegalArgumentException, MyGitIOException {
         final MyGitCommandHandler handler = new MyGitCommandHandler(currentDirectory);
         handler.deleteBranch(branchName);
     }
 
-    void performCheckout(@NotNull String revisionName)
-            throws MyGitStateException, MyGitIllegalArgumentException, IOException, MyGitMissingPrerequisitesException {
+    void performCheckout(@NotNull String revisionName) throws
+            MyGitStateException, MyGitIllegalArgumentException, MyGitIOException, MyGitMissingPrerequisitesException {
         final MyGitCommandHandler handler = new MyGitCommandHandler(currentDirectory);
         handler.checkout(revisionName);
     }
 
     void performCommit(@NotNull String message)
-            throws MyGitStateException, MyGitIllegalArgumentException, IOException {
+            throws MyGitStateException, MyGitIllegalArgumentException, MyGitIOException {
         final MyGitCommandHandler handler = new MyGitCommandHandler(currentDirectory);
         handler.commitWithMessage(message);
     }
 
-    void performMerge(@NotNull String withBranchName)
-            throws MyGitStateException, MyGitIllegalArgumentException, IOException, MyGitMissingPrerequisitesException {
+    void performMerge(@NotNull String withBranchName) throws
+            MyGitStateException, MyGitIllegalArgumentException, MyGitIOException, MyGitMissingPrerequisitesException {
         final MyGitCommandHandler handler = new MyGitCommandHandler(currentDirectory);
         handler.mergeHeadWithBranch(withBranchName);
     }
 
-    void performStatus() throws MyGitStateException, IOException, MyGitIllegalArgumentException {
+    void performStatus() throws MyGitStateException, MyGitIOException, MyGitIllegalArgumentException {
         final MyGitCommandHandler handler = new MyGitCommandHandler(currentDirectory);
         printStatusInfo(handler);
 
@@ -184,7 +180,7 @@ class CommandExecutor {
         printStream.println();
     }
 
-    private void printStatusInfo(@NotNull MyGitCommandHandler handler) throws MyGitStateException, IOException {
+    private void printStatusInfo(@NotNull MyGitCommandHandler handler) throws MyGitStateException, MyGitIOException {
         final HeadStatus headStatus = handler.getHeadStatus();
         if (headStatus.getType().equals(Branch.TYPE)) {
             printStream.println("On branch " + headStatus.getName());

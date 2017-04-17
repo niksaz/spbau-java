@@ -1,10 +1,10 @@
 package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -20,7 +20,7 @@ class BranchExistsCommand extends Command {
         this.branchName = branchName;
     }
 
-    boolean perform() throws MyGitStateException, IOException {
+    boolean perform() throws MyGitStateException, MyGitIOException {
         internalStateAccessor.getLogger().trace("BranchExistsCommand -- started with name=" + branchName);
         final List<Branch> branches = new ListBranchesCommand(internalStateAccessor).perform();
         final boolean exists = branches.contains(new Branch(branchName));

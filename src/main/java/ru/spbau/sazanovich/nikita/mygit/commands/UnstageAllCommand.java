@@ -1,9 +1,9 @@
 package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 
-import java.io.IOException;
 import java.util.HashSet;
 
 /**
@@ -15,7 +15,7 @@ class UnstageAllCommand extends Command {
         super(internalStateAccessor);
     }
 
-    void perform() throws IOException, MyGitStateException {
+    void perform() throws MyGitIOException, MyGitStateException {
         internalStateAccessor.getLogger().trace("UnstageAllCommand -- started");
         internalStateAccessor.writeIndexPaths(new HashSet<>());
         internalStateAccessor.getLogger().trace("UnstageAllCommand -- completed");

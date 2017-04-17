@@ -1,6 +1,7 @@
 package ru.spbau.sazanovich.nikita.mygit.commands;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitIllegalArgumentException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitMissingPrerequisitesException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
@@ -8,7 +9,6 @@ import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.HeadStatus;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
@@ -29,8 +29,8 @@ class MergeCommand extends Command {
         this.branchName = branchName;
     }
 
-    void perform()
-            throws MyGitStateException, IOException, MyGitMissingPrerequisitesException, MyGitIllegalArgumentException {
+    void perform() throws MyGitStateException, MyGitIOException,
+                          MyGitMissingPrerequisitesException, MyGitIllegalArgumentException {
         internalStateAccessor.getLogger().trace("MergeCommand -- started with name=" + branchName);
         final HeadStatus headStatus = internalStateAccessor.getHeadStatus();
         if (headStatus.getName().equals(Commit.TYPE)) {
@@ -64,7 +64,7 @@ class MergeCommand extends Command {
 
     @NotNull
     private String mergeTwoTrees(@NotNull Tree baseTree, @NotNull Tree otherTree)
-            throws MyGitStateException, IOException {
+            throws MyGitStateException, MyGitIOException {
         final Tree mergedTree = new Tree();
         final ListIterator<Tree.TreeEdge> baseIterator = baseTree.getChildren().listIterator();
         final ListIterator<Tree.TreeEdge> otherIterator = otherTree.getChildren().listIterator();
