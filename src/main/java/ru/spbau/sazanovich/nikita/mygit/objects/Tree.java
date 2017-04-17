@@ -85,12 +85,21 @@ public class Tree implements Serializable {
         }
 
         /**
-         * Checks whether the file is directory.
+         * Checks whether the path is directory.
          *
          * @return {@code true} if it is directory; {@code false} otherwise
          */
         public boolean isDirectory() {
             return getType().equals(Tree.TYPE);
+        }
+
+        /**
+         * Checks whether the path is file.
+         *
+         * @return {@code true} if it is file; {@code false} otherwise
+         */
+        public boolean isFile() {
+            return getType().equals(Blob.TYPE);
         }
     }
 }

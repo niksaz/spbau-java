@@ -6,6 +6,7 @@ import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
 import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
 import ru.spbau.sazanovich.nikita.mygit.objects.Blob;
 import ru.spbau.sazanovich.nikita.mygit.objects.FileDifference;
+import ru.spbau.sazanovich.nikita.mygit.objects.FileDifferenceStageStatus;
 import ru.spbau.sazanovich.nikita.mygit.objects.Tree;
 import ru.spbau.sazanovich.nikita.mygit.utils.FileSystem;
 
@@ -82,61 +83,43 @@ class StatusCommand extends Command {
                                           @NotNull List<FileDifference> differences)
             throws MyGitStateException, MyGitIOException {
         final Path relativePath = internalStateAccessor.relativizeWithMyGitDirectory(path);
-        final boolean isPresentInFilesystem = Files.exists(path);
-        if (child.getType().equals(Tree.TYPE)) {
+        final FileDifferenceStageStatus status =
+                indexedPaths.contains(relativePath) ? TO_BE_COMMITTED : NOT_STAGED_FOR_COMMIT;
+        if (child.isDirectory()) {
             final Tree childTree = internalStateAccessor.readTree(child.getHash());
-            if (isPresentInFilesystem) {
+            if (Files.exists(path)) {
                 if (Files.isDirectory(path)) {
                     differences.addAll(getTreeDifferenceList(childTree, path, indexedPaths));
                 } else {
-                    if (indexedPaths.contains(relativePath)) {
-                        differences.add(new FileDifference(relativePath, MODIFICATION, TO_BE_COMMITTED));
-                        for (Tree.TreeEdge object : childTree.getChildren()) {
-                            Path objectPath = Paths.get(path.toString(), object.getName());
-                            objectPath = internalStateAccessor.relativizeWithMyGitDirectory(objectPath);
-                            differences.add(new FileDifference(objectPath, REMOVAL, TO_BE_COMMITTED));
-                        }
-                    } else {
-                        differences.add(new FileDifference(relativePath, MODIFICATION, NOT_STAGED_FOR_COMMIT));
-                        for (Tree.TreeEdge object : childTree.getChildren()) {
-                            Path objectPath = Paths.get(path.toString(), object.getName());
-                            objectPath = internalStateAccessor.relativizeWithMyGitDirectory(objectPath);
-                            differences.add(new FileDifference(objectPath, REMOVAL, NOT_STAGED_FOR_COMMIT));
-                        }
+                    differences.add(new FileDifference(relativePath, MODIFICATION, status));
+                    for (Tree.TreeEdge object : childTree.getChildren()) {
+                        Path objectPath = Paths.get(path.toString(), object.getName());
+                        objectPath = internalStateAccessor.relativizeWithMyGitDirectory(objectPath);
+                        differences.add(new FileDifference(objectPath, REMOVAL, status));
                     }
                 }
-            } else if (indexedPaths.contains(relativePath)) {
-                differences.add(new FileDifference(relativePath, REMOVAL, TO_BE_COMMITTED));
             } else {
-                differences.add(new FileDifference(relativePath, REMOVAL, NOT_STAGED_FOR_COMMIT));
+                differences.add(new FileDifference(relativePath, REMOVAL, status));
             }
             return;
         }
-        if (child.getType().equals(Blob.TYPE)) {
+        if (child.isFile()) {
             final Blob childBlob = internalStateAccessor.readBlob(child.getHash());
-            if (isPresentInFilesystem) {
+            if (Files.exists(path)) {
                 if (Files.isDirectory(path)) {
+                    differences.add(new FileDifference(relativePath, MODIFICATION, status));
                     if (indexedPaths.contains(relativePath)) {
-                        differences.add(new FileDifference(relativePath, MODIFICATION, TO_BE_COMMITTED));
                         differences.addAll(getTreeDifferenceList(null, path, indexedPaths));
-                    } else {
-                        differences.add(new FileDifference(relativePath, MODIFICATION, NOT_STAGED_FOR_COMMIT));
                     }
                 } else {
                     final byte[] committedContent = childBlob.getContent();
                     final byte[] currentContent = FileSystem.readAllBytes(path);
                     if (!Arrays.equals(committedContent, currentContent)) {
-                        if (indexedPaths.contains(relativePath)) {
-                            differences.add(new FileDifference(relativePath, MODIFICATION, TO_BE_COMMITTED));
-                        } else {
-                            differences.add(new FileDifference(relativePath, MODIFICATION, NOT_STAGED_FOR_COMMIT));
-                        }
+                        differences.add(new FileDifference(relativePath, MODIFICATION, status));
                     }
                 }
-            } else if (indexedPaths.contains(relativePath)) {
-                differences.add(new FileDifference(relativePath, REMOVAL, TO_BE_COMMITTED));
             } else {
-                differences.add(new FileDifference(relativePath, REMOVAL, NOT_STAGED_FOR_COMMIT));
+                differences.add(new FileDifference(relativePath, REMOVAL, status));
             }
             return;
         }

@@ -5,8 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import ru.spbau.sazanovich.nikita.mygit.MyGitIOException;
+import ru.spbau.sazanovich.nikita.mygit.utils.MyGitHasher;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
@@ -98,6 +100,39 @@ public class Commit implements Serializable, Comparable<Commit> {
             }
         }
         return 0;
+    }
+
+    /**
+     * Extracts commit's information to the library's user.
+     *
+     * @param hasher hasher to perform operation with
+     * @return log object
+     * @throws MyGitIOException if an error occurred while hashing
+     */
+    @NotNull
+    public CommitLog extractLogInfo(@NotNull MyGitHasher hasher) throws MyGitIOException {
+        try {
+            return new CommitLog(hasher.getHashFromObject(this), getMessage(), getAuthor(), getDateCreated());
+        } catch (IOException e) {
+            throw new MyGitIOException("Error while hashing object", e);
+        }
+    }
+
+    /**
+     * Information about a commit that is given to the user of library.
+     */
+    @AllArgsConstructor
+    @Getter
+    static public class CommitLog {
+
+        @NotNull
+        private String revisionHash;
+        @NotNull
+        private String message;
+        @NotNull
+        private String author;
+        @NotNull
+        private Date dateCreated;
     }
 
     @NotNull

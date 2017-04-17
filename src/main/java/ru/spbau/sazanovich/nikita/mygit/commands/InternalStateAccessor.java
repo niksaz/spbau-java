@@ -426,4 +426,9 @@ class InternalStateAccessor {
         }
         return null;
     }
+
+    @NotNull
+    MyGitHasher getHasher() {
+        return hasher;
+    }
 }

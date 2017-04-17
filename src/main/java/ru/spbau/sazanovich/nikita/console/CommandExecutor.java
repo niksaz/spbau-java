@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.*;
 import ru.spbau.sazanovich.nikita.mygit.commands.MyGitCommandHandler;
 import ru.spbau.sazanovich.nikita.mygit.objects.*;
+import ru.spbau.sazanovich.nikita.mygit.objects.Commit.CommitLog;
 
 import java.io.PrintStream;
 import java.nio.file.Path;

@@ -2,7 +2,7 @@ package ru.spbau.sazanovich.nikita;
 
 import org.junit.Test;
 import ru.spbau.sazanovich.nikita.mygit.commands.MyGitCommandHandler;
-import ru.spbau.sazanovich.nikita.mygit.objects.CommitLog;
+import ru.spbau.sazanovich.nikita.mygit.objects.Commit.CommitLog;
 import ru.spbau.sazanovich.nikita.mygit.objects.FileDifference;
 import ru.spbau.sazanovich.nikita.testing.FolderInitializedTest;
 

@@ -3,7 +3,7 @@ package ru.spbau.sazanovich.nikita.mygit.commands;
 import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.*;
 import ru.spbau.sazanovich.nikita.mygit.objects.Branch;
-import ru.spbau.sazanovich.nikita.mygit.objects.CommitLog;
+import ru.spbau.sazanovich.nikita.mygit.objects.Commit;
 import ru.spbau.sazanovich.nikita.mygit.objects.FileDifference;
 import ru.spbau.sazanovich.nikita.mygit.objects.HeadStatus;
 import ru.spbau.sazanovich.nikita.mygit.utils.SHA1Hasher;
@@ -149,7 +149,7 @@ public class MyGitCommandHandler {
      * @throws MyGitIOException    if an error occurs while working with a filesystem
      */
     @NotNull
-    public List<CommitLog> getCommitsLogsHistory() throws MyGitStateException, MyGitIOException {
+    public List<Commit.CommitLog> getCommitsLogsHistory() throws MyGitStateException, MyGitIOException {
         return new LogCommand(internalStateAccessor).perform();
     }
 
