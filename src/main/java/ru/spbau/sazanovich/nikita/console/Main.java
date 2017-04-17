@@ -8,7 +8,7 @@ import java.nio.file.Paths;
 /**
  * Provides a console access to MyGit system.
  */
-public class ConsoleApp {
+public class Main {
 
     /**
      * Entrance point to the console application.
@@ -27,5 +27,5 @@ public class ConsoleApp {
         }
     }
 
-    private ConsoleApp() {}
+    private Main() {}
 }

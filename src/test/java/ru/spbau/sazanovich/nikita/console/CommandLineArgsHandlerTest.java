@@ -1,26 +1,21 @@
 package ru.spbau.sazanovich.nikita.console;
 
+import org.junit.Before;
 import org.junit.Test;
-import ru.spbau.sazanovich.nikita.mygit.commands.MyGitCommandHandler;
-import ru.spbau.sazanovich.nikita.testing.FolderInitializedTest;
 
 import java.io.PrintStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
-public class CommandLineArgsHandlerTest extends FolderInitializedTest {
-
-    private static final PrintStream FAKE_STREAM = mock(PrintStream.class);
+public class CommandLineArgsHandlerTest {
 
     private CommandLineArgsHandler handler;
 
-    @Override
+    @Before
     public void initialize() throws Exception {
-        super.initialize();
-        handler = new CommandLineArgsHandler(FAKE_STREAM, folderPath);
+        handler = spy(new CommandLineArgsHandler(mock(PrintStream.class), mock(Path.class)));
+        doReturn(mock(CommandExecutor.class)).when(handler).createCommandExecutor();
     }
 
     @Test(expected = CommandNotSupportedException.class)
@@ -42,65 +37,54 @@ public class CommandLineArgsHandlerTest extends FolderInitializedTest {
 
     @Test
     public void handleStage() throws Exception {
-        MyGitCommandHandler.init(folderPath);
         final String[] args = {"stage", "."};
         handler.handle(args);
     }
 
     @Test
     public void handleUnstage() throws Exception {
-        MyGitCommandHandler.init(folderPath);
         final String[] args = {"unstage", "."};
         handler.handle(args);
     }
 
     @Test
     public void handleUnstageAll() throws Exception {
-        MyGitCommandHandler.init(folderPath);
         final String[] args = {"unstage-all"};
         handler.handle(args);
     }
 
     @Test
     public void handleReset() throws Exception {
-        MyGitCommandHandler.init(folderPath);
         final String[] args = {"reset", "."};
         handler.handle(args);
     }
 
     @Test
     public void handleRm() throws Exception {
-        MyGitCommandHandler.init(folderPath);
-        final Path file = Paths.get(folderPath.toString(), "greeting.txt");
-        Files.createFile(file);
         final String[] args = {"rm", "greeting.txt"};
         handler.handle(args);
     }
 
     @Test
     public void handleClean() throws Exception {
-        MyGitCommandHandler.init(folderPath);
         final String[] args = {"clean"};
         handler.handle(args);
     }
 
     @Test
     public void handleLog() throws Exception {
-        MyGitCommandHandler.init(folderPath);
         final String[] args = {"log"};
         handler.handle(args);
     }
 
     @Test
     public void handleStatus() throws Exception {
-        MyGitCommandHandler.init(folderPath);
         final String[] args = {"status"};
         handler.handle(args);
     }
 
     @Test
     public void handleBranch() throws Exception {
-        MyGitCommandHandler.init(folderPath);
         final String[] argsToList = {"branch"};
         handler.handle(argsToList);
         final String[] argsToCreate = {"branch", "test"};
@@ -111,21 +95,18 @@ public class CommandLineArgsHandlerTest extends FolderInitializedTest {
 
     @Test
     public void handleCheckout() throws Exception {
-        MyGitCommandHandler.init(folderPath);
         final String[] args = {"checkout", "master"};
         handler.handle(args);
     }
 
     @Test
     public void handleCommit() throws Exception {
-        MyGitCommandHandler.init(folderPath);
         final String[] args = {"commit", "hello"};
         handler.handle(args);
     }
 
     @Test
     public void handleMerge() throws Exception {
-        MyGitCommandHandler.init(folderPath);
         final String[] branchCreateArgs = {"branch", "test"};
         handler.handle(branchCreateArgs);
         final String[] args = {"merge", "test"};

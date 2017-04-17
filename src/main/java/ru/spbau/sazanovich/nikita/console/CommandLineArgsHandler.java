@@ -2,14 +2,13 @@ package ru.spbau.sazanovich.nikita.console;
 
 import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.mygit.MyGitException;
-import ru.spbau.sazanovich.nikita.mygit.MyGitStateException;
-import ru.spbau.sazanovich.nikita.mygit.commands.MyGitCommandHandler;
-import ru.spbau.sazanovich.nikita.mygit.objects.*;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Parses and executes command line arguments.
@@ -49,7 +48,7 @@ class CommandLineArgsHandler {
     }
 
     /**
-     * Parses command line arguments and executes them if parsed successfully.
+     * Parses command line arguments and delegates execution to {@link CommandExecutor} if parsed successfully.
      *
      * @param args command line arguments
      * @throws CommandNotSupportedException if the command does not exist in MyGit library
@@ -57,93 +56,84 @@ class CommandLineArgsHandler {
      * @throws IOException                  if an error occurs during working with a filesystem
      */
     void handle(@NotNull String[] args) throws CommandNotSupportedException, MyGitException, IOException {
+        final CommandExecutor commandExecutor = createCommandExecutor();
         if (args.length == 0) {
             throw new CommandNotSupportedException("Add at least one argument.");
         }
         if (args[0].equals(HELP_CMD)) {
-            showHelp();
+            printHelp();
             return;
         }
         if (args[0].equals(INIT_CMD)) {
-            MyGitCommandHandler.init(currentDirectory);
-            printStream.println("Successfully initialized mygit repository.");
+            commandExecutor.performInit();
             return;
         }
-        final MyGitCommandHandler handler = new MyGitCommandHandler(currentDirectory);
         switch (args[0]) {
             case STAGE_CMD:
                 if (args.length > 1) {
-                    for (int i = 1; i < args.length; i++) {
-                        handler.stagePath(args[i]);
-                    }
+                    commandExecutor.performStage(omitFirstArg(args));
                     return;
                 }
                 throw new CommandNotSupportedException(STAGE_CMD + " requires some files to have an effect");
             case UNSTAGE_CMD:
                 if (args.length > 1) {
-                    for (int i = 1; i < args.length; i++) {
-                        handler.unstagePath(args[i]);
-                    }
+                    commandExecutor.performUnstage(omitFirstArg(args));
                     return;
                 }
                 throw new CommandNotSupportedException(UNSTAGE_CMD + " requires some files to have an effect");
             case UNSTAGE_ALL_CMD:
-                handler.unstageAllPaths();
+                commandExecutor.performUnstageAll();
                 return;
             case RESET_CMD:
                 if (args.length > 1) {
-                    for (int i = 1; i < args.length; i++) {
-                        handler.resetPath(args[i]);
-                    }
+                    commandExecutor.performReset(omitFirstArg(args));
                     return;
                 }
                 throw new CommandNotSupportedException(RESET_CMD + " requires some files to have an effect");
             case RM_CMD:
                 if (args.length > 1) {
-                    for (int i = 1; i < args.length; i++) {
-                        handler.removePath(args[i]);
-                    }
+                    commandExecutor.performRemove(omitFirstArg(args));
                     return;
                 }
                 throw new CommandNotSupportedException(RM_CMD + " requires some files to have an effect");
             case CLEAN_CMD:
-                handler.clean();
+                commandExecutor.performClean();
                 return;
             case LOG_CMD:
-                performLogCommand(handler);
+                commandExecutor.performLog();
                 return;
             case STATUS_CMD:
-                performStatusCommand(handler);
+                commandExecutor.performStatus();
                 return;
             case BRANCH_CMD:
                 if (args.length == 1) {
-                    printAllBranches(handler);
+                    commandExecutor.performPrintBranches();
                     return;
                 }
                 if (args.length == 2) {
-                    handler.createBranch(args[1]);
+                    commandExecutor.performBranchCreate(args[1]);
                     return;
                 }
                 if (args.length == 3 && args[1].equals("-d")) {
-                    handler.deleteBranch(args[2]);
+                    commandExecutor.performBranchDelete(args[2]);
                     return;
                 }
                 throw new CommandNotSupportedException(BRANCH_CMD + " entered too many arguments");
             case CHECKOUT_CMD:
                 if (args.length > 1) {
-                    handler.checkout(args[1]);
+                    commandExecutor.performCheckout(args[1]);
                     return;
                 }
                 throw new CommandNotSupportedException(CHECKOUT_CMD + " requires a revision name");
             case COMMIT_CMD:
                 if (args.length > 1) {
-                    handler.commitWithMessage(args[1]);
+                    commandExecutor.performCommit(args[1]);
                     return;
                 }
                 throw new CommandNotSupportedException(COMMIT_CMD + " requires a message");
             case MERGE_CMD:
                 if (args.length > 1) {
-                    handler.mergeHeadWithBranch(args[1]);
+                    commandExecutor.performMerge(args[1]);
                     return;
                 }
                 throw new CommandNotSupportedException(MERGE_CMD + " requires another branch");
@@ -152,89 +142,7 @@ class CommandLineArgsHandler {
         }
     }
 
-    private void printAllBranches(@NotNull MyGitCommandHandler handler) throws MyGitStateException, IOException {
-        final List<Branch> branches = handler.listBranches();
-        final HeadStatus headStatus = handler.getHeadStatus();
-        String currentBranchName;
-        if (headStatus.getType().equals(Branch.TYPE)) {
-            currentBranchName = headStatus.getName();
-        } else {
-            currentBranchName = null;
-            printStream.println("* (HEAD detached at " + headStatus.getName() + ")");
-        }
-        for (Branch branch : branches) {
-            printStream.println(
-                    (branch.getName().equals(currentBranchName) ? "* " : "  ") +
-                            branch.getName());
-        }
-    }
-
-    private void performLogCommand(@NotNull MyGitCommandHandler handler) throws MyGitStateException, IOException {
-        printStatusInfo(handler);
-        printStream.println();
-        final List<CommitLog> logsHistory = handler.getCommitsLogsHistory();
-        for (CommitLog log : logsHistory) {
-            printStream.println(
-                    "commit " + log.getRevisionHash() + "\n" +
-                            "Author: " + log.getAuthor() + "\n" +
-                            "Date:   " + log.getDateCreated() + "\n" +
-                            "\n" +
-                            "    " + log.getMessage() +
-                            "\n");
-        }
-    }
-
-    private void performStatusCommand(@NotNull MyGitCommandHandler handler) throws MyGitStateException, IOException {
-        printStatusInfo(handler);
-
-        final List<FileDifference> fileDifferences = handler.getHeadDifferences();
-        final List<FileDifference> changesToBeCommitted =
-                FileDifferenceStageStatus.filterBy(fileDifferences, FileDifferenceStageStatus.TO_BE_COMMITTED);
-        if (changesToBeCommitted.size() != 0) {
-            printStream.println("Changes to be committed:\n");
-            printDifferencesWithoutStatus(changesToBeCommitted);
-        }
-
-        final List<FileDifference> changesNotStagedForCommit =
-                FileDifferenceStageStatus.filterBy(fileDifferences, FileDifferenceStageStatus.NOT_STAGED_FOR_COMMIT);
-        if (changesNotStagedForCommit.size() != 0) {
-            printStream.println("Changes not staged for commit:\n");
-            printDifferencesWithoutStatus(changesNotStagedForCommit);
-        }
-
-        final List<FileDifference> untrackedFiles =
-                FileDifferenceStageStatus.filterBy(fileDifferences, FileDifferenceStageStatus.UNTRACKED);
-        if (untrackedFiles.size() != 0) {
-            printStream.println("Untracked files:\n");
-            for (FileDifference change : untrackedFiles) {
-                printStream.println(
-                        "\t" +
-                                change.getPath());
-            }
-            printStream.println();
-        }
-    }
-
-    private void printDifferencesWithoutStatus(@NotNull List<FileDifference> changes) {
-        for (FileDifference change : changes) {
-            printStream.println(
-                    "\t" +
-                            mapFileChangeTypeToString(change.getType()) +
-                            change.getPath());
-        }
-        printStream.println();
-    }
-
-    private void printStatusInfo(@NotNull MyGitCommandHandler handler) throws MyGitStateException, IOException {
-        final HeadStatus headStatus = handler.getHeadStatus();
-        if (headStatus.getType().equals(Branch.TYPE)) {
-            printStream.println("On branch " + headStatus.getName());
-        } else {
-            printStream.println("HEAD detached at " + headStatus.getName());
-        }
-    }
-
-    private void showHelp() {
+    private void printHelp() {
         printStream.println(
                 "usage: mygit <command> [<args>]\n" +
                         "\n" +
@@ -262,14 +170,13 @@ class CommandLineArgsHandler {
                         "'mygit help' list all available commands.");
     }
 
-    private static String mapFileChangeTypeToString(@NotNull FileDifferenceType fileDifferenceType) {
-        switch (fileDifferenceType) {
-            case ADDITION:
-                return "new file:   ";
-            case REMOVAL:
-                return "deleted:   ";
-            default:
-                return "";
-        }
+    @NotNull
+    CommandExecutor createCommandExecutor() {
+        return new CommandExecutor(currentDirectory, printStream);
+    }
+
+    @NotNull
+    private static List<String> omitFirstArg(@NotNull String[] args) {
+        return Arrays.stream(args).skip(1).collect(Collectors.toList());
     }
 }
