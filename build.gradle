@@ -12,6 +12,9 @@ jar {
         def manif = "${projectDir}/src/main/java/META-INF/MANIFEST.MF"
         from file(manif)
     }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
     baseName = "mygit"
 }
 
