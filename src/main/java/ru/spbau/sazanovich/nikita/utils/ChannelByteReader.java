@@ -16,8 +16,10 @@ public class ChannelByteReader {
 
     @NotNull
     private final ByteBuffer buffer;
+
     @NotNull
     private byte[] data;
+
     private int position;
 
     /**

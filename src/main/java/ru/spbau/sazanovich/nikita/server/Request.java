@@ -11,6 +11,7 @@ class Request {
 
     @NotNull
     private final SelectionKey key;
+
     @NotNull
     private final byte[] content;
 

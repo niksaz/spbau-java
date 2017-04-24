@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.server.commands.Command;
 import ru.spbau.sazanovich.nikita.server.commands.GetCommand;
 import ru.spbau.sazanovich.nikita.server.commands.ListCommand;
-import ru.spbau.sazanovich.nikita.server.commands.UnsuccessfulCommandExecution;
+import ru.spbau.sazanovich.nikita.server.commands.UnsuccessfulCommandExecutionException;
 import ru.spbau.sazanovich.nikita.utils.ChannelByteReader;
 import ru.spbau.sazanovich.nikita.utils.ChannelByteWriter;
 
@@ -19,21 +19,31 @@ import java.util.Queue;
 import java.util.Set;
 
 /**
- * Represents a server which accepts client's requests.
+ * Represents a server which accepts client's requests via {@link ServerSocketChannel}.
  */
 class Server {
 
     private final int port;
+
     private volatile boolean stopped;
+
     @NotNull
     private final Queue<Request> processorQueue;
 
-    Server(int port) throws IOException {
+    /**
+     * Constructs a server on a given port.
+     *
+     * @param port port to start the server on
+     */
+    Server(int port) {
         this.port = port;
         this.stopped = false;
         this.processorQueue = new LinkedList<>();
     }
 
+    /**
+     * Starts a server in a separate thread.
+     */
     void start() {
         final Runnable serverCycleTask = () -> {
             try (ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
@@ -61,6 +71,9 @@ class Server {
         new Thread(serverCycleTask).start();
     }
 
+    /**
+     * Asks the server to stop. Server will stop an execution with next cycle.
+     */
     void stop() {
         stopped = true;
     }
@@ -109,21 +122,21 @@ class Server {
             ) {
                 int code = inputStream.readInt();
                 switch (code) {
-                    case 1: {
+                    case ListCommand.CODE: {
                         final String path = inputStream.readUTF();
                         response = new ListCommand(path).execute();
                         break;
                     }
-                    case 2: {
+                    case GetCommand.CODE: {
                         final String path = inputStream.readUTF();
                         response = new GetCommand(path).execute();
                         break;
                     }
                     default:
-                        throw new UnsuccessfulCommandExecution();
+                        throw new UnsuccessfulCommandExecutionException();
                 }
-            } catch (IOException | UnsuccessfulCommandExecution e) {
-                response = Command.errorResponse();
+            } catch (IOException | UnsuccessfulCommandExecutionException e) {
+                response = Command.errorResponseBytes();
             }
 
             try {
