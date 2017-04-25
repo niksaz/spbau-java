@@ -1,7 +1,6 @@
 package ru.spbau.sazanovich.nikita.server.commands;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.nio.file.Files;

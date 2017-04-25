@@ -21,7 +21,7 @@ import java.util.Set;
 /**
  * Represents a server which accepts client's requests via {@link ServerSocketChannel}.
  */
-class Server {
+public class Server {
 
     private final int port;
 
@@ -35,7 +35,7 @@ class Server {
      *
      * @param port port to start the server on
      */
-    Server(int port) {
+    public Server(int port) {
         this.port = port;
         this.stopped = false;
         this.processorQueue = new LinkedList<>();
@@ -44,7 +44,7 @@ class Server {
     /**
      * Starts a server in a separate thread.
      */
-    void start() {
+    public void start() {
         final Runnable serverCycleTask = () -> {
             try (ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
                  Selector selector = Selector.open()
@@ -74,7 +74,7 @@ class Server {
     /**
      * Asks the server to stop. Server will stop an execution with next cycle.
      */
-    void stop() {
+    public void stop() {
         stopped = true;
     }
 

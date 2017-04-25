@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * Class which represents a client of {@link ru.spbau.sazanovich.nikita.server.Server}.
  */
-class Client {
+public class Client {
 
     private final int port;
 
@@ -32,12 +32,20 @@ class Client {
      *
      * @param port server's port
      */
-    Client(int port) {
+    public Client(int port) {
         this.port = port;
     }
 
+    /**
+     * Sends a request to the server to list directory at the given path.
+     * Returns null if the request was unsuccessful.
+     *
+     * @param path directory to list
+     * @return filenames in directory
+     * @throws IOException if an I/O error occurs
+     */
     @Nullable
-    List<String> list(@NotNull String path) throws IOException {
+    public List<String> list(@NotNull String path) throws IOException {
         byte[] content = sendRequestWithCodeAndArg(ListCommand.CODE, path);
         if (Arrays.equals(content, Command.errorResponseBytes())) {
             return null;
@@ -45,7 +53,16 @@ class Client {
         return ListCommand.fromBytes(content);
     }
 
-    boolean get(@NotNull String fromPath, @NotNull String toPath) throws IOException, InvalidPathException {
+    /**
+     * Sends a request to the server to get file's content from the path on the server to the given path.
+     *
+     * @param fromPath file on the server to get
+     * @param toPath path to save file from the server
+     * @return {@code true} if request was successful; {@code false} otherwise
+     * @throws IOException if an I/O error occurs
+     * @throws InvalidPathException if {@code toPath} is not a valid path
+     */
+    public boolean get(@NotNull String fromPath, @NotNull String toPath) throws IOException, InvalidPathException {
         Path toFile = Paths.get(toPath);
         byte[] content = sendRequestWithCodeAndArg(GetCommand.CODE, fromPath);
         if (Arrays.equals(content, Command.errorResponseBytes())) {
