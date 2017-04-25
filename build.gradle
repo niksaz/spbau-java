@@ -4,8 +4,10 @@ version '1.0-SNAPSHOT'
 apply plugin: 'java'
 apply plugin: 'jacoco'
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+allprojects {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+}
 
 repositories {
     mavenCentral()
@@ -21,4 +23,32 @@ jacocoTestReport {
         xml.enabled true
         html.enabled false
     }
+}
+
+task jarClient(type: Jar) {
+    manifest {
+        def manifest = "${projectDir}/src/main/resources/ru/spbau/sazanovich/nikita/client/MANIFEST.MF"
+        from file(manifest)
+    }
+    baseName = "client"
+    from {
+        configurations.compile.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    with jar
+}
+
+task jarServer(type: Jar) {
+    manifest {
+        def manifest = "${projectDir}/src/main/resources/ru/spbau/sazanovich/nikita/server/MANIFEST.MF"
+        from file(manifest)
+    }
+    baseName = "server"
+    from {
+        configurations.compile.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    with jar
 }
