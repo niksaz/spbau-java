@@ -78,6 +78,15 @@ public class Server {
         stopped = true;
     }
 
+    /**
+     * Gets the port where server is running.
+     *
+     * @return port
+     */
+    int getPort() {
+        return port;
+    }
+
     private void processReadyKeys(@NotNull Selector selector) {
         final Set<SelectionKey> keySet = selector.selectedKeys();
         Iterator<SelectionKey> keyIterator = keySet.iterator();

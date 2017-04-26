@@ -28,8 +28,14 @@ public class GetCommandTest {
     }
 
     @Test(expected = UnsuccessfulCommandExecutionException.class)
-    public void getInvalidPath() throws Exception {
+    public void getNonexistentPath() throws Exception {
         GetCommand command = new GetCommand(Paths.get("nonexistent", "directory").toString());
+        command.get();
+    }
+
+    @Test(expected = UnsuccessfulCommandExecutionException.class)
+    public void getInvalidPath() throws Exception {
+        GetCommand command = new GetCommand("C::/Program files/");
         command.get();
     }
 

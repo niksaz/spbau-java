@@ -51,8 +51,8 @@ public class GetCommand extends Command {
         } catch (InvalidPathException e) {
             throw new UnsuccessfulCommandExecutionException("Invalid path", e);
         }
-        if (Files.isDirectory(file)) {
-            throw new UnsuccessfulCommandExecutionException("Should be a file");
+        if (Files.isDirectory(file) || !Files.exists(file)) {
+            throw new UnsuccessfulCommandExecutionException("Should be a present file");
         }
         try {
             return Files.readAllBytes(file);

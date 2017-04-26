@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.NoSuchFileException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
@@ -27,18 +28,18 @@ public class CommandLineApp {
         showHelp();
         try (Scanner scanner = new Scanner(System.in)
         ) {
-            commandLineCycle(scanner);
+            handleTokensFrom(scanner);
         }
     }
 
-    private static void commandLineCycle(@NotNull Scanner scanner) {
+    static void handleTokensFrom(@NotNull Iterator<String> iterator) {
         Client client = new Client(ru.spbau.sazanovich.nikita.server.CommandLineApp.SERVER_PORT);
         while (true) {
-            String nextCommand = scanner.next();
+            String token = iterator.next();
             try {
-                switch (nextCommand) {
+                switch (token) {
                     case LIST_CMD: {
-                        String path = scanner.next();
+                        String path = iterator.next();
                         List<String> files = client.list(path);
                         if (files == null) {
                             System.out.println("Unsuccessful command.");
@@ -50,8 +51,8 @@ public class CommandLineApp {
                         break;
                     }
                     case GET_CMD: {
-                        String fromPath = scanner.next();
-                        String toPath = scanner.next();
+                        String fromPath = iterator.next();
+                        String toPath = iterator.next();
                         boolean got = client.get(fromPath, toPath);
                         if (!got) {
                             System.out.println("Unsuccessful command.");

@@ -89,8 +89,8 @@ public class ListCommand extends Command {
         } catch (InvalidPathException e) {
             throw new UnsuccessfulCommandExecutionException("Invalid path", e);
         }
-        if (!Files.isDirectory(directory)) {
-            throw new UnsuccessfulCommandExecutionException("Should be a directory");
+        if (!Files.isDirectory(directory) || !Files.exists(directory)) {
+            throw new UnsuccessfulCommandExecutionException("Should be a present directory");
         }
         try {
             return Files.list(directory).collect(Collectors.toList());

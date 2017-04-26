@@ -28,8 +28,14 @@ public class ListCommandTest {
     }
 
     @Test(expected = UnsuccessfulCommandExecutionException.class)
-    public void listInvalidPath() throws Exception {
+    public void listNonexistentPath() throws Exception {
         ListCommand command = new ListCommand(Paths.get("nonexistent", "directory").toString());
+        command.list();
+    }
+
+    @Test(expected = UnsuccessfulCommandExecutionException.class)
+    public void listInvalidPath() throws Exception {
+        ListCommand command = new ListCommand("C::/Program files/");
         command.list();
     }
 
