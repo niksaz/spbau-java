@@ -44,7 +44,7 @@ public class ListCommand extends Command {
     @Override
     @NotNull
     public byte[] execute() throws UnsuccessfulCommandExecutionException {
-        List<Path> paths = list(path);
+        List<Path> paths = list();
         try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
              DataOutputStream outputStream = new DataOutputStream(byteStream)
         ) {
@@ -82,7 +82,7 @@ public class ListCommand extends Command {
     }
 
     @NotNull
-    private List<Path> list(@NotNull String path) throws UnsuccessfulCommandExecutionException {
+    List<Path> list() throws UnsuccessfulCommandExecutionException {
         final Path directory;
         try {
             directory = Paths.get(path);

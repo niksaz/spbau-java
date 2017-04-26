@@ -40,11 +40,11 @@ public class GetCommand extends Command {
     @Override
     @NotNull
     public byte[] execute() throws UnsuccessfulCommandExecutionException {
-        return get(path);
+        return get();
     }
 
     @NotNull
-    private byte[] get(@NotNull String path) throws UnsuccessfulCommandExecutionException {
+    byte[] get() throws UnsuccessfulCommandExecutionException {
         final Path file;
         try {
             file = Paths.get(path);
