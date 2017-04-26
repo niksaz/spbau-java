@@ -3,7 +3,7 @@ package ru.spbau.sazanovich.nikita.server;
 /**
  * Interface which allows to create {@link Server}.
  */
-public interface ServerFactory {
+interface ServerFactory {
 
     /**
      * Creates a server.

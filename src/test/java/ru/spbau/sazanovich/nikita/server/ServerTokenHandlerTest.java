@@ -16,7 +16,7 @@ public class ServerTokenHandlerTest {
     @Test
     public void handleTokensFrom() throws Exception {
         ServerSaverFactory factory = new ServerSaverFactory();
-        final ServerTokenHandler handler = new ServerTokenHandler(factory, mock(PrintStream.class));
+        ServerTokenHandler handler = new ServerTokenHandler(factory, mock(PrintStream.class));
         //noinspection unchecked
         Iterator<String> iterator = (Iterator<String>) mock(Iterator.class);
         when(iterator.next()).thenReturn("start").thenReturn("stop").thenReturn("start").thenReturn("exit");

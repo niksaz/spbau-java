@@ -7,7 +7,7 @@ import java.util.Scanner;
 /**
  * Command line access to server control.
  */
-public class CommandLineApp {
+public class ServerCommandLineApp {
 
     /**
      * Server's default port.
@@ -20,7 +20,7 @@ public class CommandLineApp {
      * @param args command line arguments
      */
     public static void main(@NotNull String[] args) {
-        final ServerTokenHandler handler = new ServerTokenHandler(
+        ServerTokenHandler handler = new ServerTokenHandler(
                 () -> new Server(SERVER_PORT),
                 System.out);
         handler.showHelp();

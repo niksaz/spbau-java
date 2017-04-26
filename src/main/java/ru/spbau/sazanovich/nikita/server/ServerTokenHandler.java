@@ -6,7 +6,8 @@ import java.io.PrintStream;
 import java.util.Iterator;
 
 /**
- * Class which handles tokens from {@link Iterator} and prints the result to {@link PrintStream}.
+ * Class which handles server commands which are coming as strings from {@link Iterator}
+ * and prints the result to {@link PrintStream}.
  */
 class ServerTokenHandler {
 

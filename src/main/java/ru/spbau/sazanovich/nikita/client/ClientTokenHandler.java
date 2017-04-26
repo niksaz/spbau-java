@@ -3,37 +3,36 @@ package ru.spbau.sazanovich.nikita.client;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.ConnectException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.NoSuchFileException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Scanner;
 
 /**
- * Class which interacts with user and make requests to the server.
+ * Class which handles client commands which are coming as strings from {@link Iterator}
+ * and prints the result to {@link PrintStream}.
  */
-public class CommandLineApp {
+class ClientTokenHandler {
 
     private static final String LIST_CMD = "list";
     private static final String GET_CMD = "get";
     private static final String EXIT_CMD = "exit";
 
-    /**
-     * Runs a client command line app.
-     *
-     * @param args command line arguments
-     */
-    public static void main(@NotNull String[] args) {
-        showHelp();
-        try (Scanner scanner = new Scanner(System.in)
-        ) {
-            handleTokensFrom(scanner);
-        }
+    @NotNull
+    private final ClientFactory clientFactory;
+
+    @NotNull
+    private final PrintStream printStream;
+
+    ClientTokenHandler(@NotNull ClientFactory clientFactory, @NotNull PrintStream printStream) {
+        this.clientFactory = clientFactory;
+        this.printStream = printStream;
     }
 
-    static void handleTokensFrom(@NotNull Iterator<String> iterator) {
-        Client client = new Client(ru.spbau.sazanovich.nikita.server.CommandLineApp.SERVER_PORT);
+    void handleTokensFrom(@NotNull Iterator<String> iterator) {
+        Client client = clientFactory.createClient();
         while (true) {
             String token = iterator.next();
             try {
@@ -77,8 +76,8 @@ public class CommandLineApp {
         }
     }
 
-    private static void showHelp() {
-        System.out.println(
+    void showHelp() {
+        printStream.println(
                 LIST_CMD + " <path>                to list directory from server\n" +
                 GET_CMD + " <fromPath> <toPath>    to copy file from server\n" +
                 EXIT_CMD + "                       to exit\n");

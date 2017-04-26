@@ -11,7 +11,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
@@ -24,6 +27,8 @@ import java.util.List;
  * Class which represents a client of {@link ru.spbau.sazanovich.nikita.server.Server}.
  */
 public class Client {
+
+    private static final long TIMEOUT = 2000;
 
     private final int port;
 
@@ -93,9 +98,17 @@ public class Client {
     @NotNull
     private SocketChannel openChannel() throws IOException {
         SocketChannel channel = SocketChannel.open();
-        channel.connect(new InetSocketAddress(port));
         channel.configureBlocking(false);
-        return channel;
+        try (Selector selector = Selector.open()
+        ) {
+            channel.register(selector, SelectionKey.OP_CONNECT);
+            channel.connect(new InetSocketAddress(port));
+            int selected = selector.select(TIMEOUT);
+            if (selected == 0 || !channel.finishConnect()) {
+                throw new SocketTimeoutException("Could not connect to server in " + TIMEOUT + "ms");
+            }
+            return channel;
+        }
     }
 
     private void writeBytesTo(@NotNull byte[] bytes, @NotNull SocketChannel channel) throws IOException {
