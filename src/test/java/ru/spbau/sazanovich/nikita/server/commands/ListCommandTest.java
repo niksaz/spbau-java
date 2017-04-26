@@ -35,7 +35,7 @@ public class ListCommandTest {
 
     @Test(expected = UnsuccessfulCommandExecutionException.class)
     public void listInvalidPath() throws Exception {
-        ListCommand command = new ListCommand("C::/Program files/");
+        ListCommand command = new ListCommand("C:/Program files\0");
         command.list();
     }
 

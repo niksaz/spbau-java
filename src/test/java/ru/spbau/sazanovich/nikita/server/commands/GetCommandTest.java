@@ -35,7 +35,7 @@ public class GetCommandTest {
 
     @Test(expected = UnsuccessfulCommandExecutionException.class)
     public void getInvalidPath() throws Exception {
-        GetCommand command = new GetCommand("C::/Program files/");
+        GetCommand command = new GetCommand("C:/Program files\0");
         command.get();
     }
 
