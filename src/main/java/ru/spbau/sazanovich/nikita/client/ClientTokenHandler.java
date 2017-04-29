@@ -1,6 +1,7 @@
 package ru.spbau.sazanovich.nikita.client;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.server.commands.FileInfo;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -39,12 +40,12 @@ class ClientTokenHandler {
                 switch (token) {
                     case LIST_CMD: {
                         String path = iterator.next();
-                        List<String> files = client.list(path);
+                        List<FileInfo> files = client.list(path);
                         if (files == null) {
                             System.out.println("Unsuccessful command.");
                         } else {
-                            for (String fileName : files) {
-                                System.out.println(fileName);
+                            for (FileInfo fileInfo : files) {
+                                System.out.println(fileInfo);
                             }
                         }
                         break;

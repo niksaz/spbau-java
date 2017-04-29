@@ -6,7 +6,7 @@ import ru.spbau.sazanovich.nikita.server.ServerCommandLineApp;
 import java.util.Scanner;
 
 /**
- * Class which interacts with user and make requests to the server.
+ * Class which interacts with user and make requests to the server through terminal.
  */
 public class ClientCommandLineApp {
 

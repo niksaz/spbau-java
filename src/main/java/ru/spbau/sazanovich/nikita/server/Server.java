@@ -28,7 +28,7 @@ public class Server {
     private volatile boolean stopped;
 
     @NotNull
-    private final Queue<Request> processorQueue;
+    private final Queue<ProcessRequest> processorQueue;
 
     /**
      * Constructs a server on a given port.
@@ -101,7 +101,7 @@ public class Server {
                     if (bytesRead == -1) {
                         byte[] data = reader.getData();
                         key.interestOps(0);
-                        processorQueue.add(new Request(key, data));
+                        processorQueue.add(new ProcessRequest(key, data));
                     }
                 } catch (IOException e) {
                     finishWorkWithChannelForKey(key);
@@ -124,9 +124,9 @@ public class Server {
 
     private void processQueue(@NotNull Selector selector) {
         while (!processorQueue.isEmpty()) {
-            Request request = processorQueue.poll();
+            ProcessRequest processRequest = processorQueue.poll();
             byte[] response;
-            try (ByteArrayInputStream byteStream = new ByteArrayInputStream(request.getContent());
+            try (ByteArrayInputStream byteStream = new ByteArrayInputStream(processRequest.getContent());
                  DataInputStream inputStream = new DataInputStream(byteStream)
             ) {
                 int code = inputStream.readInt();
@@ -149,10 +149,10 @@ public class Server {
             }
 
             try {
-                SelectableChannel channel = request.getKey().channel();
+                SelectableChannel channel = processRequest.getKey().channel();
                 channel.register(selector, SelectionKey.OP_WRITE, new ChannelByteWriter(response));
             } catch (ClosedChannelException e) {
-                finishWorkWithChannelForKey(request.getKey());
+                finishWorkWithChannelForKey(processRequest.getKey());
             }
         }
     }

@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import ru.spbau.sazanovich.nikita.client.Client;
 import ru.spbau.sazanovich.nikita.server.Server;
+import ru.spbau.sazanovich.nikita.server.commands.FileInfo;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,12 +37,12 @@ public class WorkflowTest {
 
         Client client = new Client(TEST_PORT);
 
-        List<String> list = client.list(folder.getRoot().getAbsolutePath());
-        assertTrue(list != null);
-        assertEquals(3, list.size());
-        assertTrue(list.contains(file1.getFileName().toString()));
-        assertTrue(list.contains(file2.getFileName().toString()));
-        assertTrue(list.contains(dir.getFileName().toString()));
+        List<FileInfo> infoList = client.list(folder.getRoot().getAbsolutePath());
+        assertTrue(infoList != null);
+        assertEquals(3, infoList.size());
+        assertTrue(infoList.contains(new FileInfo(file1)));
+        assertTrue(infoList.contains(new FileInfo(file2)));
+        assertTrue(infoList.contains(new FileInfo(dir)));
 
         Path tmp = folder.newFile("tmp").toPath();
         boolean successful = client.get(file1.toAbsolutePath().toString(), tmp.toAbsolutePath().toString());

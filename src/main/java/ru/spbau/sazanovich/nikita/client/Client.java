@@ -3,6 +3,7 @@ package ru.spbau.sazanovich.nikita.client;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.spbau.sazanovich.nikita.server.commands.Command;
+import ru.spbau.sazanovich.nikita.server.commands.FileInfo;
 import ru.spbau.sazanovich.nikita.server.commands.GetCommand;
 import ru.spbau.sazanovich.nikita.server.commands.ListCommand;
 import ru.spbau.sazanovich.nikita.utils.ChannelByteReader;
@@ -46,11 +47,11 @@ public class Client {
      * Returns null if the request was unsuccessful.
      *
      * @param path directory to list
-     * @return filenames in directory
+     * @return info about files in a given directory
      * @throws IOException if an I/O error occurs
      */
     @Nullable
-    public List<String> list(@NotNull String path) throws IOException {
+    public List<FileInfo> list(@NotNull String path) throws IOException {
         byte[] content = sendRequestWithCodeAndArg(ListCommand.CODE, path);
         if (Arrays.equals(content, Command.errorResponseBytes())) {
             return null;

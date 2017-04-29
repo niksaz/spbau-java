@@ -20,11 +20,11 @@ public class ListCommandTest {
         Path dir = folder.newFolder("dir").toPath();
 
         ListCommand command = new ListCommand(folder.getRoot().getAbsolutePath());
-        List<Path> list = command.list();
-        assertEquals(3, list.size());
-        assertTrue(list.contains(file1.toAbsolutePath()));
-        assertTrue(list.contains(file2.toAbsolutePath()));
-        assertTrue(list.contains(dir.toAbsolutePath()));
+        List<FileInfo> infoList = command.list();
+        assertEquals(3, infoList.size());
+        assertTrue(infoList.contains(new FileInfo(file1)));
+        assertTrue(infoList.contains(new FileInfo(file2)));
+        assertTrue(infoList.contains(new FileInfo(dir)));
     }
 
     @Test(expected = UnsuccessfulCommandExecutionException.class)
@@ -59,11 +59,11 @@ public class ListCommandTest {
 
         ListCommand command = new ListCommand(folder.getRoot().getAbsolutePath());
         byte[] content = command.execute();
-        List<String> list = ListCommand.fromBytes(content);
+        List<FileInfo> infoList = ListCommand.fromBytes(content);
 
-        assertEquals(3, list.size());
-        assertTrue(list.contains(file1.getFileName().toString()));
-        assertTrue(list.contains(file2.getFileName().toString()));
-        assertTrue(list.contains(dir.getFileName().toString()));
+        assertEquals(3, infoList.size());
+        assertTrue(infoList.contains(new FileInfo(file1)));
+        assertTrue(infoList.contains(new FileInfo(file2)));
+        assertTrue(infoList.contains(new FileInfo(dir)));
     }
 }

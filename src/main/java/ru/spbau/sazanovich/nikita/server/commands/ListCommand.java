@@ -44,13 +44,13 @@ public class ListCommand extends Command {
     @Override
     @NotNull
     public byte[] execute() throws UnsuccessfulCommandExecutionException {
-        List<Path> paths = list();
+        List<FileInfo> infoList = list();
         try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
              DataOutputStream outputStream = new DataOutputStream(byteStream)
         ) {
-            outputStream.writeInt(paths.size());
-            for (Path path : paths) {
-                outputStream.writeUTF(path.getFileName().toString());
+            outputStream.writeInt(infoList.size());
+            for (FileInfo info : infoList) {
+                info.writeTo(outputStream);
             }
             outputStream.flush();
             return byteStream.toByteArray();
@@ -60,29 +60,29 @@ public class ListCommand extends Command {
     }
 
     /**
-     * Converts bytes to list of filenames which were retrieved from a server. Inverse for {@link #execute()}.
+     * Converts bytes to list of {@link FileInfo} which were retrieved from a server. Inverse for {@link #execute()}.
      *
      * @param content bytes to convert
-     * @return list of filenames
+     * @return list of file's info
      * @throws IOException if some I/O error occurs
      */
     @NotNull
-    public static List<String> fromBytes(@NotNull byte[] content) throws IOException {
+    public static List<FileInfo> fromBytes(@NotNull byte[] content) throws IOException {
         try (ByteArrayInputStream byteStream = new ByteArrayInputStream(content);
              DataInputStream inputStream = new DataInputStream(byteStream)
         ) {
             int size = inputStream.readInt();
-            List<String> names = new LinkedList<>();
+            List<FileInfo> files = new LinkedList<>();
             while (size > 0) {
                 size--;
-                names.add(inputStream.readUTF());
+                files.add(FileInfo.readFrom(inputStream));
             }
-            return names;
+            return files;
         }
     }
 
     @NotNull
-    List<Path> list() throws UnsuccessfulCommandExecutionException {
+    List<FileInfo> list() throws UnsuccessfulCommandExecutionException {
         final Path directory;
         try {
             directory = Paths.get(path);
@@ -93,7 +93,7 @@ public class ListCommand extends Command {
             throw new UnsuccessfulCommandExecutionException("Should be a present directory");
         }
         try {
-            return Files.list(directory).collect(Collectors.toList());
+            return Files.list(directory).map(FileInfo::new).collect(Collectors.toList());
         } catch (IOException e) {
             throw new UnsuccessfulCommandExecutionException("IO error while listing directory", e);
         }

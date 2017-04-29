@@ -5,9 +5,9 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.channels.SelectionKey;
 
 /**
- * Represents client's request.
+ * Represents a request which is gotten from a client.
  */
-class Request {
+class ProcessRequest {
 
     @NotNull
     private final SelectionKey key;
@@ -15,7 +15,7 @@ class Request {
     @NotNull
     private final byte[] content;
 
-    Request(@NotNull SelectionKey key, @NotNull byte[] content) {
+    ProcessRequest(@NotNull SelectionKey key, @NotNull byte[] content) {
         this.key = key;
         this.content = content;
     }
