@@ -1,6 +1,8 @@
-package ru.spbau.sazanovich.nikita.client;
+package ru.spbau.sazanovich.nikita.client.terminal;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.client.Client;
+import ru.spbau.sazanovich.nikita.client.ClientFactory;
 import ru.spbau.sazanovich.nikita.server.commands.FileInfo;
 
 import java.io.IOException;
@@ -42,10 +44,10 @@ class ClientTokenHandler {
                         String path = iterator.next();
                         List<FileInfo> files = client.list(path);
                         if (files == null) {
-                            System.out.println("Unsuccessful command.");
+                            printStream.println("Unsuccessful command.");
                         } else {
                             for (FileInfo fileInfo : files) {
-                                System.out.println(fileInfo);
+                                printStream.println(fileInfo);
                             }
                         }
                         break;
@@ -55,22 +57,22 @@ class ClientTokenHandler {
                         String toPath = iterator.next();
                         boolean got = client.get(fromPath, toPath);
                         if (!got) {
-                            System.out.println("Unsuccessful command.");
+                            printStream.println("Unsuccessful command.");
                         } else {
-                            System.out.println("File is written to " + toPath);
+                            printStream.println("File is written to " + toPath);
                         }
                         break;
                     }
                     case EXIT_CMD:
                         return;
                     default:
-                        System.out.println("Unknown command.");
+                        printStream.println("Unknown command.");
                         break;
                 }
             } catch (InvalidPathException | NoSuchFileException e) {
-                System.out.println("Local path should be valid: " + e.getMessage());
+                printStream.println("Local path should be valid: " + e.getMessage());
             } catch (ConnectException e) {
-                System.out.println("Could not connect to the server.");
+                printStream.println("Could not connect to the server.");
             } catch(IOException e) {
                 e.printStackTrace();
             }

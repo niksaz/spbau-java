@@ -1,6 +1,7 @@
-package ru.spbau.sazanovich.nikita.client;
+package ru.spbau.sazanovich.nikita.client.terminal;
 
 import org.jetbrains.annotations.NotNull;
+import ru.spbau.sazanovich.nikita.client.Client;
 import ru.spbau.sazanovich.nikita.server.ServerCommandLineApp;
 
 import java.util.Scanner;

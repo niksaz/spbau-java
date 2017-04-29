@@ -1,7 +1,9 @@
-package ru.spbau.sazanovich.nikita.client;
+package ru.spbau.sazanovich.nikita.client.terminal;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
+import ru.spbau.sazanovich.nikita.client.Client;
+import ru.spbau.sazanovich.nikita.client.ClientFactory;
 
 import java.io.PrintStream;
 import java.util.Iterator;

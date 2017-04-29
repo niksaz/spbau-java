@@ -1,5 +1,5 @@
 group 'spbau'
-version '1.0-SNAPSHOT'
+version '1.0'
 
 apply plugin: 'java'
 apply plugin: 'jacoco'
@@ -26,12 +26,24 @@ jacocoTestReport {
     }
 }
 
-task jarClient(type: Jar) {
+task jarClientGui(type: Jar) {
     manifest {
-        def manifest = "${projectDir}/src/main/resources/ru/spbau/sazanovich/nikita/client/MANIFEST.MF"
-        from file(manifest)
+        from file("${projectDir}/src/main/resources/ru/spbau/sazanovich/nikita/client/gui/MANIFEST.MF")
     }
-    baseName = "client"
+    baseName = "client-gui"
+    from {
+        configurations.compile.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    with jar
+}
+
+task jarClientTerm(type: Jar) {
+    manifest {
+        from file("${projectDir}/src/main/resources/ru/spbau/sazanovich/nikita/client/terminal/MANIFEST.MF")
+    }
+    baseName = "client-term"
     from {
         configurations.compile.collect {
             it.isDirectory() ? it : zipTree(it)
@@ -42,8 +54,7 @@ task jarClient(type: Jar) {
 
 task jarServer(type: Jar) {
     manifest {
-        def manifest = "${projectDir}/src/main/resources/ru/spbau/sazanovich/nikita/server/MANIFEST.MF"
-        from file(manifest)
+        from file("${projectDir}/src/main/resources/ru/spbau/sazanovich/nikita/server/MANIFEST.MF")
     }
     baseName = "server"
     from {

@@ -3,7 +3,7 @@ package ru.spbau.sazanovich.nikita.client;
 /**
  * Interface which allows to create {@link Client}.
  */
-interface ClientFactory {
+public interface ClientFactory {
 
     /**
      * Creates a client.
