@@ -1,5 +1,7 @@
 package ru.spbau.sazanovich.nikita.client.gui;
 
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -17,6 +19,8 @@ import ru.spbau.sazanovich.nikita.client.ClientFactory;
 import ru.spbau.sazanovich.nikita.server.commands.FileInfo;
 
 import java.io.File;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,8 +39,12 @@ class ClientSceneBuilder {
     @NotNull
     private final ClientFactory clientFactory;
 
-    ClientSceneBuilder(@NotNull ClientFactory clientFactory) {
+    @NotNull
+    private Path currentDirectory;
+
+    ClientSceneBuilder(@NotNull ClientFactory clientFactory, @NotNull Path currentDirectory) {
         this.clientFactory = clientFactory;
+        this.currentDirectory = currentDirectory;
     }
 
     @NotNull
@@ -52,49 +60,69 @@ class ClientSceneBuilder {
 
         Label lastDirectoryListedLabel = createInfoLabel("");
         nodes.add(lastDirectoryListedLabel);
-        ListView<String> fileListView = new ListView<>();
+        ListView<FileInfo> fileListView = new ListView<>();
         nodes.add(fileListView);
 
         Button downloadButton = new Button("Download");
         Button chooseDirButton = new Button("Choose directory");
         nodes.add(packTwoButtons(downloadButton, chooseDirButton));
 
-        nodes.add(createInfoLabel("Local path to save to:"));
+        Label localPathLabel = createInfoLabel(constructLocalLabelText());
+        nodes.add(localPathLabel);
 
         TextField localPathTextField = new TextField();
         nodes.add(localPathTextField);
 
         listButton.setOnAction(event ->
                 performListOperationOf(remotePathTextField.getText(), lastDirectoryListedLabel, fileListView));
-
         fileListView.setOnMouseClicked(event -> {
             if (fileListView.getSelectionModel().getSelectedItem() == null) {
                 return;
             }
             if (event.getClickCount() == 1) {
-                String selectedItem = fileListView.getSelectionModel().getSelectedItem();
-                remotePathTextField.setText(Paths.get(lastDirectoryListedLabel.getText(), selectedItem).toString());
+                FileInfo selectedItem = fileListView.getSelectionModel().getSelectedItem();
+                if (!selectedItem.isDirectory()) {
+                    localPathTextField.setText(selectedItem.getName());
+                }
+                remotePathTextField.setText(Paths.get(lastDirectoryListedLabel.getText(), selectedItem.getName()).toString());
                 return;
             }
             if (event.getClickCount() == 2) {
                 performListOperationOf(remotePathTextField.getText(), lastDirectoryListedLabel, fileListView);
             }
         });
-
-        downloadButton.setOnAction(event ->
-                performGetOperationOf(remotePathTextField.getText(), localPathTextField.getText()));
-
-        chooseDirButton.setOnAction(event -> chooseDirectoryTo(localPathTextField, stage));
+        downloadButton.setOnAction(createDownloadEventHandler(remotePathTextField, localPathTextField));
+        chooseDirButton.setOnAction(event -> chooseDirectoryTo(localPathLabel, stage));
 
         return new Scene(buildRootLayoutFor(nodes));
     }
 
-    private void chooseDirectoryTo(@NotNull TextInputControl textInput, @NotNull Stage stage) {
+    @NotNull
+    private EventHandler<ActionEvent> createDownloadEventHandler(@NotNull TextField remotePathTextField,
+                                                                 @NotNull TextField localPathTextField) {
+        return event -> {
+            Path completeLocalPath;
+            try {
+                completeLocalPath = Paths.get(currentDirectory.toString(), localPathTextField.getText());
+            } catch (InvalidPathException e) {
+                showAlert(ERROR, "Unsuccessful downloading", e.getMessage());
+                return;
+            }
+            performGetOperationOf(remotePathTextField.getText(), completeLocalPath.toString());
+        };
+    }
+
+    private String constructLocalLabelText() {
+        return "Local path relative to directory " + currentDirectory + ":";
+    }
+
+    private void chooseDirectoryTo(@NotNull Labeled labeled, @NotNull Stage stage) {
         DirectoryChooser chooser = new DirectoryChooser();
         chooser.setTitle("Choose a directory where to save file");
         File selected = chooser.showDialog(stage);
         if (selected != null) {
-            textInput.setText(selected.getAbsolutePath());
+            currentDirectory = selected.toPath();
+            labeled.setText(constructLocalLabelText());
         }
     }
 
@@ -138,7 +166,7 @@ class ClientSceneBuilder {
     }
 
     private void performListOperationOf(@NotNull String remotePath, @NotNull Label lastDirectoryListedLabel,
-                                        @NotNull ListView<String> fileListView) {
+                                        @NotNull ListView<FileInfo> fileListView) {
         Client client = clientFactory.createClient();
         try {
             List<FileInfo> paths = client.list(remotePath);
@@ -149,7 +177,7 @@ class ClientSceneBuilder {
             lastDirectoryListedLabel.setText(remotePath);
             fileListView.getItems().clear();
             for (FileInfo fileInfo : paths) {
-                fileListView.getItems().add(fileInfo.toString());
+                fileListView.getItems().add(fileInfo);
             }
         } catch (Exception e) {
             showAlert(ERROR, "Unsuccessful listing", e.getMessage());

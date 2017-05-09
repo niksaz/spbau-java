@@ -48,13 +48,12 @@ public class FileInfo {
     }
 
     /**
-     * Returns file's type.
+     * Utility method for checking whether the file is a directory.
      *
-     * @return file's type
+     * @return {@code true} if it is a directory; {@code false} otherwise
      */
-    @NotNull
-    public FileType getType() {
-        return type;
+    public boolean isDirectory() {
+        return type.equals(DIRECTORY);
     }
 
     /**
@@ -95,7 +94,7 @@ public class FileInfo {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder(name);
-        if (getType().equals(DIRECTORY)) {
+        if (isDirectory()) {
             builder.append(File.separatorChar);
         }
         return builder.toString();
