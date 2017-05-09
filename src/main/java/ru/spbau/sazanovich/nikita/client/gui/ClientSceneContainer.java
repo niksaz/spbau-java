@@ -30,9 +30,9 @@ import static javafx.scene.control.Alert.AlertType.INFORMATION;
 import static javafx.scene.layout.Priority.ALWAYS;
 
 /**
- * Class which allows to build scenes which provide access to client operations.
+ * Class which stores client scene and its inner state.
  */
-class ClientSceneBuilder {
+class ClientSceneContainer {
 
     private static final Font SMALL_FONT = new Font(10.0);
 
@@ -42,13 +42,29 @@ class ClientSceneBuilder {
     @NotNull
     private Path currentDirectory;
 
-    ClientSceneBuilder(@NotNull ClientFactory clientFactory, @NotNull Path currentDirectory) {
+    @NotNull
+    private final Scene scene;
+
+    /**
+     * Constructs a container with given client factory, an initial path and a stage to attach the scene to.
+     *
+     * @param clientFactory a factory which is used when {@link Client} is needed
+     * @param currentDirectory an initial directory
+     * @param stage a stage to attach the scene to
+     */
+    ClientSceneContainer(@NotNull ClientFactory clientFactory, @NotNull Path currentDirectory, @NotNull Stage stage) {
         this.clientFactory = clientFactory;
         this.currentDirectory = currentDirectory;
+        this.scene = build(stage);
     }
 
     @NotNull
-    Scene build(@NotNull Stage stage) {
+    Scene getScene() {
+        return scene;
+    }
+
+    @NotNull
+    private Scene build(@NotNull Stage stage) {
         final List<Node> nodes = new LinkedList<>();
 
         nodes.add(createInfoLabel("Remote path:"));

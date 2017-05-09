@@ -1,7 +1,6 @@
 package ru.spbau.sazanovich.nikita.client.gui;
 
 import javafx.application.Application;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.jetbrains.annotations.NotNull;
 import ru.spbau.sazanovich.nikita.client.Client;
@@ -26,11 +25,10 @@ public class ClientGuiApp extends Application {
     public void start(@NotNull Stage primaryStage) throws Exception {
         ClientFactory factory = () -> new Client(ServerCommandLineApp.SERVER_PORT);
         Path directory = Paths.get(System.getProperty("user.dir"));
-        ClientSceneBuilder sceneBuilder = new ClientSceneBuilder(factory, directory);
-        Scene scene = sceneBuilder.build(primaryStage);
+        ClientSceneContainer sceneContainer = new ClientSceneContainer(factory, directory, primaryStage);
 
         primaryStage.setTitle("FPT client");
-        primaryStage.setScene(scene);
+        primaryStage.setScene(sceneContainer.getScene());
         primaryStage.show();
     }
 
