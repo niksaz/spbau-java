@@ -119,22 +119,39 @@ class Executor {
                                         @Nullable    Throwable caughtException) {
         if (caughtException == null) {
             if (expectedClass.equals(None.class)) {
-                logStream.println("Successful");
+                showSuccessful();
             } else {
-                logStream.println("Failed because expected " + expectedClass.getName());
+                showFailedBecauseExpected(expectedClass.getName());
             }
         } else {
             if (expectedClass.isAssignableFrom(caughtException.getClass())) {
-                logStream.println("Successful");
+                showSuccessful();
             } else {
                 if (expectedClass.equals(None.class)) {
-                    logStream.println("Failed because of");
+                    showFailedBecauseOf(caughtException);
                 } else {
-                    logStream.println("Failed because expected " + expectedClass.getName() + " but got");
+                    showFailedBecauseExpectedButGot(expectedClass.getName(), caughtException);
                 }
-                caughtException.printStackTrace(logStream);
             }
         }
+    }
+
+    void showSuccessful() {
+        logStream.println("Successful");
+    }
+
+    void showFailedBecauseExpected(@NotNull String name) {
+        logStream.println("Failed because expected " + name);
+    }
+
+    void showFailedBecauseOf(@NotNull Throwable throwable) {
+        logStream.println("Failed because of");
+        throwable.printStackTrace(logStream);
+    }
+
+    void showFailedBecauseExpectedButGot(@NotNull String name, @NotNull Throwable throwable) {
+        logStream.println("Failed because expected " + name + " but got");
+        throwable.printStackTrace(logStream);
     }
 
     private boolean runNonTestMethods(@NotNull List<Method> methods, @NotNull Object instance) {
