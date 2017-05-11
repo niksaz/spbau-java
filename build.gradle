@@ -22,7 +22,7 @@ task jarMain(type: Jar) {
     manifest {
         from file("${projectDir}/src/main/resources/ru/spbau/sazanovich/nikita/MANIFEST.MF")
     }
-    baseName = "main"
+    baseName = "game"
     from {
         configurations.compile.collect {
             it.isDirectory() ? it : zipTree(it)
