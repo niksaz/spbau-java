@@ -5,7 +5,8 @@ import ru.spbau.sazanovich.nikita.xunit.XTest;
 
 import java.io.PrintStream;
 
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
 public class TestRunnerAppTest {
 
@@ -18,27 +19,39 @@ public class TestRunnerAppTest {
         System.setOut(mock(PrintStream.class));
         TestRunnerApp.main(args);
 
-        assert(TestClass0.called == 1);
-        assert(TestClass1.called == 1);
+        assertEquals(1, TestClass0.constructed);
+        assertEquals(1, TestClass0.invoked);
+        assertEquals(1, TestClass1.constructed);
+        assertEquals(1, TestClass1.invoked);
     }
 
     public static class TestClass0 {
 
-        private static int called;
+        private static int constructed;
+        private static int invoked;
+
+        public TestClass0() {
+            constructed++;
+        }
 
         @XTest
         public void test() throws Exception {
-            called++;
+            invoked++;
         }
     }
 
     public static class TestClass1 {
 
-        private static int called;
+        private static int constructed;
+        private static int invoked;
+
+        public TestClass1() {
+            constructed++;
+        }
 
         @XTest
         public void test() throws Exception {
-            called++;
+            invoked++;
         }
     }
 }

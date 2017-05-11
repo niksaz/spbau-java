@@ -45,10 +45,15 @@ class Executor {
      * @throws IllegalTestClassException if given class is not valid test class
      */
     void execute(@NotNull String testClassName) throws IllegalTestClassException {
-        logStream.println("==================================================");
-        logStream.println("Running tests of " + testClassName + " class");
-
         Class<?> testClass = getTestClass(testClassName);
+        Object testClassInstance = getTestClassInstance(testClass);
+        execute(testClassInstance);
+    }
+
+    void execute(@NotNull Object testClassInstance) throws IllegalTestClassException {
+        Class<?> testClass = testClassInstance.getClass();
+        logStream.println("==================================================");
+        logStream.println("Running tests of " + testClass.getName() + " class");
 
         List<Method> beforeClassMethods = extractMethodsWithAnnotation(testClass, XBeforeClass.class);
         ensureXClassMethods(beforeClassMethods);
@@ -62,7 +67,6 @@ class Executor {
         List<Method> testMethods = extractMethodsWithAnnotation(testClass, XTest.class);
         ensureXMethods(testMethods);
 
-        Object testClassInstance = getTestClassInstance(testClass);
         boolean beforeClassSuccessful = runNonTestMethods(beforeClassMethods, testClass);
 
         if (!beforeClassSuccessful) {
