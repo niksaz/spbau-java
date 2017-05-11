@@ -25,6 +25,23 @@ public class ExecutorTest {
     }
 
     @Test
+    public void ignore() throws Exception {
+        executor.execute(TestClassWithIgnore.class.getName());
+        assert(TestClassWithIgnore.called == 0);
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public static class TestClassWithIgnore {
+        private static int called;
+
+        @XTest(ignore = "Throws IOException so fails. Fix someone.")
+        public void test() throws Exception {
+            called++;
+            throw new IOException();
+        }
+    }
+
+    @Test
     public void showSuccessful() throws Exception {
         executor.execute(TestClassWithSuccessful.class.getName());
 
